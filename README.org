@@ -1,0 +1,57 @@
+* Fennel Cljlib
+Library for [[https://fennel-lang.org/][Fennel]] language that adds a lot of functions from [[https://clojure.org/][Clojure]] standard library.
+This is not a one to one port of Clojure =core=, because many Clojure functions require certain guarantees, like immutability of the underlying data structures.
+Therefore some names were changed, but they should be still recognizable.
+
+Goals of this project are:
+
+- Have a self contained library, with no dependencies, that provides a set of useful functions from Clojure =core=,
+- Be close to the platform, e.g. implement functions in a way that is efficient to use in Lua VM,
+- Be well documented library, with good test coverage.
+
+** Functions
+Here are some important functions from the library.
+Full set can be examined by requiring the module.
+
+*** =mapv= and =mapkv=
+Mapping functions.
+In Clojure we have a =seq= abstraction, that allows us to use single =mapv= on both vectors, and hash tables.
+However in Fennel, and Lua there's no efficient way of checking if we got an associative or indexed table.
+For this reason, there are two functions - =mapv=, or which maps over vectors, and =mapkv= which maps over associative tables (=kv= is for key-value).
+Here, =mapv= works the same as =mapv= from Clojure, except it doesn't yield a transducer (yet?) when only function is supplied.
+=mapkv= also works similarly, except it requires for function you pass to accept twice the amount of tables you pass to =mapkv=.
+
+#+begin_src fennel
+  (fn cube [x] (* x x x))
+  (mapv cube [1 2 3])
+  ;; [1 8 27]
+
+  (mapv #(* $1 $2) [1 2 3] [1 -1 0])
+  ;; [1 -2 0]
+
+  (mapv (fn [f-name s-name company position]
+          (.. f-name " " s-name " works as " position " at " company))
+        ["Bob" "Alice"]
+        ["Smith" "Watson"]
+        ["Happy Days co." "Coffee With You"]
+        ["secretary" "chief officer"])
+  ;; ["Bob Smith works as secretary at Happy Days co."
+  ;;  "Alice Watson works as chief officer at Coffee With You"]
+
+  (mapkv (fn [k v] [k v]) {:host "localhost" :port 1344})
+  ;; [["port" 1344] ["host" "localhost"]]
+#+end_src
+
+*** =reduce= and =reduce-kv=
+Ordinary reducing functions.
+Work the same as in Clojure, except doesn't yield transducer when only function was passed.
+
+#+begin_src fennel
+  (fn add [a b] (+ a b))
+
+  (reduce add [1 2 3 4 5]) ;; 15
+
+  (reduce add 10 [1 2 3 4 5]) ;; 25
+#+end_src
+
+#  LocalWords:  Luajit VM
