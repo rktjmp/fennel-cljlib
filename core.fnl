@@ -41,11 +41,6 @@
     (insert 1 x)))
 
 
-(fn reduce3 [f val [x & xs]]
-  (if (not (= x nil))
-      (reduce3 f (f val x) xs)
-      val))
-
 (fn* reduce
   "Reduce collection using function of two arguments and optional initial value.
 
@@ -64,9 +59,11 @@ val and f is not called."
      1 (. itbl 1)
      2 (f (. itbl 1) (. itbl 2))
      _ (let [[a b & rest] itbl]
-         (reduce3 f (f a b) rest))))
-  ([f val itbl]
-   (reduce3 f val itbl)))
+         (reduce f (f a b) rest))))
+  ([f val [x & xs]]
+   (if (not (= x nil))
+       (reduce f (f val x) xs)
+      val)))
 
 
 (fn* mapv
