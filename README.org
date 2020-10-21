@@ -1,3 +1,4 @@
+
 * Fennel Cljlib
 Library for [[https://fennel-lang.org/][Fennel]] language that adds a lot of functions from [[https://clojure.org/][Clojure]] standard library.
 This is not a one to one port of Clojure =core=, because many Clojure functions require certain guarantees, like immutability of the underlying data structures.
@@ -9,6 +10,45 @@ Goals of this project are:
 - Be close to the platform, e.g. implement functions in a way that is efficient to use in Lua VM,
 - Be well documented library, with good test coverage.
 
+** Macros
+*** =fn*=
+Clojure's =defn= equivalent.
+Returns a function of fixed arity by doing runtime dispatch, based on argument amount.
+Capable of producing multi-arity functions:
+
+#+begin_src fennel
+  (fn* square "square number" [x] (^ x 2))
+
+  (square 9) ;; 81
+  (square 1 2) ;; error
+
+  (fn* range
+    "Returns increasing sequence  of numbers from `lower' to `upper'.
+  If `lower' is not provided, sequence starts from zero.
+  Accepts optional `step'"
+    ([upper] (range 0 upper 1))
+    ([lower upper] (range lower upper 1))
+    ([lower upper step]
+     (let [res []]
+       (for [i lower upper step]
+         (table.insert res i))
+       res)))
+
+  (range 10)
+  ;; [0 1 2 3 4 5 6 7 8 9 10]
+  (range -10 0)
+  ;; [-10 -9 -8 -7 -6 -5 -4 -3 -2 -1 0]
+  (range 0 1 0.2)
+  ;; [0.0 0.2 0.4 0.6 0.8 1.0]
+
+  ;; both variants support up to one arity with & more:
+  (fn* list [& xs] xs)
+
+  (list 1 2 3)
+  ;; [1 2 3]
+#+end_src
+
+See =core.fnl= for more examples.
 ** Functions
 Here are some important functions from the library.
 Full set can be examined by requiring the module.
