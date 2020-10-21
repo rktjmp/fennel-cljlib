@@ -16,14 +16,26 @@ sequential table, leaves it unchanged."
       (insert res [k v]))
     (if assoc? res tbl)))
 
+(fn unseq [tbl]
+  (local res {})
+  (each [_ [k v] (ipairs tbl)]
+    (tset res k v))
+  res)
+
+(fn into [to from]
+  (match to
+    :vec (seq from)
+    :map (unseq from)
+    _ (error "unsupported table type" 2)))
+
 (fn first [itbl]
   "Return first element of an indexed table."
-  (. itbl 1))
+  (. (seq itbl) 1))
 
 
 (fn rest [itbl]
   "Returns table of all elements of indexed table but the first one."
-  (let [[_ & xs] itbl]
+  (let [[_ & xs] (seq itbl)]
     xs))
 
 
@@ -49,7 +61,7 @@ sequential table, leaves it unchanged."
        (consj itbl x))))
 
 
-(fn* cons [x itbl]
+(fn cons [x itbl]
   "Insert `x' to `itbl' at the front. Modifies `itbl'."
   (doto (or itbl [])
     (insert 1 x)))
@@ -209,13 +221,13 @@ sorting tables first."
       ))
 
 {: seq
+ : into
  : mapv
  : mapkv
  : reduce
  : reduce-kv
  : conj
  : cons
- : consj
  : first
  : rest
  : eq?

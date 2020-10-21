@@ -30,16 +30,16 @@ Capable of producing multi-arity functions:
     ([lower upper] (range lower upper 1))
     ([lower upper step]
      (let [res []]
-       (for [i lower upper step]
+       (for [i lower (- upper 1) step]
          (table.insert res i))
        res)))
 
   (range 10)
-  ;; [0 1 2 3 4 5 6 7 8 9 10]
+  ;; [0 1 2 3 4 5 6 7 8 9]
   (range -10 0)
-  ;; [-10 -9 -8 -7 -6 -5 -4 -3 -2 -1 0]
+  ;; [-10 -9 -8 -7 -6 -5 -4 -3 -2 -1]
   (range 0 1 0.2)
-  ;; [0.0 0.2 0.4 0.6 0.8 1.0]
+  ;; [0.0 0.2 0.4 0.6 0.8]
 
   ;; both variants support up to one arity with & more:
   (fn* list [& xs] xs)
@@ -49,9 +49,124 @@ Capable of producing multi-arity functions:
 #+end_src
 
 See =core.fnl= for more examples.
+*** =if-let= and =when-let=
+When test expression is not =nil= or =false=, evaluates the first body form with the =name= bound to the result of the expressions.
+
+#+begin_src fennel
+  (if-let [val (test)]
+    (print val)
+    :fail)
+#+end_src
+
+Expanded form:
+
+#+begin_src fennel
+  (let [tmp (test)]
+    (if tmp
+        (let [val tmp]
+          (print val))
+        :fail))
+#+end_src
+
+=when-let= is mostly the same, except doesn't have false branch and accepts any amount of forms:
+
+#+begin_src fennel
+  (when-let [val (test)]
+    (print val)
+    val)
+#+end_src
+
+Expanded form:
+
+#+begin_src fennel
+  (let [tmp (test)]
+    (if tmp
+        (let [val tmp]
+          (print val)
+          val)))
+#+end_src
+
+*** =if-some= and =when-some=
+Much like =if-let= and =when-let=, except tests expression for =nil=.
+
+#+begin_src fennel
+  (when-some [val (foo)]
+    (print (.. "val is not nil: " val))
+    val)
+#+end_src
+
 ** Functions
 Here are some important functions from the library.
 Full set can be examined by requiring the module.
+
+*** =seq= and =into=
+=seq= produces a sequential table from any kind of table in linear time.
+Works mostly like in Clojure, but, since Fennel doesn't have list object, it always returns squential tables:
+
+#+begin_src fennel
+  (seq [1 2 3 4 5])
+  ;; [1 2 3 4 5]
+
+  (seq {:a 1 :b 2 :c 3 :d 4})
+  ;; [["a" 1] ["b" 2] ["c" 3] ["d" 4]]
+#+end_src
+
+=into= can be used to convert =seq= result back to it's original form.
+Unlike clojure, =into= accepts either =:vec= or =:map= keywords:
+
+#+begin_src fennel
+  (into :map (into :vec {:a :b :c :d}))
+  ;; {:a "b" :c "d"}
+#+end_src
+
+=into= uses =seq= inernally.
+
+*** =first= and =rest=
+=first= returns first value of a table.
+It call =seq= on it, so this takes linear time for any table.
+As a consequence, associative tables are supported:
+
+#+begin_src fennel
+  (first [1 2 3])
+  ;; 1
+
+  (first {:host "localhost" :port 2344 :options {}})
+  ;; ["host" "localhost"]
+#+end_src
+
+=last= works the same way, but returns everything except first argument as a table.
+It also calls =seq= on it's argument.
+
+#+begin_src fennel
+  (rest [1 2 3])
+  ;; [2 3]
+
+  (rest {:host "localhost" :port 2344 :options {}})
+  ;; [["port" 2344] ["options" {}]]
+#+end_src
+
+*** =conj= and =cons=
+Unlike Clojure, =conj=, and =cons= modify table passed to these functions.
+This is done both to avoid copying of whole thing, and because Fennel doesn't have immutability guarantees.
+Both functions return the resulting table, so it is possible to nest these, or build a classic =map=:
+
+#+begin_src fennel
+  (fn map [f col]
+    (if-some [val (first col)]
+      (cons (f val) (map f (rest col)))
+      []))
+#+end_src
+
+=cons= accepts value as its first argument and table as second and puts value to the front of the table.
+=col= is not modified by the =map= function described above, but the =[]= table in the =else= branch of =is-some= is.
+
+=conj= accepts table as it's first argument and any amount of values afterwards.
+It puts values in order given into the table:
+
+#+begin_src fennel
+  (conj [] 1 2 3)
+  ; [1 2 3]
+#+end_src
 
 *** =mapv= and =mapkv=
 Mapping functions.
@@ -92,6 +207,16 @@ Work the same as in Clojure, except doesn't yield transducer when only function 
   (reduce add [1 2 3 4 5]) ;; 15
 
   (reduce add 10 [1 2 3 4 5]) ;; 25
+#+end_src
+
+=reduce-kv= expects function that accepts 3 arguments and initial value.
+Then it maps function over the associative map, by passing initial value as a first argument, key as second argument, and value as third argument.
+
+#+begin_src fennel
+  (reduce-kv (fn [acc key val] (if (or (= key :a) (= key :c)) (+ acc val) acc))
+             0
+             {:a 10 :b -20 :c 10})
+  ;; 20
 #+end_src
 
 #  LocalWords:  Luajit VM
