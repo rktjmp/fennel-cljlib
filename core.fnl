@@ -1,5 +1,6 @@
 (local insert table.insert)
 (local _unpack (or table.unpack unpack))
+(import-macros {: fn*} :macros.fn)
 
 (fn first [itbl]
   "Return first element of an indexed table."
@@ -12,28 +13,26 @@
     xs))
 
 
-(fn conj [...]
+(fn* conj
   "Insert `x' as a last element of indexed table `itbl'. Modifies `itbl'"
-  (match (length [...])
-    0 []
-    1 (let [[itbl] [...]] itbl)
-    2 (let [[itbl x] [...]] (insert itbl x) itbl)
-    _ (let [[itbl x & xs] [...]]
-        (if (> (length xs) 0)
-            (let [[y & xs] xs] (conj (conj itbl x) y (_unpack xs)))
-            (conj itbl x)))))
+  ([] [])
+  ([itbl] itbl)
+  ([itbl x] (insert itbl x) itbl)
+  ([itbl x & xs]
+   (if (> (length xs) 0)
+       (let [[y & xs] xs] (conj (conj itbl x) y (_unpack xs)))
+       (conj itbl x))))
 
 
-(fn consj [...]
+(fn* consj
   "Like conj but joins at the front. Modifies `itbl'."
-  (match (length [...])
-    0 []
-    1 (let [[itbl] [...]] itbl)
-    2 (let [[itbl x] [...]] (insert itbl 1 x) itbl)
-    _ (let [[itbl x & xs] [...]]
-        (if (> (length xs) 0)
-            (let [[y & xs] xs] (consj (consj itbl x) y (_unpack xs)))
-            (consj itbl x)))))
+  ([] [])
+  ([itbl] itbl)
+  ([itbl x] (insert itbl 1 x) itbl)
+  ([itbl x & xs]
+   (if (> (length xs) 0)
+       (let [[y & xs] xs] (consj (consj itbl x) y (_unpack xs)))
+       (consj itbl x))))
 
 
 (fn cons [x itbl]
@@ -47,7 +46,7 @@
       (reduce3 f (f val x) xs)
       val))
 
-(fn reduce [...]
+(fn* reduce
   "Reduce collection using function of two arguments and optional initial value.
 
 f should be a function of 2 arguments.  If val is not supplied,
@@ -59,20 +58,18 @@ returned and f is not called.  If val is supplied, returns the result
 of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
-  (match (length [...])
-    2 (let [[f itbl] [...]]
-        (match (length itbl)
-          0 (f)
-          1 (. itbl 1)
-          2 (f (. itbl 1) (. itbl 2))
-          _ (let [[a b & rest] itbl]
-              (reduce3 f (f a b) rest))))
-    3 (let [[f val itbl] [...]]
-        (reduce3 f val itbl))
-    _ (error "wrong amount of arguments to reduce" 2)))
+  ([f itbl]
+   (match (length itbl)
+     0 (f)
+     1 (. itbl 1)
+     2 (f (. itbl 1) (. itbl 2))
+     _ (let [[a b & rest] itbl]
+         (reduce3 f (f a b) rest))))
+  ([f val itbl]
+   (reduce3 f val itbl)))
 
 
-(fn mapv [...]
+(fn* mapv
   "Maps function `f' over indexed tables.
 
 Accepts arbitrary amount of tables.  Function `f' must take the same
@@ -80,37 +77,41 @@ amount of parameters as the amount of tables passed to `mapv'. Applyes
 `f' over first value of each table. Then applies `f' to second value
 of each table. Continues until any of the tables is exhausted. All
 remaining values are ignored. Returns a table of results. "
-  (let [res []]
-    (match (length [...])
-      1 (error "wrong argument amount for mapv" 2)
-      2 (let [[f itbl] [...]]
-          (each [_ v (ipairs itbl)]
-            (insert res (f v))))
-      3 (let [[f t1 t2] [...]]
-          (var (i1 v1) (next t1))
-          (var (i2 v2) (next t2))
-          (while (and i1 i2)
-            (insert res (f v1 v2))
-            (set (i1 v1) (next t1 i1))
-            (set (i2 v2) (next t2 i2))))
-      4 (let [[f t1 t2 t3] [...]]
-          (var (i1 v1) (next t1))
-          (var (i2 v2) (next t2))
-          (var (i3 v3) (next t3))
-          (while (and i1 i2 i3)
-            (insert res (f v1 v2 v3))
-            (set (i1 v1) (next t1 i1))
-            (set (i2 v2) (next t2 i2))
-            (set (i3 v3) (next t3 i3))))
-      _ (let [[f t1 t2 t3 & tbls] [...]
-              step (fn step [tbls]
-                     (when (->> tbls
-                                (mapv #(if (next $) true false))
-                                (reduce #(and $1 $2)))
-                       (cons (mapv first tbls) (step (mapv rest tbls)))))]
-          (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
-            (insert res (f (_unpack v))))))
-    res))
+  ([f itbl]
+   (local res [])
+   (each [_ v (ipairs itbl)]
+     (insert res (f v)))
+   res)
+  ([f t1 t2]
+   (local res [])
+   (var (i1 v1) (next t1))
+   (var (i2 v2) (next t2))
+   (while (and i1 i2)
+     (insert res (f v1 v2))
+     (set (i1 v1) (next t1 i1))
+     (set (i2 v2) (next t2 i2)))
+   res)
+  ([f t1 t2 t3]
+   (local res [])
+   (var (i1 v1) (next t1))
+   (var (i2 v2) (next t2))
+   (var (i3 v3) (next t3))
+   (while (and i1 i2 i3)
+     (insert res (f v1 v2 v3))
+     (set (i1 v1) (next t1 i1))
+     (set (i2 v2) (next t2 i2))
+     (set (i3 v3) (next t3 i3)))
+   res)
+  ([f t1 t2 t3 & tbls]
+   (let [step (fn step [tbls]
+                (when (->> tbls
+                           (mapv #(if (next $) true false))
+                           (reduce #(and $1 $2)))
+                  (cons (mapv first tbls) (step (mapv rest tbls)))))
+         res []]
+     (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
+       (insert res (f (_unpack v))))
+     res)))
 
 (fn kvseq [kvtbl]
   (let [res []]
@@ -118,7 +119,7 @@ remaining values are ignored. Returns a table of results. "
       (insert res [k v]))
     res))
 
-(fn mapkv [...]
+(fn* mapkv
   "Maps function `f' over one or more associative tables.
 
 `f' should be a function of 2 arguments. If more than one table
@@ -126,17 +127,17 @@ supplied, `f' must take double the table amount of arguments.  Returns
 indexed table of results.  Order of results depends on the order
 returned by the `pairs' function. If you want consistent results, consider
 sorting tables first."
-  (match (length [...])
-    2 (let [[f kvtbl] [...]]
-        (var res [])
-        (each [k v (pairs kvtbl)]
-          (insert res (f k v)))
-        res)
-    _ (let [[f & kvtbls] [...]
-            itbls []]
-        (each [_ t (ipairs kvtbls)]
-          (insert itbls (kvseq t)))
-        (mapv f (_unpack itbls)))))
+
+  ([f kvtbl]
+   (local res [])
+   (each [k v (pairs kvtbl)]
+     (insert res (f k v)))
+   res)
+  ([f & kvtbls]
+   (local itbls [])
+   (each [_ t (ipairs kvtbls)]
+     (insert itbls (kvseq t)))
+   (mapv f (_unpack itbls))))
 
 
 (fn eq2 [a b]
@@ -145,10 +146,10 @@ sorting tables first."
            (reduce #(and $1 $2) (mapkv (fn [k v] (eq2 (. a k) v)) b)))
       (= a b)))
 
-(fn eq? [...]
+(fn* eq?
   "Deep compare values."
-  (let [[x & xs] [...]]
-    (reduce #(and $1 $2) (mapv #(eq2 x $) xs))))
+  [x & xs]
+  (reduce #(and $1 $2) (mapv #(eq2 x $) xs)))
 
 
 {: mapv
