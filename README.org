@@ -12,7 +12,7 @@ Goals of this project are:
 
 ** Macros
 *** =fn*=
-Clojure's =defn= equivalent.
+Clojure's =fn= equivalent.
 Returns a function of fixed arity by doing runtime dispatch, based on argument amount.
 Capable of producing multi-arity functions:
 

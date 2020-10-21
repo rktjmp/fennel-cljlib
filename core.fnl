@@ -2,13 +2,27 @@
 (local _unpack (or table.unpack unpack))
 (import-macros {: fn*} :macros.fn)
 
+(fn seq [tbl]
+  "Return sequential table.
+Transforms original table to sequential table of key value pairs
+stored as sequential tables in linear time.  If original table is
+sequential table, leaves it unchanged."
+  (var assoc? false)
+  (let [res []]
+    (each [k v (pairs tbl)]
+      (if (and (not assoc?)
+               (not (= (type k) "number")))
+          (set assoc? true))
+      (insert res [k v]))
+    (if assoc? res tbl)))
+
 (fn first [itbl]
   "Return first element of an indexed table."
   (. itbl 1))
 
 
 (fn rest [itbl]
-  "Returns table of all elements of inexed table but the first one."
+  "Returns table of all elements of indexed table but the first one."
   (let [[_ & xs] itbl]
     xs))
 
@@ -17,7 +31,7 @@
   "Insert `x' as a last element of indexed table `itbl'. Modifies `itbl'"
   ([] [])
   ([itbl] itbl)
-  ([itbl x] (insert itbl x) itbl)
+  ([itbl x] (doto itbl (insert x)))
   ([itbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (conj (conj itbl x) y (_unpack xs)))
@@ -28,23 +42,26 @@
   "Like conj but joins at the front. Modifies `itbl'."
   ([] [])
   ([itbl] itbl)
-  ([itbl x] (insert itbl 1 x) itbl)
+  ([itbl x] (doto itbl (insert 1 x)))
   ([itbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (consj (consj itbl x) y (_unpack xs)))
        (consj itbl x))))
 
 
-(fn cons [x itbl]
+(fn* cons [x itbl]
   "Insert `x' to `itbl' at the front. Modifies `itbl'."
   (doto (or itbl [])
     (insert 1 x)))
 
 
 (fn* reduce
-  "Reduce collection using function of two arguments and optional initial value.
+  "Reduce indexed table using function `f' and optional initial value `val'.
 
-f should be a function of 2 arguments.  If val is not supplied,
+([f table])
+([f val table])
+
+`f' should be a function of 2 arguments.  If val is not supplied,
 returns the result of applying f to the first 2 items in coll, then
 applying f to that result and the 3rd item, etc.  If coll contains no
 items, f must accept no arguments as well, and reduce returns the
@@ -65,12 +82,27 @@ val and f is not called."
        (reduce f (f val x) xs)
       val)))
 
+(fn* reduce-kv
+  "Reduces an associative table using function `f' and initial value `val'.
+
+([f val table])
+
+`f' should be a function of 3 arguments.  Returns the result of
+applying `f' to `val', the first key and the first value in coll, then
+applying `f' to that result and the 2nd key and value, etc.  If coll
+contains no entries, returns `val' and `f' is not called.  Note that
+reduce-kv is supported on vectors, where the keys will be the
+ordinals."  [f val kvtbl]
+  (var res val)
+  (each [k v (pairs kvtbl)]
+    (set res (f res k v)))
+  res)
 
 (fn* mapv
   "Maps function `f' over indexed tables.
 
 Accepts arbitrary amount of tables.  Function `f' must take the same
-amount of parameters as the amount of tables passed to `mapv'. Applyes
+amount of parameters as the amount of tables passed to `mapv'. Applies
 `f' over first value of each table. Then applies `f' to second value
 of each table. Continues until any of the tables is exhausted. All
 remaining values are ignored. Returns a table of results. "
@@ -110,11 +142,13 @@ remaining values are ignored. Returns a table of results. "
        (insert res (f (_unpack v))))
      res)))
 
+
 (fn kvseq [kvtbl]
   (let [res []]
     (each [k v (pairs kvtbl)]
       (insert res [k v]))
     res))
+
 
 (fn* mapkv
   "Maps function `f' over one or more associative tables.
@@ -124,38 +158,67 @@ supplied, `f' must take double the table amount of arguments.  Returns
 indexed table of results.  Order of results depends on the order
 returned by the `pairs' function. If you want consistent results, consider
 sorting tables first."
-
   ([f kvtbl]
-   (local res [])
-   (each [k v (pairs kvtbl)]
-     (insert res (f k v)))
-   res)
-  ([f & kvtbls]
-   (local itbls [])
+   (let [res []]
+     (each [k v (pairs kvtbl)]
+       (insert res (f k v)))
+     res))
+  ([f kvtbl & kvtbls]
+   (local itbls [(kvseq kvtbl)])
    (each [_ t (ipairs kvtbls)]
      (insert itbls (kvseq t)))
    (mapv f (_unpack itbls))))
 
 
-(fn eq2 [a b]
-  (if (and (= (type a) "table") (= (type b) "table"))
-      (and (reduce #(and $1 $2) (mapkv (fn [k v] (eq2 (. b k) v)) a))
-           (reduce #(and $1 $2) (mapkv (fn [k v] (eq2 (. a k) v)) b)))
-      (= a b)))
-
 (fn* eq?
   "Deep compare values."
-  [x & xs]
-  (reduce #(and $1 $2) (mapv #(eq2 x $) xs)))
+  ([x] true)
+  ([x y]
+   (if (and (= (type x) "table") (= (type y) "table"))
+       (and (reduce #(and $1 $2) (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
+            (reduce #(and $1 $2) (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
+       (= x y)))
+  ([x y & xs]
+   (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))
 
+;;;;;;;;;; fn stuff ;;;;;;;;
+(fn identity [x] x)
 
-{: mapv
+(fn* comp
+  ([] identity)
+  ([f] f)
+  ([f g]
+   (fn*
+     ([] (f (g)))
+     ([x] (f (g x)))
+     ([x y] (f (g x y)))
+     ([x y z] (f (g x y z)))
+     ([x y z & args] (f g x y z (_unpack args)))))
+  ([f g & fs]
+   (reduce comp (conj [f g] (_unpack fs)))))
+
+(fn* every?
+  [pred itbl]
+  (if (= 0 (length itbl)) true
+      (pred (first itbl)) (every? pred (rest itbl))
+      false))
+
+(fn* some
+  [pred itbl]
+  (if (> (length itbl) 0)
+      ))
+
+{: seq
+ : mapv
  : mapkv
  : reduce
+ : reduce-kv
  : conj
  : cons
+ : consj
  : first
  : rest
- : eq?}
-
-;; (local {: mapv : mapkv : reduce : conj : cons : first : rest : eq?} (require :core))
+ : eq?
+ : identity
+ : comp
+ : every?}
