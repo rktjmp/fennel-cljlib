@@ -1,10 +1,9 @@
-
 * Fennel Cljlib
-Library for [[https://fennel-lang.org/][Fennel]] language that adds a lot of functions from [[https://clojure.org/][Clojure]] standard library.
-This is not a one to one port of Clojure =core=, because many Clojure functions require certain guarantees, like immutability of the underlying data structures.
+Experimental library for [[https://fennel-lang.org/][Fennel]] language, that adds many functions from [[https://clojure.org/][Clojure]]'s standard library.
+This is not a one to one port of Clojure =core=, because many Clojure functions require certain guarantees, like immutability of the underlying data structures, or laziness.
 Therefore some names were changed, but they should be still recognizable.
 
-Goals of this project are:
+Even though it is project is experimental, the goals of this project are:
 
 - Have a self contained library, with no dependencies, that provides a set of useful functions from Clojure =core=,
 - Be close to the platform, e.g. implement functions in a way that is efficient to use in Lua VM,
@@ -155,19 +154,16 @@ It also calls =seq= on it's argument.
 #+end_src
 
 *** =conj= and =cons=
+Append and prepend item to the table.
 Unlike Clojure, =conj=, and =cons= modify table passed to these functions.
 This is done both to avoid copying of whole thing, and because Fennel doesn't have immutability guarantees.
-Both functions return the resulting table, so it is possible to nest these, or build a classic =map=:
+
+=cons= accepts value as its first argument and table as second, and puts value to the front of the table:
 
 #+begin_src fennel
-  (fn map [f col]
-    (if-some [val (first col)]
-      (cons (f val) (map f (rest col)))
-      []))
+  (cons 1 [2 3])
+  ;; [1 2 3]
 #+end_src
-
-=cons= accepts value as its first argument and table as second and puts value to the front of the table.
-=col= is not modified by the =map= function described above, but the =[]= table in the =else= branch of =is-some= is.
 
 =conj= accepts table as it's first argument and any amount of values afterwards.
 It puts values in order given into the table:
@@ -176,6 +172,19 @@ It puts values in order given into the table:
   (conj [] 1 2 3)
   ; [1 2 3]
 #+end_src
+
+Both functions return the resulting table, so it is possible to nest calls to both of these.
+As an example, here's a classic map function:
+
+#+begin_src fennel
+  (fn map [f col]
+    (if-some [val (first col)]
+      (cons (f val) (map f (rest col)))
+      []))
+#+end_src
+
+=col= is not modified by the =map= function described above, but the =[]= table in the =else= branch of =is-some= is eventually modified by the stack of calls to =cons=.
+However this library provides more efficient versions of map, that support arbitrary amount of tables.
 
 *** =mapv= and =mapkv=
 Mapping functions.
@@ -228,4 +237,4 @@ Then it maps function over the associative map, by passing initial value as a fi
   ;; 20
 #+end_src
 
-#  LocalWords:  Luajit VM
+#  LocalWords:  Luajit VM arity runtime multi Cljlib fn

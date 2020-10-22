@@ -3,10 +3,11 @@
 (import-macros {: fn*} :macros.fn)
 
 (fn seq [tbl]
-  "Return sequential table.
+  "Create sequential table.
 Transforms original table to sequential table of key value pairs
-stored as sequential tables in linear time.  If original table is
-sequential table, leaves it unchanged."
+stored as sequential tables in linear time.  If `tbl' is an
+associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
+If `tbl' is sequential table, leaves it unchanged."
   (var assoc? false)
   (let [res []]
     (each [k v (pairs tbl)]
@@ -23,8 +24,7 @@ sequential table, leaves it unchanged."
 
 (fn rest [itbl]
   "Returns table of all elements of indexed table but the first one."
-  (let [[_ & xs] (seq itbl)]
-    xs))
+  [(_unpack itbl 2)])
 
 
 (fn* conj
@@ -175,8 +175,8 @@ sorting tables first."
   ([x] true)
   ([x y]
    (if (and (= (type x) "table") (= (type y) "table"))
-       (and (reduce #(and $1 $2) (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
-            (reduce #(and $1 $2) (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
+       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
+            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
        (= x y)))
   ([x y & xs]
    (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))

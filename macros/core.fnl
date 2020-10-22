@@ -3,10 +3,8 @@
 (local insert table.insert)
 
 (fn check-bindings [bindings]
-  (assert-compile (sequence? bindings) "expected binding table
-
-* Try placing a table here in square brackets containing identifiers to bind." bindings)
-  (assert-compile (= (length bindings) 2) "expected exactly two forms in binding vector." bindings))
+  (and (assert-compile (sequence? bindings) "expected binding table" [])
+       (assert-compile (= (length bindings) 2) "expected exactly two forms in binding vector." bindings)))
 
 (fn* if-let
   ([bindings then]
