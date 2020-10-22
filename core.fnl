@@ -16,18 +16,6 @@ sequential table, leaves it unchanged."
       (insert res [k v]))
     (if assoc? res tbl)))
 
-(fn unseq [tbl]
-  (local res {})
-  (each [_ [k v] (ipairs tbl)]
-    (tset res k v))
-  res)
-
-(fn into [to from]
-  (match to
-    :vec (seq from)
-    :map (unseq from)
-    _ (error "unsupported table type" 2)))
-
 (fn first [itbl]
   "Return first element of an indexed table."
   (. (seq itbl) 1))
@@ -221,7 +209,6 @@ sorting tables first."
       ))
 
 {: seq
- : into
  : mapv
  : mapkv
  : reduce

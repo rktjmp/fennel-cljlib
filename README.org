@@ -95,13 +95,30 @@ Much like =if-let= and =when-let=, except tests expression for =nil=.
     val)
 #+end_src
 
+*** =into=
+Clojure's =into= function implemented as macro, because Fennel has no runtime distinction between =[]= and ={}= tables, since Lua also doesn't feature this feature.
+However we can do this at compile time.
+
+#+begin_src fennel
+  (into [1 2 3] [4 5 6])
+  ;; [1 2 3 4 5 6]
+
+  (into [] {:a 1 :b 2 :c 3 :d 4})
+  ;; [["a" 1] ["b" 2] ["c" 3] ["d" 4]]
+
+  (into {} [[:a 1] [:b 2] [:c 3] [:d 4]])
+  ;; {:a 1 :b 2 :c 3 :d 4}
+
+  (into {:a 0 :e 5} {:a 1 :b 2 :c 3 :d 4})
+  ;; {:a 1 :b 2 :c 3 :d 4 :e 5}
+#+end_src
 ** Functions
 Here are some important functions from the library.
 Full set can be examined by requiring the module.
 
-*** =seq= and =into=
+*** =seq=
 =seq= produces a sequential table from any kind of table in linear time.
-Works mostly like in Clojure, but, since Fennel doesn't have list object, it always returns squential tables:
+Works mostly like in Clojure, but, since Fennel doesn't have list object, it always returns sequential tables:
 
 #+begin_src fennel
   (seq [1 2 3 4 5])
@@ -111,15 +128,7 @@ Works mostly like in Clojure, but, since Fennel doesn't have list object, it alw
   ;; [["a" 1] ["b" 2] ["c" 3] ["d" 4]]
 #+end_src
 
-=into= can be used to convert =seq= result back to it's original form.
-Unlike clojure, =into= accepts either =:vec= or =:map= keywords:
-
-#+begin_src fennel
-  (into :map (into :vec {:a :b :c :d}))
-  ;; {:a "b" :c "d"}
-#+end_src
-
-=into= uses =seq= inernally.
+See [[*=into=][=into=]] on how to transform such sequence back into associative table.
 
 *** =first= and =rest=
 =first= returns first value of a table.
