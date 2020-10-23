@@ -24,7 +24,7 @@ If `tbl' is sequential table, leaves it unchanged."
 
 (fn rest [itbl]
   "Returns table of all elements of indexed table but the first one."
-  [(_unpack itbl 2)])
+  [(_unpack (seq itbl) 2)])
 
 
 (fn* conj
@@ -71,12 +71,13 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
   ([f itbl]
-   (match (length itbl)
-     0 (f)
-     1 (. itbl 1)
-     2 (f (. itbl 1) (. itbl 2))
-     _ (let [[a b & rest] itbl]
-         (reduce f (f a b) rest))))
+   (let [itbl (seq itbl)]
+     (match (length itbl)
+       0 (f)
+       1 (. itbl 1)
+       2 (f (. itbl 1) (. itbl 2))
+       _ (let [[a b & rest] itbl]
+           (reduce f (f a b) rest)))))
   ([f val [x & xs]]
    (if (not (= x nil))
        (reduce f (f val x) xs)
@@ -94,81 +95,65 @@ contains no entries, returns `val' and `f' is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
 ordinals."  [f val kvtbl]
   (var res val)
-  (each [k v (pairs kvtbl)]
+  (each [_ [k v] (pairs (seq kvtbl))]
     (set res (f res k v)))
   res)
 
 (fn* mapv
-  "Maps function `f' over indexed tables.
+  "Maps function `f' over one or more tables.
 
-Accepts arbitrary amount of tables.  Function `f' must take the same
-amount of parameters as the amount of tables passed to `mapv'. Applies
-`f' over first value of each table. Then applies `f' to second value
-of each table. Continues until any of the tables is exhausted. All
-remaining values are ignored. Returns a table of results. "
+Accepts arbitrary amount of tables, calls `seq' on each of it.
+Function `f' must take the same amount of parameters as the amount of
+tables passed to `mapv'. Applies `f' over first value of each
+table. Then applies `f' to second value of each table. Continues until
+any of the tables is exhausted. All remaining values are
+ignored. Returns a table of results."
   ([f itbl]
    (local res [])
-   (each [_ v (ipairs itbl)]
+   (each [_ v (ipairs (seq itbl))]
      (insert res (f v)))
    res)
   ([f t1 t2]
-   (local res [])
-   (var (i1 v1) (next t1))
-   (var (i2 v2) (next t2))
-   (while (and i1 i2)
-     (insert res (f v1 v2))
-     (set (i1 v1) (next t1 i1))
-     (set (i2 v2) (next t2 i2)))
-   res)
+   (let [res []
+         t1 (seq t1)
+         t2 (seq t2)]
+     (var (i1 v1) (next t1))
+     (var (i2 v2) (next t2))
+     (while (and i1 i2)
+       (insert res (f v1 v2))
+       (set (i1 v1) (next t1 i1))
+       (set (i2 v2) (next t2 i2)))
+     res))
   ([f t1 t2 t3]
-   (local res [])
-   (var (i1 v1) (next t1))
-   (var (i2 v2) (next t2))
-   (var (i3 v3) (next t3))
-   (while (and i1 i2 i3)
-     (insert res (f v1 v2 v3))
-     (set (i1 v1) (next t1 i1))
-     (set (i2 v2) (next t2 i2))
-     (set (i3 v3) (next t3 i3)))
-   res)
+   (let [res []
+         t1 (seq t1)
+         t2 (seq t2)
+         t3 (seq t3)]
+     (var (i1 v1) (next t1))
+     (var (i2 v2) (next t2))
+     (var (i3 v3) (next t3))
+     (while (and i1 i2 i3)
+       (insert res (f v1 v2 v3))
+       (set (i1 v1) (next t1 i1))
+       (set (i2 v2) (next t2 i2))
+       (set (i3 v3) (next t3 i3)))
+     res))
   ([f t1 t2 t3 & tbls]
    (let [step (fn step [tbls]
                 (when (->> tbls
-                           (mapv #(if (next $) true false))
+                           (mapv #(~= (next $) nil))
                            (reduce #(and $1 $2)))
-                  (cons (mapv first tbls) (step (mapv rest tbls)))))
+                  (cons (mapv #(first (seq $)) tbls) (step (mapv rest tbls)))))
          res []]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
        (insert res (f (_unpack v))))
      res)))
-
 
 (fn kvseq [kvtbl]
   (let [res []]
     (each [k v (pairs kvtbl)]
       (insert res [k v]))
     res))
-
-
-(fn* mapkv
-  "Maps function `f' over one or more associative tables.
-
-`f' should be a function of 2 arguments. If more than one table
-supplied, `f' must take double the table amount of arguments.  Returns
-indexed table of results.  Order of results depends on the order
-returned by the `pairs' function. If you want consistent results, consider
-sorting tables first."
-  ([f kvtbl]
-   (let [res []]
-     (each [k v (pairs kvtbl)]
-       (insert res (f k v)))
-     res))
-  ([f kvtbl & kvtbls]
-   (local itbls [(kvseq kvtbl)])
-   (each [_ t (ipairs kvtbls)]
-     (insert itbls (kvseq t)))
-   (mapv f (_unpack itbls))))
-
 
 (fn* eq?
   "Deep compare values."
@@ -203,14 +188,23 @@ sorting tables first."
       (pred (first itbl)) (every? pred (rest itbl))
       false))
 
-(fn* some
-  [pred itbl]
-  (if (> (length itbl) 0)
-      ))
+;; (fn* some
+;;   [pred itbl]
+;;   (if (> (length itbl) 0)
+;;       ))
+
+(fn* range
+  "return range of of numbers from `lower' to `upper' with optional `step'."
+  ([upper] (range 0 upper 1))
+  ([lower upper] (range lower upper 1))
+  ([lower upper step]
+   (let [res []]
+     (for [i lower (- upper step) step]
+       (table.insert res i))
+     res)))
 
 {: seq
  : mapv
- : mapkv
  : reduce
  : reduce-kv
  : conj
@@ -220,4 +214,5 @@ sorting tables first."
  : eq?
  : identity
  : comp
- : every?}
+ : every?
+ : range}

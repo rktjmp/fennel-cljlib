@@ -18,7 +18,7 @@ Capable of producing multi-arity functions:
 #+begin_src fennel
   (fn* square "square number" [x] (^ x 2))
 
-  (square 9) ;; 81
+  (square 9) ;; 81.0
   (square 1 2) ;; error
 
   (fn* range
@@ -29,7 +29,7 @@ Capable of producing multi-arity functions:
     ([lower upper] (range lower upper 1))
     ([lower upper step]
      (let [res []]
-       (for [i lower (- upper 1) step]
+       (for [i lower (- upper step) step]
          (table.insert res i))
        res)))
 
@@ -41,13 +41,14 @@ Capable of producing multi-arity functions:
   ;; [0.0 0.2 0.4 0.6 0.8]
 
   ;; both variants support up to one arity with & more:
-  (fn* list [& xs] xs)
+  (fn* vec [& xs] xs)
 
-  (list 1 2 3)
+  (vec 1 2 3)
   ;; [1 2 3]
 #+end_src
 
 See =core.fnl= for more examples.
+
 *** =if-let= and =when-let=
 When test expression is not =nil= or =false=, evaluates the first body form with the =name= bound to the result of the expressions.
 
@@ -103,14 +104,44 @@ However we can do this at compile time.
   ;; [1 2 3 4 5 6]
 
   (into [] {:a 1 :b 2 :c 3 :d 4})
-  ;; [["a" 1] ["b" 2] ["c" 3] ["d" 4]]
+  ;; [["d" 4] ["a" 1] ["b" 2] ["c" 3]]
 
-  (into {} [[:a 1] [:b 2] [:c 3] [:d 4]])
+  (into {} [[:d 4] [:a 1] [:b 2] [:c 3]])
   ;; {:a 1 :b 2 :c 3 :d 4}
 
   (into {:a 0 :e 5} {:a 1 :b 2 :c 3 :d 4})
   ;; {:a 1 :b 2 :c 3 :d 4 :e 5}
 #+end_src
+
+Because the type check at compile time it will only respect the type when literal representation is used.
+If a variable holding the table, it's type checked at runtime.
+Empty tables default to sequential ones:
+
+#+begin_src fennel
+  (local a [])
+  (into a {:a 1 :b 2})
+  ;; [["b" 2] ["a" 1]]
+
+  (local b {})
+  (into b {:a 1 :b 2})
+  ;; [["b" 2] ["a" 1]]
+#+end_src
+
+However, if target table is not empty, it's type can be deduced:
+
+#+begin_src fennel
+  (local a {:c 3})
+  (into a {:a 1 :b 2})
+  ;; {:a 1 :b 2 :c 3}
+
+  (local b [1])
+  (into b {:a 1 :b 2})
+  ;; [1 ["b" 2] ["a" 1]]
+#+end_src
+
+Note that when converting associative table into sequential table order is determined by the =pairs= function.
+Also note that if variable stores the table has both integer key 1, and other associative keys, the type will be the same as of sequential table.
+
 ** Functions
 Here are some important functions from the library.
 Full set can be examined by requiring the module.
@@ -124,14 +155,14 @@ Works mostly like in Clojure, but, since Fennel doesn't have list object, it alw
   ;; [1 2 3 4 5]
 
   (seq {:a 1 :b 2 :c 3 :d 4})
-  ;; [["a" 1] ["b" 2] ["c" 3] ["d" 4]]
+  ;; [["d" 4] ["a" 1] ["b" 2] ["c" 3]]
 #+end_src
 
 See [[*=into=][=into=]] on how to transform such sequence back into associative table.
 
 *** =first= and =rest=
 =first= returns first value of a table.
-It call =seq= on it, so this takes linear time for any table.
+It call =seq= on it, so this takes linear time for any kind of table.
 As a consequence, associative tables are supported:
 
 #+begin_src fennel
@@ -152,6 +183,8 @@ It also calls =seq= on it's argument.
   (rest {:host "localhost" :port 2344 :options {}})
   ;; [["port" 2344] ["options" {}]]
 #+end_src
+
+These functions are expensive, therefore should be avoided when table type is known beforehand.
 
 *** =conj= and =cons=
 Append and prepend item to the table.
@@ -186,13 +219,10 @@ As an example, here's a classic map function:
 =col= is not modified by the =map= function described above, but the =[]= table in the =else= branch of =is-some= is eventually modified by the stack of calls to =cons=.
 However this library provides more efficient versions of map, that support arbitrary amount of tables.
 
-*** =mapv= and =mapkv=
-Mapping functions.
+*** =mapv=
+Mapping function over table.
 In Clojure we have a =seq= abstraction, that allows us to use single =mapv= on both vectors, and hash tables.
-However in Fennel, and Lua there's no efficient way of checking if we got an associative or indexed table.
-For this reason, there are two functions - =mapv=, or which maps over vectors, and =mapkv= which maps over associative tables (=kv= is for key-value).
-Here, =mapv= works the same as =mapv= from Clojure, except it doesn't yield a transducer (yet?) when only function is supplied.
-=mapkv= also works similarly, except it requires for function you pass to accept twice the amount of tables you pass to =mapkv=.
+In this library the =seq= function is implemented in a similar way, so you can expect =mapv= to behave similarly to Clojure:
 
 #+begin_src fennel
   (fn cube [x] (* x x x))
@@ -211,8 +241,8 @@ Here, =mapv= works the same as =mapv= from Clojure, except it doesn't yield a tr
   ;; ["Bob Smith works as secretary at Happy Days co."
   ;;  "Alice Watson works as chief officer at Coffee With You"]
 
-  (mapkv (fn [k v] [k v]) {:host "localhost" :port 1344})
-  ;; [["port" 1344] ["host" "localhost"]]
+  (mapv (fn [[k v]] [(string.upper k) v]) {:host "localhost" :port 1344})
+  ;; [["HOST" "localhost"] ["PORT" 1344]]
 #+end_src
 
 *** =reduce= and =reduce-kv=
