@@ -18,44 +18,44 @@ If `tbl' is sequential table, leaves it unchanged."
       (insert res [k v]))
     (if assoc? res tbl)))
 
-(fn first [itbl]
+(fn first [tbl]
   "Return first element of an indexed table."
-  (. (seq itbl) 1))
+  (. (seq tbl) 1))
 
 
-(fn rest [itbl]
+(fn rest [tbl]
   "Returns table of all elements of indexed table but the first one."
-  [(_unpack (seq itbl) 2)])
+  [(_unpack (seq tbl) 2)])
 
 
 (fn* conj
-  "Insert `x' as a last element of indexed table `itbl'. Modifies `itbl'"
+  "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
   ([] [])
-  ([itbl] itbl)
-  ([itbl x] (when-some [x x]
-              (doto itbl (insert x))))
-  ([itbl x & xs]
+  ([tbl] tbl)
+  ([tbl x] (when-some [x x]
+              (doto tbl (insert x))))
+  ([tbl x & xs]
    (if (> (length xs) 0)
-       (let [[y & xs] xs] (conj (conj itbl x) y (_unpack xs)))
-       (conj itbl x))))
+       (let [[y & xs] xs] (conj (conj tbl x) y (_unpack xs)))
+       (conj tbl x))))
 
 
 (fn* consj
-  "Like conj but joins at the front. Modifies `itbl'."
+  "Like conj but joins at the front. Modifies `tbl'."
   ([] [])
-  ([itbl] itbl)
-  ([itbl x] (when-some [x x]
-              (doto itbl (insert 1 x))))
-  ([itbl x & xs]
+  ([tbl] tbl)
+  ([tbl x] (when-some [x x]
+              (doto tbl (insert 1 x))))
+  ([tbl x & xs]
    (if (> (length xs) 0)
-       (let [[y & xs] xs] (consj (consj itbl x) y (_unpack xs)))
-       (consj itbl x))))
+       (let [[y & xs] xs] (consj (consj tbl x) y (_unpack xs)))
+       (consj tbl x))))
 
 
-(fn cons [x itbl]
-  "Insert `x' to `itbl' at the front. Modifies `itbl'."
+(fn cons [x tbl]
+  "Insert `x' to `tbl' at the front. Modifies `tbl'."
   (when-some [x x]
-    (doto (or itbl [])
+    (doto (or tbl [])
       (insert 1 x))))
 
 
@@ -74,13 +74,13 @@ returned and f is not called.  If val is supplied, returns the result
 of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
-  ([f itbl]
-   (let [itbl (seq itbl)]
-     (match (length itbl)
+  ([f tbl]
+   (let [tbl (seq tbl)]
+     (match (length tbl)
        0 (f)
-       1 (. itbl 1)
-       2 (f (. itbl 1) (. itbl 2))
-       _ (let [[a b & rest] itbl]
+       1 (. tbl 1)
+       2 (f (. tbl 1) (. tbl 2))
+       _ (let [[a b & rest] tbl]
            (reduce f (f a b) rest)))))
   ([f val [x & xs]]
    (if (not (= x nil))
@@ -97,9 +97,9 @@ applying `f' to `val', the first key and the first value in coll, then
 applying `f' to that result and the 2nd key and value, etc.  If coll
 contains no entries, returns `val' and `f' is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
-ordinals."  [f val kvtbl]
+ordinals."  [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (seq kvtbl))]
+  (each [_ [k v] (pairs (seq tbl))]
     (set res (f res k v)))
   res)
 
@@ -112,9 +112,9 @@ tables passed to `mapv'. Applies `f' over first value of each
 table. Then applies `f' to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
-  ([f itbl]
+  ([f tbl]
    (local res [])
-   (each [_ v (ipairs (seq itbl))]
+   (each [_ v (ipairs (seq tbl))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
@@ -157,9 +157,10 @@ ignored. Returns a table of results."
          (insert res tmp)))
      res)))
 
-(fn kvseq [kvtbl]
+(fn kvseq [tbl]
+  "Transforms any table kind to key-value sequence."
   (let [res []]
-    (each [k v (pairs kvtbl)]
+    (each [k v (pairs tbl)]
       (insert res [k v]))
     res))
 
@@ -174,7 +175,6 @@ ignored. Returns a table of results."
   ([x y & xs]
    (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))
 
-;;;;;;;;;; fn stuff ;;;;;;;;
 (fn identity [x] x)
 
 (fn* comp
@@ -191,9 +191,9 @@ ignored. Returns a table of results."
    (reduce comp (conj [f g] (_unpack fs)))))
 
 (fn* every?
-  [pred itbl]
-  (if (= 0 (length itbl)) true
-      (pred (first itbl)) (every? pred (rest itbl))
+  [pred tbl]
+  (if (= 0 (length tbl)) true
+      (pred (first tbl)) (every? pred (rest tbl))
       false))
 
 ;; (fn* some
