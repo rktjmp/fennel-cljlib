@@ -100,7 +100,6 @@ Much like =if-let= and =when-let=, except tests expression for =nil=.
 #+end_src
 
 *** =into=
-<<into>>
 Clojure's =into= function implemented as macro, because Fennel has no runtime distinction between =[]= and ={}= tables, since Lua also doesn't feature this feature.
 However we can do this at compile time.
 
@@ -169,7 +168,7 @@ Works mostly like in Clojure, but, since Fennel doesn't have list object, it ret
   ;; nil
 #+end_src
 
-See [[into][into]] on how to transform such sequence back into associative table.
+See =into= on how to transform such sequence back into associative table.
 
 *** =first= and =rest=
 =first= returns first value of a table.
