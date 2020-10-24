@@ -14,7 +14,7 @@ If `tbl' is sequential table, leaves it unchanged."
     (let [res []]
       (each [k v (pairs tbl)]
         (if (and (not assoc?)
-                 (not (= (type k) "number")))
+                 (not (= (type k) :number)))
             (set assoc? true))
         (insert res [k v]))
       (if assoc? res tbl))))
@@ -27,13 +27,24 @@ If `tbl' is sequential table, leaves it unchanged."
   (when-some [tbl tbl]
     (. (seq tbl) 1)))
 
-
 (fn rest [tbl]
   "Returns table of all elements of indexed table but the first one."
   (if-some [tbl tbl]
     [(_unpack (seq tbl) 2)]
     []))
 
+(fn map? [tbl]
+  "Check whether tbl is an associative table."
+  (if (= (type tbl) :table)
+      (let [(k _) (next tbl)]
+        (and (~= k nil) (or (~= (type k) :number)
+                            (~= k 1))))))
+
+(fn seq? [tbl]
+  "Check whether tbl is an sequential table."
+  (if (= (type tbl) :table)
+      (let [(k _) (next tbl)]
+        (and (~= k nil) (= (type k) :number) (= k 1)))))
 
 (fn* conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
@@ -46,7 +57,6 @@ If `tbl' is sequential table, leaves it unchanged."
        (let [[y & xs] xs] (conj (conj tbl x) y (_unpack xs)))
        (conj tbl x))))
 
-
 (fn* consj
   "Like conj but joins at the front. Modifies `tbl'."
   ([] [])
@@ -58,13 +68,11 @@ If `tbl' is sequential table, leaves it unchanged."
        (let [[y & xs] xs] (consj (consj tbl x) y (_unpack xs)))
        (consj tbl x))))
 
-
 (fn cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   (when-some [x x]
     (doto (or tbl [])
       (insert 1 x))))
-
 
 (fn* reduce
   "Reduce indexed table using function `f' and optional initial value `val'.
@@ -185,7 +193,7 @@ ignored. Returns a table of results."
   "Deep compare values."
   ([x] true)
   ([x y]
-   (if (and (= (type x) "table") (= (type y) "table"))
+   (if (and (= (type x) :table) (= (type y) :table))
        (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
             (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
        (= x y)))
@@ -220,6 +228,9 @@ ignored. Returns a table of results."
 
 (local not-any? (comp #(not $) some))
 
+(fn complement [f]
+  #(not (partial f)))
+
 (fn* range
   "return range of of numbers from `lower' to `upper' with optional `step'."
   ([upper] (range 0 upper 1))
@@ -246,6 +257,8 @@ ignored. Returns a table of results."
  : cons
  : first
  : rest
+ : map?
+ : seq?
  : eq?
  : identity
  : comp

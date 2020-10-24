@@ -11,6 +11,8 @@
         : cons
         : first
         : rest
+        : map?
+        : seq?
         : eq?
         : identity
         : comp
@@ -66,6 +68,13 @@
   ;; different.
   (assert-eq {4 1} [nil nil nil 1]))
 
+(test seq-test
+  (assert-eq (seq []) nil)
+  (assert-eq (seq {}) nil)
+  (assert-eq (seq [1]) [1])
+  (assert-eq (seq [1 2 3]) [1 2 3])
+  (assert-eq (seq {:a 1}) [["a" 1]]))
+
 (test mapv-test
   (assert-eq (mapv #(* $ $) [1 2 3 4]) [1 4 9 16])
 
@@ -97,6 +106,7 @@
      (each [_ v (ipairs c)]
        (set res (+ res v)))
      res))
+
   (assert-eq (reduce ++ (range 10)) 45)
   (assert-eq (reduce ++ -3 (range 10)) 42)
   (assert-eq (reduce ++ 10 nil) 10)
@@ -116,4 +126,6 @@
 
 (test filter-test
   (assert-eq (filter even? (range 10)) [0 2 4 6 8])
-  (assert-eq (filter odd? (range 10)) [1 3 5 7 9]))
+  (assert-eq (filter odd? (range 10)) [1 3 5 7 9])
+  (assert-eq (filter map? [{:a 1} {5 1} [1 2] [] {}]) [{:a 1} {5 1}])
+  (assert-eq (filter seq? [{:a 1} {5 1} [1 2] [] {}]) [[1 2]]))
