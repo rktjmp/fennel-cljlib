@@ -1,6 +1,7 @@
 (local insert table.insert)
 (local _unpack (or table.unpack unpack))
 (import-macros {: fn*} :macros.fn)
+(import-macros {: when-some} :macros.core)
 
 (fn seq [tbl]
   "Create sequential table.
@@ -31,7 +32,8 @@ If `tbl' is sequential table, leaves it unchanged."
   "Insert `x' as a last element of indexed table `itbl'. Modifies `itbl'"
   ([] [])
   ([itbl] itbl)
-  ([itbl x] (doto itbl (insert x)))
+  ([itbl x] (when-some [x x]
+              (doto itbl (insert x))))
   ([itbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (conj (conj itbl x) y (_unpack xs)))
@@ -42,7 +44,8 @@ If `tbl' is sequential table, leaves it unchanged."
   "Like conj but joins at the front. Modifies `itbl'."
   ([] [])
   ([itbl] itbl)
-  ([itbl x] (doto itbl (insert 1 x)))
+  ([itbl x] (when-some [x x]
+              (doto itbl (insert 1 x))))
   ([itbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (consj (consj itbl x) y (_unpack xs)))
@@ -51,8 +54,9 @@ If `tbl' is sequential table, leaves it unchanged."
 
 (fn cons [x itbl]
   "Insert `x' to `itbl' at the front. Modifies `itbl'."
-  (doto (or itbl [])
-    (insert 1 x)))
+  (when-some [x x]
+    (doto (or itbl [])
+      (insert 1 x))))
 
 
 (fn* reduce
@@ -111,7 +115,8 @@ ignored. Returns a table of results."
   ([f itbl]
    (local res [])
    (each [_ v (ipairs (seq itbl))]
-     (insert res (f v)))
+     (when-some [tmp (f v)]
+       (insert res tmp)))
    res)
   ([f t1 t2]
    (let [res []
@@ -120,7 +125,8 @@ ignored. Returns a table of results."
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (while (and i1 i2)
-       (insert res (f v1 v2))
+       (when-some [tmp (f v1 v2)]
+         (insert res tmp))
        (set (i1 v1) (next t1 i1))
        (set (i2 v2) (next t2 i2)))
      res))
@@ -133,7 +139,8 @@ ignored. Returns a table of results."
      (var (i2 v2) (next t2))
      (var (i3 v3) (next t3))
      (while (and i1 i2 i3)
-       (insert res (f v1 v2 v3))
+       (when-some [tmp (f v1 v2 v3)]
+         (insert res tmp))
        (set (i1 v1) (next t1 i1))
        (set (i2 v2) (next t2 i2))
        (set (i3 v3) (next t3 i3)))
@@ -146,7 +153,8 @@ ignored. Returns a table of results."
                   (cons (mapv #(first (seq $)) tbls) (step (mapv rest tbls)))))
          res []]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
-       (insert res (f (_unpack v))))
+       (when-some [tmp (f (_unpack v))]
+         (insert res tmp)))
      res)))
 
 (fn kvseq [kvtbl]
@@ -200,7 +208,7 @@ ignored. Returns a table of results."
   ([lower upper step]
    (let [res []]
      (for [i lower (- upper step) step]
-       (table.insert res i))
+       (insert res i))
      res)))
 
 {: seq
