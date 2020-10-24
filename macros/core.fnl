@@ -8,7 +8,7 @@
 
 (fn* if-let
   ([bindings then]
-   (if-let bindings then 'nil))
+   (if-let bindings then nil))
   ([bindings then else]
    (check-bindings bindings)
    (let [[form test] bindings]
@@ -29,7 +29,7 @@
 
 (fn* if-some
   ([bindings then]
-   (if-some bindings then 'nil))
+   (if-some bindings then nil))
   ([bindings then else]
    (check-bindings bindings)
    (let [[form test] bindings]

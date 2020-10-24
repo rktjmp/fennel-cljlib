@@ -74,7 +74,7 @@
   ;; For more info check `gen-arity' documentation.
   (let [[args & body] args
         (arity body amp) (gen-arity [args (_unpack body)])]
-    `(let [len# (length [...])]
+    `(let [len# (select :# ...)]
        ,(arity-dispatcher
          'len#
          (if amp {} {arity body})
@@ -94,7 +94,7 @@
     (assert-compile (<= (length bodies&) 1)
                     "fn* must have only one arity with `&':"
                     (. bodies& (length bodies&)))
-    `(let [len# (length [...])]
+    `(let [len# (select :# ...)]
        ,(arity-dispatcher
          'len#
          bodies
