@@ -2,7 +2,25 @@
 (import-macros {: into} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : test} :test)
 
-(local {: seq : mapv : mapkv : reduce : reduce-kv : conj : cons : consj : first : rest : eq? : identity : comp : every? : range} (require :core))
+(local {: seq
+        : mapv
+        : filter
+        : reduce
+        : reduce-kv
+        : conj
+        : cons
+        : first
+        : rest
+        : eq?
+        : identity
+        : comp
+        : every?
+        : some
+        : not-any?
+        : range
+        : even?
+        : odd?}
+       (require :core))
 
 (test equality-test
   ;; comparing basetypes
@@ -70,9 +88,18 @@
               "Alice Watson works as chief officer at Coffee With You"]))
 
 (test reduce-test
-  (fn ++ [a b] (+ a b))
+  (fn* ++
+    ([] 0)
+    ([a] a)
+    ([a b] (+ a b))
+    ([a b & c]
+     (var res (+ a b))
+     (each [_ v (ipairs c)]
+       (set res (+ res v)))
+     res))
   (assert-eq (reduce ++ (range 10)) 45)
   (assert-eq (reduce ++ -3 (range 10)) 42)
+  (assert-eq (reduce ++ 10 nil) 10)
 
 
   (fn mapping [f]
@@ -86,3 +113,7 @@
         init))
 
   (assert-eq (reduce ++ (range 10)) (reduce- ++ 0 (range 10))))
+
+(test filter-test
+  (assert-eq (filter even? (range 10)) [0 2 4 6 8])
+  (assert-eq (filter odd? (range 10)) [1 3 5 7 9]))

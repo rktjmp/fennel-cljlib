@@ -1,7 +1,7 @@
 (local insert table.insert)
 (local _unpack (or table.unpack unpack))
 (import-macros {: fn*} :macros.fn)
-(import-macros {: when-some} :macros.core)
+(import-macros {: when-some : if-some : when-let} :macros.core)
 
 (fn seq [tbl]
   "Create sequential table.
@@ -9,23 +9,30 @@ Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `tbl' is an
 associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
 If `tbl' is sequential table, leaves it unchanged."
-  (var assoc? false)
-  (let [res []]
-    (each [k v (pairs tbl)]
-      (if (and (not assoc?)
-               (not (= (type k) "number")))
-          (set assoc? true))
-      (insert res [k v]))
-    (if assoc? res tbl)))
+  (when-some [_ (and tbl (next tbl))]
+    (var assoc? false)
+    (let [res []]
+      (each [k v (pairs tbl)]
+        (if (and (not assoc?)
+                 (not (= (type k) "number")))
+            (set assoc? true))
+        (insert res [k v]))
+      (if assoc? res tbl))))
+
+(macro safe-seq [tbl]
+  `(or (seq ,tbl) []))
 
 (fn first [tbl]
   "Return first element of an indexed table."
-  (. (seq tbl) 1))
+  (when-some [tbl tbl]
+    (. (seq tbl) 1)))
 
 
 (fn rest [tbl]
   "Returns table of all elements of indexed table but the first one."
-  [(_unpack (seq tbl) 2)])
+  (if-some [tbl tbl]
+    [(_unpack (seq tbl) 2)]
+    []))
 
 
 (fn* conj
@@ -75,17 +82,20 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
   ([f tbl]
-   (let [tbl (seq tbl)]
+   (when-some [tbl (seq tbl)]
      (match (length tbl)
        0 (f)
        1 (. tbl 1)
        2 (f (. tbl 1) (. tbl 2))
        _ (let [[a b & rest] tbl]
            (reduce f (f a b) rest)))))
-  ([f val [x & xs]]
-   (if (not (= x nil))
-       (reduce f (f val x) xs)
-      val)))
+  ([f val tbl]
+   (if-some [tbl (seq tbl)]
+     (let [[x & xs] tbl]
+       (if (not (= x nil))
+           (reduce f (f val x) xs)
+           val))
+     val)))
 
 (fn* reduce-kv
   "Reduces an associative table using function `f' and initial value `val'.
@@ -99,7 +109,7 @@ contains no entries, returns `val' and `f' is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
 ordinals."  [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (seq tbl))]
+  (each [_ [k v] (pairs (safe-seq tbl))]
     (set res (f res k v)))
   res)
 
@@ -114,14 +124,14 @@ any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
    (local res [])
-   (each [_ v (ipairs (seq tbl))]
+   (each [_ v (ipairs (safe-seq tbl))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
   ([f t1 t2]
    (let [res []
-         t1 (seq t1)
-         t2 (seq t2)]
+         t1 (safe-seq t1)
+         t2 (safe-seq t2)]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (while (and i1 i2)
@@ -132,9 +142,9 @@ ignored. Returns a table of results."
      res))
   ([f t1 t2 t3]
    (let [res []
-         t1 (seq t1)
-         t2 (seq t2)
-         t3 (seq t3)]
+         t1 (safe-seq t1)
+         t2 (safe-seq t2)
+         t3 (safe-seq t3)]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (var (i3 v3) (next t3))
@@ -150,12 +160,19 @@ ignored. Returns a table of results."
                 (when (->> tbls
                            (mapv #(~= (next $) nil))
                            (reduce #(and $1 $2)))
-                  (cons (mapv #(first (seq $)) tbls) (step (mapv rest tbls)))))
+                  (cons (mapv #(first (safe-seq $)) tbls) (step (mapv rest tbls)))))
          res []]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
        (when-some [tmp (f (_unpack v))]
          (insert res tmp)))
      res)))
+
+(fn filter [pred tbl]
+  (when-let [tbl (seq tbl)]
+    (let [f (first tbl) r (rest tbl)]
+          (if (pred f)
+              (cons f (filter pred r))
+              (filter pred r)))))
 
 (fn kvseq [tbl]
   "Transforms any table kind to key-value sequence."
@@ -196,10 +213,12 @@ ignored. Returns a table of results."
       (pred (first tbl)) (every? pred (rest tbl))
       false))
 
-;; (fn* some
-;;   [pred itbl]
-;;   (if (> (length itbl) 0)
-;;       ))
+(fn* some
+  [pred tbl]
+  (when-let [tbl (seq tbl)]
+    (or (pred (first tbl)) (some pred (rest tbl)))))
+
+(local not-any? (comp #(not $) some))
 
 (fn* range
   "return range of of numbers from `lower' to `upper' with optional `step'."
@@ -211,8 +230,16 @@ ignored. Returns a table of results."
        (insert res i))
      res)))
 
+(fn even? [x]
+  (when-some [x x]
+    (= (% x 2) 0)))
+
+(fn odd? [x]
+  (not (even? x)))
+
 {: seq
  : mapv
+ : filter
  : reduce
  : reduce-kv
  : conj
@@ -223,4 +250,8 @@ ignored. Returns a table of results."
  : identity
  : comp
  : every?
- : range}
+ : some
+ : not-any?
+ : range
+ : even?
+ : odd?}
