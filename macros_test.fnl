@@ -3,7 +3,7 @@
 (local {: eq?} (require :core)) ;; required for testing
 
 
-(test into-test
+(test into
   (assert-eq (into [] []) [])
   (assert-eq (into [1 2 3] []) [1 2 3])
   (assert-eq (into [1 2 3] [4 5 6]) [1 2 3 4 5 6])

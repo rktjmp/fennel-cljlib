@@ -24,20 +24,31 @@
   Left: " (view# left#) "
   Right: " (view# right#) "\n"))))))
 
+(fn walk-tree [root f custom-iterator]
+  "Walks a tree (like the AST), invoking f(node, idx, parent) on each node.
+When f returns a truthy value, recursively walks the children."
+  (fn walk [iterfn parent idx node]
+    (when (f idx node parent)
+      (each [k v (iterfn node)]
+        (walk iterfn node k v))))
+  (walk (or custom-iterator pairs) nil nil root)
+  root)
+
 (fn* assert*
   ([expr]
    (assert* expr 'nil))
   ([expr msg]
-  `(assert ,expr (.. "assertion failed for " (or ,msg ,(tostring expr))))))
+   `(assert ,expr (.. "assertion failed for " (or ,msg ,(tostring expr))))))
 
 (fn* test
   ;"define test function, print its name and run it."
   [name docstring & body]
-  `(do (fn ,name []
-         ,(or docstring nil)
-         ((or table.unpack unpack) ,body))
-       (io.stderr:write (.. "running: " ,(tostring name) "\n"))
-       (,name)))
+  (let [test-name (sym (.. (tostring name) "-test"))]
+    `(do (fn ,test-name []
+           ,(or docstring nil)
+           ((or table.unpack unpack) ,body))
+         (io.stderr:write (.. "running: " ,(tostring test-name) "\n"))
+         (,test-name))))
 
 {: assert-eq
  : assert-ne

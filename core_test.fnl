@@ -2,29 +2,42 @@
 (import-macros {: into} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : test} :test)
 
-(local {: seq
-        : mapv
-        : filter
-        : reduce
-        : reduce-kv
-        : conj
-        : cons
+(local {: apply
+        : seq
         : first
         : rest
+        : conj
+        : cons
+        : concat
+        : reduce
+        : reduce-kv
+        : mapv
+        : filter
         : map?
         : seq?
+        : nil?
+        : zero?
+        : pos?
+        : neg?
+        : even?
+        : odd?
+        : int?
+        : pos-int?
+        : neg-int?
+        : double?
+        : string?
         : eq?
         : identity
         : comp
         : every?
         : some
-        : not-any?
+        : complement
+        : constantly
         : range
-        : even?
-        : odd?}
+        : reverse}
        (require :core))
 
-(test equality-test
+(test equality
   ;; comparing basetypes
   (assert-eq 1 1)
   (assert-ne 1 2)
@@ -68,14 +81,14 @@
   ;; different.
   (assert-eq {4 1} [nil nil nil 1]))
 
-(test seq-test
+(test seq
   (assert-eq (seq []) nil)
   (assert-eq (seq {}) nil)
   (assert-eq (seq [1]) [1])
   (assert-eq (seq [1 2 3]) [1 2 3])
   (assert-eq (seq {:a 1}) [["a" 1]]))
 
-(test mapv-test
+(test mapv
   (assert-eq (mapv #(* $ $) [1 2 3 4]) [1 4 9 16])
 
   (assert-eq (into {} (mapv (fn [[k v]] [k (* v v)]) {:a 1 :b 2 :c 3}))
@@ -96,8 +109,8 @@
              ["Bob Smith works as secretary at Happy Days co."
               "Alice Watson works as chief officer at Coffee With You"]))
 
-(test reduce-test
-  (fn* ++
+(test reduce
+  (fn* plus
     ([] 0)
     ([a] a)
     ([a b] (+ a b))
@@ -107,9 +120,9 @@
        (set res (+ res v)))
      res))
 
-  (assert-eq (reduce ++ (range 10)) 45)
-  (assert-eq (reduce ++ -3 (range 10)) 42)
-  (assert-eq (reduce ++ 10 nil) 10)
+  (assert-eq (reduce plus (range 10)) 45)
+  (assert-eq (reduce plus -3 (range 10)) 42)
+  (assert-eq (reduce plus 10 nil) 10)
 
 
   (fn mapping [f]
@@ -122,10 +135,42 @@
         (reduce f (f init (first tbl)) (rest tbl))
         init))
 
-  (assert-eq (reduce ++ (range 10)) (reduce- ++ 0 (range 10))))
+  (assert-eq (reduce plus (range 10)) (reduce- plus 0 (range 10))))
 
-(test filter-test
+(test predicate
+  (assert* (int? 1))
+  (assert* (not (int? 1.1)))
+  (assert* (pos? 1))
+  (assert* (and (not (pos? 0)) (not (pos? -1))))
+  (assert* (neg? -1))
+  (assert* (and (not (neg? 0)) (not (neg? 1))))
+  (assert* (pos-int? 42))
+  (assert* (not (pos-int? 4.2)))
+  (assert* (neg-int? -42))
+  (assert* (not (neg-int? -4.2)))
+  (assert* (string? :s))
+  (assert* (double? 3.3))
+  (assert* (not (double? 3.0)))
+  (assert* (map? {:a 1}))
+  (assert* (not (map? {})))
+  (assert* (not (seq? [])))
+  (assert* (seq? [{:a 1}]))
+  (assert* (not (seq? {})))
+  (assert* (not (seq? {:a 1})))
+  (assert* (nil?))
+  (assert* (nil? nil))
+  (assert* (not (nil? 1))))
+
+(test filter
   (assert-eq (filter even? (range 10)) [0 2 4 6 8])
   (assert-eq (filter odd? (range 10)) [1 3 5 7 9])
   (assert-eq (filter map? [{:a 1} {5 1} [1 2] [] {}]) [{:a 1} {5 1}])
   (assert-eq (filter seq? [{:a 1} {5 1} [1 2] [] {}]) [[1 2]]))
+
+(test concat
+  (assert-eq (concat) nil)
+  (assert-eq (concat []) [])
+  (assert-eq (concat [1 2 3]) [1 2 3])
+  (assert-eq (concat [1 2 3] [4 5 6]) [1 2 3 4 5 6])
+  (assert-eq (concat [1 2] [3 4] [5 6]) [1 2 3 4 5 6])
+  (assert-eq (concat {:a 1} {:b 2}) [[:a 1] [:b 2]]))

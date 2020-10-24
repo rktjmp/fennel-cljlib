@@ -1,5 +1,4 @@
 #+title: Fennel Cljlib
-#+date: 2020-10-24
 
 Experimental library for [[https://fennel-lang.org/][Fennel]] language, that adds many functions from [[https://clojure.org/][Clojure]]'s standard library.
 This is not a one to one port of Clojure =core=, because many Clojure functions require certain guarantees, like immutability of the underlying data structures, or laziness.
@@ -20,7 +19,7 @@ Clojure's =fn= equivalent.
 Returns a function of fixed arity by doing runtime dispatch, based on argument amount.
 Capable of producing multi-arity functions:
 
-#+begin_src clojure
+#+begin_src fennel
   (fn* square "square number" [x] (^ x 2))
 
   (square 9) ;; => 81.0
@@ -45,7 +44,7 @@ Capable of producing multi-arity functions:
 
 Both variants support up to one arity with =& more=:
 
-#+begin_src clojure
+#+begin_src fennel
   (fn* vec [& xs] xs)
 
   (vec 1 2 3) ;; => [1 2 3]
@@ -68,7 +67,7 @@ See =core.fnl= for more examples.
 ** =if-let= and =when-let=
 When test expression is not =nil= or =false=, evaluates the first body form with the =name= bound to the result of the expressions.
 
-#+begin_src clojure
+#+begin_src fennel
   (if-let [val (test)]
     (print val)
     :fail)
@@ -76,7 +75,7 @@ When test expression is not =nil= or =false=, evaluates the first body form with
 
 Expanded form:
 
-#+begin_src clojure
+#+begin_src fennel
   (let [tmp (test)]
     (if tmp
         (let [val tmp]
@@ -86,7 +85,7 @@ Expanded form:
 
 =when-let= is mostly the same, except doesn't have false branch and accepts any amount of forms:
 
-#+begin_src clojure
+#+begin_src fennel
   (when-let [val (test)]
     (print val)
     val)
@@ -94,7 +93,7 @@ Expanded form:
 
 Expanded form:
 
-#+begin_src clojure
+#+begin_src fennel
   (let [tmp (test)]
     (if tmp
         (let [val tmp]
@@ -105,7 +104,7 @@ Expanded form:
 ** =if-some= and =when-some=
 Much like =if-let= and =when-let=, except tests expression for not being =nil=.
 
-#+begin_src clojure
+#+begin_src fennel
   (when-some [val (foo)]
     (print (.. "val is not nil: " val))
     val)
@@ -115,7 +114,7 @@ Much like =if-let= and =when-let=, except tests expression for not being =nil=.
 Clojure's =into= function is implemented as macro, because Fennel has no runtime distinction between =[]= and ={}= tables, since Lua also doesn't feature this feature.
 However we can do this at compile time.
 
-#+begin_src clojure
+#+begin_src fennel
   (into [1 2 3] [4 5 6]) ;; => [1 2 3 4 5 6]
   (into [] {:a 1 :b 2 :c 3 :d 4}) ;; => [["d" 4] ["a" 1] ["b" 2] ["c" 3]]
   (into {} [[:d 4] [:a 1] [:b 2] [:c 3]]) ;; => {:a 1 :b 2 :c 3 :d 4}
@@ -126,7 +125,7 @@ Because the type check at compile time it will only respect the type when litera
 If a variable holding the table, its type is checked at runtime.
 Empty tables default to sequential ones:
 
-#+begin_src clojure
+#+begin_src fennel
   (local a [])
   (into a {:a 1 :b 2}) ;; => [["b" 2] ["a" 1]]
 
@@ -136,7 +135,7 @@ Empty tables default to sequential ones:
 
 However, if target table is not empty, its type can be deduced:
 
-#+begin_src clojure
+#+begin_src fennel
   (local a {:c 3})
   (into a {:a 1 :b 2}) ;; => {:a 1 :b 2 :c 3}
 
@@ -156,7 +155,7 @@ Full set can be examined by requiring the module.
 =seq= produces a sequential table from any kind of table in linear time.
 Works mostly like in Clojure, but, since Fennel doesn't have list object, it returns sequential table or =nil=:
 
-#+begin_src clojure
+#+begin_src fennel
   (seq [1 2 3 4 5]) ;; => [1 2 3 4 5]
   (seq {:a 1 :b 2 :c 3 :d 4})
   ;; => [["d" 4] ["a" 1] ["b" 2] ["c" 3]]
@@ -171,7 +170,7 @@ See =into= on how to transform such sequence back into associative table.
 It call =seq= on it, so this takes linear time for any kind of table.
 As a consequence, associative tables are supported:
 
-#+begin_src clojure
+#+begin_src fennel
   (first [1 2 3]) ;; => 1
   (first {:host "localhost" :port 2344 :options {}})
   ;; => ["host" "localhost"]
@@ -180,7 +179,7 @@ As a consequence, associative tables are supported:
 =last= works the same way, but returns everything except first argument as a table.
 It also calls =seq= on its argument.
 
-#+begin_src clojure
+#+begin_src fennel
   (rest [1 2 3]) ;; => [2 3]
   (rest {:host "localhost" :port 2344 :options {}})
   ;; => [["port" 2344] ["options" {}]]
@@ -195,21 +194,21 @@ This is done both to avoid copying of whole thing, and because Fennel doesn't ha
 
 =cons= accepts value as its first argument and table as second, and puts value to the front of the table:
 
-#+begin_src clojure
+#+begin_src fennel
   (cons 1 [2 3]) ;; => [1 2 3]
 #+end_src
 
 =conj= accepts table as its first argument and any amount of values afterwards.
 It puts values in order given into the table:
 
-#+begin_src clojure
+#+begin_src fennel
   (conj [] 1 2 3) ;; => [1 2 3]
 #+end_src
 
 Both functions return the resulting table, so it is possible to nest calls to both of these.
 As an example, here's a classic map function:
 
-#+begin_src clojure
+#+begin_src fennel
   (fn map [f col]
     (if-some [val (first col)]
       (cons (f val) (map f (rest col)))
@@ -224,7 +223,7 @@ Mapping function over table.
 In Clojure we have a =seq= abstraction, that allows us to use single =mapv= on both vectors, and hash tables.
 In this library the =seq= function is implemented in a similar way, so you can expect =mapv= to behave similarly to Clojure:
 
-#+begin_src clojure
+#+begin_src fennel
   (fn cube [x] (* x x x))
   (mapv cube [1 2 3]) ;; => [1 8 27]
 
@@ -247,7 +246,7 @@ In this library the =seq= function is implemented in a similar way, so you can e
 Ordinary reducing functions.
 Work the same as in Clojure, except doesn't yield transducer when only function was passed.
 
-#+begin_src clojure
+#+begin_src fennel
   (fn add [a b] (+ a b))
   (reduce add [1 2 3 4 5]) ;; => 15
   (reduce add 10 [1 2 3 4 5]) ;; => 25
@@ -256,7 +255,7 @@ Work the same as in Clojure, except doesn't yield transducer when only function 
 =reduce-kv= expects function that accepts 3 arguments and initial value.
 Then it maps function over the associative map, by passing initial value as a first argument, key as second argument, and value as third argument.
 
-#+begin_src clojure
+#+begin_src fennel
   (reduce-kv (fn [acc key val]
                (if (or (= key :a) (= key :c))
                  (+ acc val) acc))
@@ -266,3 +265,26 @@ Then it maps function over the associative map, by passing initial value as a fi
 #+end_src
 
 #  LocalWords:  Luajit VM arity runtime multi Cljlib fn mapv kv
+
+** Predicate functions
+Set of functions, that are small but useful with =mapv= or =reduce=.
+These are commonly used so it makes sense to have that, without defining via anonymous function or =#= shorthand every time.
+
+- =map?= - check if table is an associative table.
+  Returns =false= for empty table.
+- =seq?= - check if table is a sequential table
+  Returns =false= for empty table.
+
+Other predicates are self-explanatory:
+
+- =nil?=
+- =even?=
+- =odd?=
+- =double?=
+- =int?=
+- =pos?=
+- =pos-int?=
+- =neg?=
+- =neg-int?=
+- =zero?=
+- =string?=
