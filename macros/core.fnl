@@ -1,5 +1,5 @@
 (import-macros {: fn*} :macros.fn)
-(local _unpack (or table.unpack unpack))
+(local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
 (fn check-bindings [bindings]
@@ -25,7 +25,7 @@
     `(let [tmp# ,test]
        (if tmp#
            (let [,form tmp#]
-             ,(_unpack body))))))
+             ,(unpack body))))))
 
 (fn* if-some
   ([bindings then]
@@ -47,7 +47,7 @@
        (if (= tmp# nil)
            nil
            (let [,form tmp#]
-             ,(_unpack body))))))
+             ,(unpack body))))))
 
 
 (fn table-type [tbl]

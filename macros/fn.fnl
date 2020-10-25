@@ -1,4 +1,4 @@
-(local _unpack (or table.unpack unpack))
+(local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
 (fn string? [x]
@@ -28,7 +28,7 @@
 
 * Try adding function parameters as a list of identifiers in brackets." args)
   (values (length args)
-          (list 'let [args ['...]] (list 'do (_unpack body)))
+          (list 'let [args ['...]] (list 'do (unpack body)))
           (has-amp? args)))
 
 (fn arity-dispatcher [len fixed body& name]
@@ -73,7 +73,7 @@
   ;; Produces arglist and body for single-arity function.
   ;; For more info check `gen-arity' documentation.
   (let [[args & body] args
-        (arity body amp) (gen-arity [args (_unpack body)])]
+        (arity body amp) (gen-arity [args (unpack body)])]
     `(let [len# (select :# ...)]
        ,(arity-dispatcher
          'len#

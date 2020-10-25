@@ -1,22 +1,97 @@
 (local insert table.insert)
-(local _unpack (or table.unpack unpack))
+(local unpack (or table.unpack _G.unpack))
 (import-macros {: fn*} :macros.fn)
 (import-macros {: when-some : if-some : when-let : into} :macros.core)
 
 (fn* apply
   "Apply `f' to the argument list formed by prepending intervening
 arguments to `args'."
-  ([f args] (f (_unpack args)))
-  ([f a args] (f a (_unpack args)))
-  ([f a b args] (f a b (_unpack args)))
-  ([f a b c args] (f a b c (_unpack args)))
+  ([f args] (f (unpack args)))
+  ([f a args] (f a (unpack args)))
+  ([f a b args] (f a b (unpack args)))
+  ([f a b c args] (f a b c (unpack args)))
   ([f a b c d & args]
    (let [flat-args []]
      (for [i 1 (- (length args) 1)]
        (insert flat-args (. args i)))
      (each [_ a (ipairs (. args (length args)))]
        (insert flat-args a))
-     (f a b c d (_unpack flat-args)))))
+     (f a b c d (unpack flat-args)))))
+
+;; predicate functions
+
+(fn map? [tbl]
+  "Check whether `tbl' is an associative table."
+  (if (= (type tbl) :table)
+      (let [(k _) (next tbl)]
+        (and (~= k nil) (or (~= (type k) :number)
+                            (~= k 1))))))
+
+(fn seq? [tbl]
+  "Check whether `tbl' is an sequential table."
+  (if (= (type tbl) :table)
+      (let [(k _) (next tbl)]
+        (and (~= k nil) (= (type k) :number) (= k 1)))))
+
+(fn nil? [x]
+  "Test if value is nil."
+  (= x nil))
+
+(fn zero? [x]
+  "Test if value is zero."
+  (= x 0))
+
+(fn pos? [x]
+  "Test if `x' is greater than zero."
+  (> x 0))
+
+(fn neg? [x]
+  "Test if `x' is less than zero."
+  (< x 0))
+
+(fn even? [x]
+  "Test if value is even."
+  (= (% x 2) 0))
+
+(fn odd? [x]
+  "Test if value is odd."
+  (not (even? x)))
+
+(fn string? [x]
+  "Test if `x' is a string."
+  (= (type x) :string))
+
+(fn int? [x]
+  "Test if `x' is a number without floating point data."
+  (and (= (type x) :number)
+       (= x (math.floor x))))
+
+(fn pos-int? [x]
+  "Test if `x' is a positive integer."
+  (and (int? x)
+       (pos? x)))
+
+(fn neg-int? [x]
+  "Test if `x' is a negetive integer."
+  (and (int? x)
+       (neg? x)))
+
+(fn double? [x]
+  "Test if `x' is a number with floating point data."
+  (and (= (type x) :number)
+       (~= x (math.floor x))))
+
+(fn empty? [x]
+  "Check if collection is empty."
+  (match (type x)
+    :table (= (next x) nil)
+    :string (= x "")
+    _ (error "empty?: unsupported collection")))
+
+(fn not-empty [x]
+  "If `x' is empty, returns `nil', otherwise `x'."
+  (if (not (empty? x))
+      x))
 
 ;; sequence manipulating functions
 
@@ -37,6 +112,7 @@ If `tbl' is sequential table, leaves it unchanged."
       (if assoc? res tbl))))
 
 (macro -safe-seq [tbl]
+  "Create sequential table, or empty table if `seq' returned `nil'."
   `(or (seq ,tbl) []))
 
 (fn first [tbl]
@@ -47,15 +123,20 @@ If `tbl' is sequential table, leaves it unchanged."
 (fn rest [tbl]
   "Returns table of all elements of indexed table but the first one."
   (if-some [tbl tbl]
-    [(_unpack (seq tbl) 2)]
+    [(unpack (seq tbl) 2)]
     []))
 
 (fn* conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
   ([] [])
   ([tbl] tbl)
-  ([tbl x] (when-some [x x]
-              (doto tbl (insert x))))
+  ([tbl x]
+   (when-some [x x]
+     (let [tbl (or tbl [])]
+       (if (map? tbl)
+           (tset tbl (. x 1) (. x 2))
+           (insert tbl x))
+       tbl)))
   ([tbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (apply conj (conj tbl x) y xs))
@@ -65,8 +146,9 @@ If `tbl' is sequential table, leaves it unchanged."
   "Like conj but joins at the front. Modifies `tbl'."
   ([] [])
   ([tbl] tbl)
-  ([tbl x] (when-some [x x]
-              (doto tbl (insert 1 x))))
+  ([tbl x]
+   (when-some [x x]
+     (doto tbl (insert 1 x))))
   ([tbl x & xs]
    (if (> (length xs) 0)
        (let [[y & xs] xs] (apply consj (consj tbl x) y xs))
@@ -75,7 +157,7 @@ If `tbl' is sequential table, leaves it unchanged."
 (fn cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   (when-some [x x]
-    (doto (or tbl [])
+    (doto (-safe-seq tbl)
       (insert 1 x))))
 
 (fn* concat
@@ -194,64 +276,6 @@ ignored. Returns a table of results."
               (cons f (filter pred r))
               (filter pred r)))))
 
-
-;; predicate functions
-
-(fn map? [tbl]
-  "Check whether `tbl' is an associative table."
-  (if (= (type tbl) :table)
-      (let [(k _) (next tbl)]
-        (and (~= k nil) (or (~= (type k) :number)
-                            (~= k 1))))))
-
-(fn seq? [tbl]
-  "Check whether `tbl' is an sequential table."
-  (if (= (type tbl) :table)
-      (let [(k _) (next tbl)]
-        (and (~= k nil) (= (type k) :number) (= k 1)))))
-
-(fn nil? [x]
-  "Test if value is nil."
-  (= x nil))
-
-(fn zero? [x]
-  "Test if value is zero."
-  (= x 0))
-
-(fn pos? [x]
-  "Test if `x' is greater than zero."
-  (> x 0))
-
-(fn neg? [x]
-  "Test if `x' is less than zero."
-  (< x 0))
-
-(fn even? [x]
-  "Test if value is even."
-  (= (% x 2) 0))
-
-(fn odd? [x]
-  "Test if value is odd."
-  (not (even? x)))
-
-(fn string? [x]
-  "Test if `x' is a string."
-  (= (type x) :string))
-
-(fn int? [x]
-  (= x (math.floor x)))
-
-(fn pos-int? [x]
-  (and (int? x)
-       (pos? x)))
-
-(fn neg-int? [x]
-  (and (int? x)
-       (neg? x)))
-
-(fn double? [x]
-  (not (int? x)))
-
 (fn -kvseq [tbl]
   "Transforms any table kind to key-value sequence."
   (let [res []]
@@ -287,7 +311,7 @@ ignored. Returns a table of results."
 
 (fn* every?
   [pred tbl]
-  (if (= 0 (length tbl)) true
+  (if (empty? tbl) true
       (pred (first tbl)) (every? pred (rest tbl))
       false))
 
@@ -326,36 +350,39 @@ oppisite truth value."
   (when-some [tbl (seq tbl)]
     (reduce consj [] tbl)))
 
-{: apply
- : seq
- : first
- : rest
- : conj
- : cons
- : concat
- : reduce
- : reduce-kv
- : mapv
- : filter
- : map?
- : seq?
- : nil?
- : zero?
- : pos?
- : neg?
- : even?
- : odd?
- : int?
- : pos-int?
- : neg-int?
- : double?
- : string?
- : eq?
- : identity
- : comp
- : every?
- : some
- : complement
- : constantly
- : range
- : reverse}
+{: apply      ;; not tested
+ : seq        ;; tested
+ : first      ;; not tested
+ : rest       ;; not tested
+ : conj       ;; not tested
+ : cons       ;; not tested
+ : concat     ;; tested
+ : reduce     ;; tested
+ : reduce-kv  ;; tested
+ : mapv       ;; tested
+ : filter     ;; tested
+ : map?       ;; tested
+ : seq?       ;; tested
+ : nil?       ;; tested
+ : zero?      ;; tested
+ : pos?       ;; tested
+ : neg?       ;; tested
+ : even?      ;; tested
+ : odd?       ;; tested
+ : int?       ;; tested
+ : pos-int?   ;; tested
+ : neg-int?   ;; tested
+ : double?    ;; tested
+ : string?    ;; tested
+ : empty?     ;; not tested
+ : not-empty  ;; not tested
+ : eq?        ;; tested
+ : identity   ;; not tested
+ : comp       ;; not tested
+ : every?     ;; not tested
+ : some       ;; not tested
+ : complement ;; not tested
+ : constantly ;; not tested
+ : range      ;; tested
+ : reverse    ;; not tested
+ }

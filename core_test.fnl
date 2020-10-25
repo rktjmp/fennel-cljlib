@@ -2,40 +2,44 @@
 (import-macros {: into} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : test} :test)
 
-(local {: apply
-        : seq
-        : first
-        : rest
-        : conj
-        : cons
-        : concat
-        : reduce
-        : reduce-kv
-        : mapv
-        : filter
-        : map?
-        : seq?
-        : nil?
-        : zero?
-        : pos?
-        : neg?
-        : even?
-        : odd?
-        : int?
-        : pos-int?
-        : neg-int?
-        : double?
-        : string?
-        : eq?
-        : identity
-        : comp
-        : every?
-        : some
-        : complement
-        : constantly
-        : range
-        : reverse}
-       (require :core))
+(local
+ {: apply      ;; not tested
+  : seq        ;; tested
+  : first      ;; not tested
+  : rest       ;; not tested
+  : conj       ;; not tested
+  : cons       ;; not tested
+  : concat     ;; tested
+  : reduce     ;; tested
+  : reduce-kv  ;; tested
+  : mapv       ;; tested
+  : filter     ;; tested
+  : map?       ;; tested
+  : seq?       ;; tested
+  : nil?       ;; tested
+  : zero?      ;; tested
+  : pos?       ;; tested
+  : neg?       ;; tested
+  : even?      ;; tested
+  : odd?       ;; tested
+  : int?       ;; tested
+  : pos-int?   ;; tested
+  : neg-int?   ;; tested
+  : double?    ;; tested
+  : string?    ;; tested
+  : empty?     ;; tested
+  : not-empty  ;; tested
+  : eq?        ;; tested
+  : identity   ;; tested
+  : comp       ;; not tested
+  : every?     ;; tested
+  : some       ;; tested
+  : complement ;; tested
+  : constantly ;; tested
+  : range      ;; tested
+  : reverse    ;; tested
+  }
+ (require :core))
 
 (test equality
   ;; comparing basetypes
@@ -174,3 +178,52 @@
   (assert-eq (concat [1 2 3] [4 5 6]) [1 2 3 4 5 6])
   (assert-eq (concat [1 2] [3 4] [5 6]) [1 2 3 4 5 6])
   (assert-eq (concat {:a 1} {:b 2}) [[:a 1] [:b 2]]))
+
+(test reverse
+  (assert-eq (reverse [1 2 3]) [3 2 1])
+  (assert-eq (reverse {:a 1}) [[:a 1]]))
+
+(test constantly
+  (let [always-nil (constantly nil)]
+    (assert-eq (always-nil) nil)
+    (assert-eq (always-nil 1) nil)
+    (assert-eq (always-nil 1 2 3 4 "5") nil))
+
+  (let [always-true (constantly true)]
+    (assert* (always-true))
+    (assert* (always-true false))))
+
+(test complement
+  (assert* ((complement nil?) 10)))
+
+(test some
+  (assert* (some pos-int? [-1 1.1 2.3 -5.5 42 10 -27]))
+  (assert* (not (some pos-int? {:a 1})))
+  (assert* (some pos-int? [{:a 1} "1" -1 1])))
+
+(test every?
+  (assert* (not (every? pos-int? [-1 1.1 2.3 -5.5 42 10 -27])))
+  (assert* (not (every? pos-int? {:a 1})))
+  (assert* (every? pos-int? [1 2 3 4 5])))
+
+(test identity
+  (assert-eq (identity 1) 1)
+  (assert-eq (identity {:a 1 :b 2}) {:a 1 :b 2})
+  (assert-eq (identity [1 2 3]) [1 2 3])
+  (assert-eq (identity "abc") "abc"))
+
+(test empty?
+  (assert* (empty? []))
+  (assert* (empty? {}))
+  (assert* (empty? ""))
+  (assert* (not (empty? "1")))
+  (assert* (not (empty? [1])))
+  (assert* (not (empty? {:a 1}))))
+
+(test not-empty
+  (assert-eq (not-empty []) nil)
+  (assert-eq (not-empty {}) nil)
+  (assert-eq (not-empty "") nil)
+  (assert-eq (not-empty "1") "1")
+  (assert-eq (not-empty [1]) [1])
+  (assert-eq (not-empty {:a 1}) {:a 1}))
