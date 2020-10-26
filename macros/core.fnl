@@ -2,7 +2,7 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
-(fn check-bindings [bindings]
+(fn -check-bindings [bindings]
   (and (assert-compile (sequence? bindings) "expected binding table" [])
        (assert-compile (= (length bindings) 2) "expected exactly two forms in binding vector." bindings)))
 
@@ -10,7 +10,7 @@
   ([bindings then]
    (if-let bindings then nil))
   ([bindings then else]
-   (check-bindings bindings)
+   (-check-bindings bindings)
    (let [[form test] bindings]
      `(let [tmp# ,test]
         (if tmp#
@@ -20,7 +20,7 @@
 
 (fn* when-let
   [bindings & body]
-  (check-bindings bindings)
+  (-check-bindings bindings)
   (let [[form test] bindings]
     `(let [tmp# ,test]
        (if tmp#
@@ -31,7 +31,7 @@
   ([bindings then]
    (if-some bindings then nil))
   ([bindings then else]
-   (check-bindings bindings)
+   (-check-bindings bindings)
    (let [[form test] bindings]
      `(let [tmp# ,test]
         (if (= tmp# nil)
@@ -41,7 +41,7 @@
 
 (fn* when-some
   [bindings & body]
-  (check-bindings bindings)
+  (-check-bindings bindings)
   (let [[form test] bindings]
     `(let [tmp# ,test]
        (if (= tmp# nil)
@@ -50,15 +50,15 @@
              ,(unpack body))))))
 
 
-(fn table-type [tbl]
+(fn -table-type [tbl]
   (if (sequence? tbl) :seq
       (table? tbl) :table
       :else))
 
 ;; based on `seq' from `core.fnl'
 (fn into [to from]
-  (local to-type (table-type to))
-  (local from-type (table-type from))
+  (local to-type (-table-type to))
+  (local from-type (-table-type from))
   `(let [to# ,to
          from# ,from
          insert# table.insert

@@ -39,19 +39,22 @@
         b []]
     (assert-eq (into b {:a 1}) [[:a 1]])))
 
-(test let-variants
+(test when-let
   (assert-eq (when-let [a 4] a) 4)
   (assert* (not (when-let [a false] a)) "(not (when-let [a false] a))")
-  (assert* (not (when-let [a nil] a)) "(not (when-let [a nil] a))")
+  (assert* (not (when-let [a nil] a)) "(not (when-let [a nil] a))"))
 
+(test when-some
   (assert-eq (when-some [a [1 2 3]] a) [1 2 3])
   (assert-eq (when-some [a false] a) false)
-  (assert* (not (when-some [a nil] a)) "(when-some [a nil] a)")
+  (assert* (not (when-some [a nil] a)) "(when-some [a nil] a)"))
 
+(test if-let
   (assert-eq (if-let [a 4] a 10) 4)
   (assert-eq (if-let [a false] a 10) 10)
-  (assert-eq (if-let [a nil] a 10) 10)
+  (assert-eq (if-let [a nil] a 10) 10))
 
+(test if-some
   (assert-eq (if-some [a [1 2 3]] a :nothing) [1 2 3])
   (assert-eq (if-some [a false] a :nothing) false)
   (assert-eq (if-some [a nil] a :nothing) :nothing))

@@ -142,7 +142,7 @@ If `tbl' is sequential table, leaves it unchanged."
        (let [[y & xs] xs] (apply conj (conj tbl x) y xs))
        (conj tbl x))))
 
-(fn* consj
+(fn* -consj
   "Like conj but joins at the front. Modifies `tbl'."
   ([] [])
   ([tbl] tbl)
@@ -151,8 +151,8 @@ If `tbl' is sequential table, leaves it unchanged."
      (doto tbl (insert 1 x))))
   ([tbl x & xs]
    (if (> (length xs) 0)
-       (let [[y & xs] xs] (apply consj (consj tbl x) y xs))
-       (consj tbl x))))
+       (let [[y & xs] xs] (apply -consj (-consj tbl x) y xs))
+       (-consj tbl x))))
 
 (fn cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
@@ -264,7 +264,7 @@ ignored. Returns a table of results."
                            (reduce #(and $1 $2)))
                   (cons (mapv #(first (-safe-seq $)) tbls) (step (mapv rest tbls)))))
          res []]
-     (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
+     (each [_ v (ipairs (step (-consj tbls t3 t2 t1)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
      res)))
@@ -307,7 +307,7 @@ ignored. Returns a table of results."
      ([x y z] (f (g x y z)))
      ([x y z & args] (apply f g x y z args))))
   ([f g & fs]
-   (apply reduce comp (conj [f g] fs))))
+   (reduce comp (-consj fs g f))))
 
 (fn* every?
   [pred tbl]
@@ -348,41 +348,46 @@ oppisite truth value."
 
 (fn reverse [tbl]
   (when-some [tbl (seq tbl)]
-    (reduce consj [] tbl)))
+    (reduce -consj [] tbl)))
 
-{: apply      ;; not tested
- : seq        ;; tested
- : first      ;; not tested
- : rest       ;; not tested
- : conj       ;; not tested
- : cons       ;; not tested
- : concat     ;; tested
- : reduce     ;; tested
- : reduce-kv  ;; tested
- : mapv       ;; tested
- : filter     ;; tested
- : map?       ;; tested
- : seq?       ;; tested
- : nil?       ;; tested
- : zero?      ;; tested
- : pos?       ;; tested
- : neg?       ;; tested
- : even?      ;; tested
- : odd?       ;; tested
- : int?       ;; tested
- : pos-int?   ;; tested
- : neg-int?   ;; tested
- : double?    ;; tested
- : string?    ;; tested
- : empty?     ;; not tested
- : not-empty  ;; not tested
- : eq?        ;; tested
- : identity   ;; not tested
- : comp       ;; not tested
- : every?     ;; not tested
- : some       ;; not tested
- : complement ;; not tested
- : constantly ;; not tested
- : range      ;; tested
- : reverse    ;; not tested
+(fn inc [x] (+ x 1))
+(fn dec [x] (- x 1))
+
+{: apply
+ : seq
+ : first
+ : rest
+ : conj
+ : cons
+ : concat
+ : reduce
+ : reduce-kv
+ : mapv
+ : filter
+ : map?
+ : seq?
+ : nil?
+ : zero?
+ : pos?
+ : neg?
+ : even?
+ : odd?
+ : int?
+ : pos-int?
+ : neg-int?
+ : double?
+ : string?
+ : empty?
+ : not-empty
+ : eq?
+ : identity
+ : comp
+ : every?
+ : some
+ : complement
+ : constantly
+ : range
+ : reverse
+ : inc
+ : dec
  }

@@ -3,45 +3,47 @@
 (import-macros {: assert-eq : assert-ne : assert* : test} :test)
 
 (local
- {: apply      ;; not tested
-  : seq        ;; tested
-  : first      ;; not tested
-  : rest       ;; not tested
-  : conj       ;; not tested
-  : cons       ;; not tested
-  : concat     ;; tested
-  : reduce     ;; tested
-  : reduce-kv  ;; tested
-  : mapv       ;; tested
-  : filter     ;; tested
-  : map?       ;; tested
-  : seq?       ;; tested
-  : nil?       ;; tested
-  : zero?      ;; tested
-  : pos?       ;; tested
-  : neg?       ;; tested
-  : even?      ;; tested
-  : odd?       ;; tested
-  : int?       ;; tested
-  : pos-int?   ;; tested
-  : neg-int?   ;; tested
-  : double?    ;; tested
-  : string?    ;; tested
-  : empty?     ;; tested
-  : not-empty  ;; tested
-  : eq?        ;; tested
-  : identity   ;; tested
-  : comp       ;; not tested
-  : every?     ;; tested
-  : some       ;; tested
-  : complement ;; tested
-  : constantly ;; tested
-  : range      ;; tested
-  : reverse    ;; tested
+ {: apply
+  : seq
+  : first
+  : rest
+  : conj
+  : cons
+  : concat
+  : reduce
+  : reduce-kv
+  : mapv
+  : filter
+  : map?
+  : seq?
+  : nil?
+  : zero?
+  : pos?
+  : neg?
+  : even?
+  : odd?
+  : int?
+  : pos-int?
+  : neg-int?
+  : double?
+  : string?
+  : empty?
+  : not-empty
+  : eq?
+  : identity
+  : comp
+  : every?
+  : some
+  : complement
+  : constantly
+  : range
+  : reverse
+  : inc
+  : dec
   }
  (require :core))
 
-(test equality
+(test eq?
   ;; comparing basetypes
   (assert-eq 1 1)
   (assert-ne 1 2)
@@ -61,10 +63,6 @@
   (assert* (eq? [1 [2]] [1 [2]] [1 [2]]))
   (assert* (eq? [1 [2]] [1 [2]] [1 [2]]))
   (assert* (not (eq? [1 [2]] [1 [2]] [1 [2 [3]]])))
-  (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
-  (assert-eq (range -5 5) [-5 -4 -3 -2 -1 0 1 2 3 4])
-  (assert-eq [0 0.2 0.4 0.6 0.8] [0 0.2 0.4 0.6 0.8])
-  (assert-eq (range 0 1 0.2) (range 0 1 0.2))
 
   (let [a {:a 1 :b 2}
         b {:a 1 :b 2}]
@@ -84,6 +82,12 @@
   ;; same thing, for example because the sizes of these tables are
   ;; different.
   (assert-eq {4 1} [nil nil nil 1]))
+
+(test range
+  (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
+  (assert-eq (range -5 5) [-5 -4 -3 -2 -1 0 1 2 3 4])
+  (assert-eq [0 0.2 0.4 0.6 0.8] [0 0.2 0.4 0.6 0.8])
+  (assert-eq (range 0 1 0.2) (range 0 1 0.2)))
 
 (test seq
   (assert-eq (seq []) nil)
@@ -141,29 +145,66 @@
 
   (assert-eq (reduce plus (range 10)) (reduce- plus 0 (range 10))))
 
-(test predicate
+;; test predicates:
+
+(test zero?
+  (assert* (zero? 0))
+  (assert* (zero? -0))
+  (assert* (not (zero? 1))))
+
+(test int?
   (assert* (int? 1))
-  (assert* (not (int? 1.1)))
+  (assert* (not (int? 1.1))))
+
+(test pos?
   (assert* (pos? 1))
-  (assert* (and (not (pos? 0)) (not (pos? -1))))
+  (assert* (and (not (pos? 0)) (not (pos? -1)))))
+
+(test neg?
   (assert* (neg? -1))
-  (assert* (and (not (neg? 0)) (not (neg? 1))))
+  (assert* (and (not (neg? 0)) (not (neg? 1)))))
+
+(test pos-int?
   (assert* (pos-int? 42))
-  (assert* (not (pos-int? 4.2)))
+  (assert* (not (pos-int? 4.2))))
+
+(test neg-int?
   (assert* (neg-int? -42))
-  (assert* (not (neg-int? -4.2)))
-  (assert* (string? :s))
+  (assert* (not (neg-int? -4.2))))
+
+(test string?
+  (assert* (string? :s)))
+
+(test double?
   (assert* (double? 3.3))
-  (assert* (not (double? 3.0)))
+  (assert* (not (double? 3.0))))
+
+(test map?
   (assert* (map? {:a 1}))
-  (assert* (not (map? {})))
+  (assert* (not (map? {}))))
+
+(test seq?
   (assert* (not (seq? [])))
   (assert* (seq? [{:a 1}]))
   (assert* (not (seq? {})))
-  (assert* (not (seq? {:a 1})))
+  (assert* (not (seq? {:a 1}))))
+
+(test nil?
   (assert* (nil?))
   (assert* (nil? nil))
   (assert* (not (nil? 1))))
+
+(test odd?
+  (assert* (odd? 3))
+  (assert* (odd? -3))
+  (assert* (not (odd? 2)))
+  (assert* (not (odd? -2))))
+
+(test even?
+  (assert* (even? 2))
+  (assert* (even? -2))
+  (assert* (not (even? 23)))
+  (assert* (not (even? -23))))
 
 (test filter
   (assert-eq (filter even? (range 10)) [0 2 4 6 8])
@@ -227,3 +268,40 @@
   (assert-eq (not-empty "1") "1")
   (assert-eq (not-empty [1]) [1])
   (assert-eq (not-empty {:a 1}) {:a 1}))
+
+(test apply
+  (fn* add
+    ([x] x)
+    ([x y] (+ x y))
+    ([x y & zs]
+     (add (+ x y) ((or _G.unpack table.unpack) zs))))
+  (assert-eq (apply add [1 2 3 4]) 10)
+  (assert-eq (apply add -1 [1 2 3 4]) 9)
+  (assert-eq (apply add -2 -1 [1 2 3 4]) 7)
+  (assert-eq (apply add -3 -2 -1 [1 2 3 4]) 4)
+  (assert-eq (apply add -4 -3 -2 -1 [1 2 3 4]) 0))
+
+(test conj
+  (assert-eq (conj [] 1 2 3) [1 2 3])
+  (assert-eq (conj [0] 1 2 3) [0 1 2 3])
+  (assert-eq (conj {:a 1} [:b 2]) {:a 1 :b 2}))
+
+(test cons
+  (assert-eq (cons 1 []) [1])
+  (assert-eq (cons 1 [0]) [1 0]))
+
+(test first
+  (assert-eq (first [1 2 3]) 1)
+  (assert-eq (first {:a 1}) [:a 1]))
+
+(test rest
+  (assert-eq (rest [1 2 3]) [2 3])
+  (assert-eq (rest {:a 1}) []))
+
+(test reduce-kv
+  (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6))
+
+(test comp
+  (fn square [x] (* x x))
+  (assert-eq ((comp square inc) 6) 49)
+  (assert-eq ((comp #(- $ 7) square inc inc inc inc inc inc inc) 0) 42))
