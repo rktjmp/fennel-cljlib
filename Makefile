@@ -1,22 +1,27 @@
-FNLSOURCES = core.fnl
+FNLSOURCES = core.fnl core_test.fnl macros_test.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 
-all: cljlib.lua
+all: $(LUASOURCES)
 
-.PHONY: all clean help test
+.PHONY: clean help test coverage all
 
-cljlib.lua: test $(LUASOURCES)
-	mv core.lua cljlib.lua
+${LUASOURCES}: $(FNLSOURCES)
 
 %.lua: %.fnl
-	fennel --compile $^ > $@
+	fennel --compile $< > $@
 
 clean:
-	rm -f *.lua
+	rm -f *.lua luacov*
 
 test:
 	@fennel core_test.fnl
 	@fennel macros_test.fnl
+
+coverage: | clean all luacov-stats
+	luacov
+
+luacov-stats: core_test.lua macros_test.lua
+	@lua -lluarocks.loader -lluacov $<
 
 help:
 	@echo "make       -- run tests and create lua library"
