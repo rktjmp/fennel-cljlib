@@ -353,6 +353,21 @@ oppisite truth value."
 (fn inc [x] (+ x 1))
 (fn dec [x] (- x 1))
 
+
+(fn* assoc
+  "Associate key `k' with value `v' in associative `tbl'."
+  ([tbl k v] (doto tbl (tset k v)))
+  ([tbl k v & kvs]
+   (tset tbl k v)
+   (assert (zero? (% (length kvs) 2)) "expected even amount key-value args")
+   (var [i k v] [1 nil nil])
+   (var (i k) (next kvs))
+   (while i
+     (set (i v) (next kvs i))
+     (tset tbl k v)
+     (set (i k) (next kvs i)))
+   tbl))
+
 {: apply
  : seq
  : first
@@ -390,4 +405,4 @@ oppisite truth value."
  : reverse
  : inc
  : dec
- }
+ : assoc}

@@ -39,7 +39,8 @@
   : range
   : reverse
   : inc
-  : dec}
+  : dec
+  : assoc}
  (require :core))
 
 (deftest equality
@@ -241,7 +242,10 @@
     (assert-eq (rest {:a 1}) []))
 
   (testing reduce-kv
-    (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6)))
+    (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6))
+
+  (testing assoc
+    (assert-eq (assoc {} :a 1 :b 2 :c 3 :d 4) {:a 1 :b 2 :c 3 :d 4})))
 
 (deftest function-manipulation
   (testing constantly
