@@ -29,12 +29,17 @@
   ([expr msg]
    `(assert ,expr (.. "assertion failed for " (or ,msg ,(tostring expr))))))
 
-(fn* test
+(fn* deftest [name docstring & tests]
+  "Simple way of grouping tests"
+  `(do
+     ,docstring
+     ,((or table.unpack _G.unpack) tests)))
+
+(fn* testing
   "Define test function, print its name and run it."
-  [name docstring & body]
+  [name & body]
   (let [test-name (sym (.. (tostring name) "-test"))]
     `(do (fn ,test-name []
-           ,(or docstring nil)
            ,((or table.unpack _G.unpack) body))
          (io.stderr:write (.. "running: " ,(tostring test-name) "\n"))
          (,test-name))))
@@ -42,4 +47,5 @@
 {: assert-eq
  : assert-ne
  : assert*
- : test}
+ : deftest
+ : testing}
