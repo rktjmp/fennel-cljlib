@@ -17,6 +17,9 @@ test:
 	@fennel core_test.fnl
 	@fennel macros_test.fnl
 
+test-coverage:
+	@sh coverage.sh
+
 coverage: | clean all luacov-stats
 	luacov
 

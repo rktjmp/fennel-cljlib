@@ -7,10 +7,20 @@ tsts=$(
         grep -o "(testing $fn[^ ]*" core_test.fnl macros_test.fnl | cut -f2 --delimiter=" "
     done
     )
-not_tested=$(printf "%s\n%s" "$fns" "$tsts" | sort | uniq -u)
+not_tested=$(printf "%s\n%s\n" "$fns" "$tsts" | sort | uniq -u)
 
-total_fns=$(printf "%s" "$fns" | wc -l)
-total_not_tested=$(printf "%s" "$not_tested" | wc -l)
+if [ -z "$fns" ]; then
+    total_fns=0
+else
+    total_fns=$(printf "%s\n" "$fns" | wc -l)
+fi
+
+if [ -z "$not_tested" ]; then
+    total_not_tested=0
+else
+    total_not_tested=$(printf "%s\n" "$not_tested" | wc -l)
+fi
+
 coverage=$((100 - (("$total_not_tested" * 100) / "$total_fns")))
 
 echo "test coverage: $coverage%" >&2
