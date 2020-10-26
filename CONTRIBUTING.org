@@ -25,7 +25,7 @@ If no feature found, please file new issue, and tag it with a =FEATURE:= at the 
 Please do.
 
 When deciding to contribute a large amount of changes, first consider opening a =DISCUSSION:= type issue, so we could first decide if such dramatic changes are in the scope of the project.
-This will save your time, in case such changes are our of the project's scope.
+This will save your time, in case such changes are out of the project's scope.
 
 If you're contributing a bugfix, please open an =BUG:= issue first, unless someone already did that.
 All bug related merge requests must have a linked issues with a meaningful explanation and steps of reproducing a bug.
