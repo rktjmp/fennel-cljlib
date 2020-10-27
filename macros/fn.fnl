@@ -1,6 +1,11 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
+(fn multisym->sym [s]
+  (if (multi-sym? s)
+      (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
+      (values s false)))
+
 (fn string? [x]
   (= (type x) "string"))
 
@@ -154,26 +159,77 @@ arities in the docstring.
 Argument lists follow the same destruction rules as in `let'.
 Variadic arguments with `...' are not supported.
 
-Passing `nil' as an argument to such function breaks arity checks,
-because result of calling `length' on a indexed table with `nil' in it
-is unpredictable."
+If function name contains namespace part, defines local variable
+without namespace part, then creates function with this name, sets
+this function to the namespace, and returns it.  This roughly means,
+that instead of writing this:
+
+(local namespace {})
+(fn f [x]
+  (if (> x 0) (f (- x 1))))
+(set namespace.f f)
+(fn g [x] (f (* x 100)))
+(set namespace.g g)
+
+It is possible to write:
+
+(local namespace {})
+(fn* namespace.f [x]
+  (if (> x 0) (f (- x 1))))
+(fn* namespace.g [x] (f (* x 100)))
+
+Note that it is still possible to call `f' and `g' in current scope
+without namespace part.  `Namespace' will hold both functions as `f'
+and `g' respectively."
   (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
   (let [docstring (if (string? doc?) doc? nil)
-        fname (if (sym? name) (tostring name))
-        args (if (sym? name)
+        (name-wo-namespace namespaced?) (multisym->sym name)
+        fname (if (sym? name-wo-namespace) (tostring name-wo-namespace))
+        args (if (sym? name-wo-namespace)
                  (if (string? doc?) [...] [doc? ...])
-                 [name doc? ...])
+                 [name-wo-namespace doc? ...])
         [x] args
         body (if (sequence? x) (single-arity-body args fname)
                  (list? x) (multi-arity-body args fname)
                  (assert-compile false "fn*: expected parameters table.
 
 * Try adding function parameters as a list of identifiers in brackets." x))]
-    (if (sym? name)
-        `(fn ,name [...] ,docstring ,body)
+    (if (sym? name-wo-namespace)
+        (if namespaced?
+            `(local ,name-wo-namespace
+                    (do
+                      (fn ,name-wo-namespace [...] ,docstring ,body)
+                      (set ,name ,name-wo-namespace)
+                      ,name-wo-namespace))
+            `(fn ,name [...] ,docstring ,body))
         `(fn [...] ,docstring ,body))))
 
-{: fn*}
+(fn fn& [name doc? args ...]
+  "Create (anonymous) function.
+Works the same as plain `fn' except supports automatic declaration of
+namespaced functions.  See `fn*' for more info."
+  (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
+  (let [docstring (if (string? doc?) doc? nil)
+        (name-wo-namespace namespaced?) (multisym->sym name)
+        arg-list (if (sym? name-wo-namespace)
+                 (if (string? doc?) args doc?)
+                 name-wo-namespace)
+        body (if (sym? name)
+                 (if (string? doc?)
+                     [doc? ...]
+                     [args ...])
+                 [doc? args ...])]
+    (if (sym? name-wo-namespace)
+        (if namespaced?
+            `(local ,name-wo-namespace
+                    (do
+                      (fn ,name-wo-namespace ,arg-list ,(unpack body))
+                      (set ,name ,name-wo-namespace)
+                      ,name-wo-namespace))
+            `(fn ,name ,arg-list ,(unpack body)))
+        `(fn ,arg-list ,(unpack body)))))
+
+{: fn* : fn&}
 
 ;; LocalWords:  arglist fn runtime arities arity multi destructuring
 ;; LocalWords:  docstring Variadic LocalWords

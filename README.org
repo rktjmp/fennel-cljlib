@@ -62,6 +62,81 @@ Both variants support up to one arity with =& more=:
   (add 1 2 3 4) ;; => 10
 #+end_src
 
+One extra capability of =fn*= is that it is possible to declare namespaced functions and use those literally in the same scope, and withing the function itself.
+
+For example, imagene you want to create function =plus= in namespace =ns=, that sums arbitary amount of integers, and quickly test it before providing the namespace:
+
+#+begin_src fennel
+  (local clj (require :cljlib.core))
+  (import-macros {: fn*} :cljlib.macros.fn)
+
+  (local ns {})
+
+  (fn* ns.plus
+    ([] 0)
+    ([x] x)
+    ([x y] (+ x y))
+    ([x y & zs] (apply plus (+ x y) zs)))
+
+  (assert (= (plus) 0))
+  (assert (= (plus 1) 1))
+  (assert (= (plus 1 2) 3))
+  (assert (= (plus 1 2 3 4) 10))
+
+  ns
+#+end_src
+
+Note, that =plus= is used without =ns= part, e.g. not =namespace.plus=.
+If we =require= this code from file in the repl, we will see that our =ns= has single function =plus=:
+
+#+begin_src fennel
+  >> (local ns (require :module))
+  >> ns
+  {
+      add #<function 0xbada55code>
+  }
+#+end_src
+
+This is possible because =fn*= separates the namespace part from the function name, and creates a =local= variable with the same name as function, then defines the function within lexical scope of =do=, sets =namespace.foo= to it and returns the function object to the outer scope.
+
+#+begin_src fennel
+  (local plus
+         (do (fn plus [...]
+               ;; plus body
+               )
+             (set ns.plus plus)
+             plus))
+#+end_src
+
+See =core.fnl= for more examples.
+
+** =fn&=
+Works similarly to Fennel's =fn=, by creating ordinary function without arity semantics, except does the namespace automation like =fn*,= and has the same order of arguments as the latter:
+
+#+begin_src fennel
+  (local ns {})
+
+  ;; module & file-local functions
+  (fn& ns.double
+    "double the number"
+    [x]
+    (* x 2))
+
+  (fn& ns.triple
+    [x]
+    (* x 3))
+
+  ;; no namespace, file-local function
+  (fn& quadruple
+    [x]
+    (* x 4))
+
+  ;; anonymous file-local function
+  (fn& [x] (* x 5))
+
+  ns
+#+end_src
+
 See =core.fnl= for more examples.
 
 ** =if-let= and =when-let=

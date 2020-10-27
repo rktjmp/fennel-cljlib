@@ -1,9 +1,11 @@
+(local core {})
+
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
-(import-macros {: fn*} :macros.fn)
+(import-macros {: fn* : fn&} :macros.fn)
 (import-macros {: when-some : if-some : when-let : into} :macros.core)
 
-(fn* apply
+(fn* core.apply
   "Apply `f' to the argument list formed by prepending intervening
 arguments to `args'."
   ([f args] (f (unpack args)))
@@ -19,114 +21,144 @@ arguments to `args'."
      (f a b c d (unpack flat-args)))))
 
 ;; predicate functions
-
-(fn map? [tbl]
+(fn& core.map? [tbl]
   "Check whether `tbl' is an associative table."
   (if (= (type tbl) :table)
       (let [(k _) (next tbl)]
         (and (~= k nil) (or (~= (type k) :number)
                             (~= k 1))))))
 
-(fn seq? [tbl]
+(fn& core.seq? [tbl]
   "Check whether `tbl' is an sequential table."
   (if (= (type tbl) :table)
       (let [(k _) (next tbl)]
         (and (~= k nil) (= (type k) :number) (= k 1)))))
 
-(fn nil? [x]
+
+(fn& core.nil? [x]
   "Test if value is nil."
   (= x nil))
 
-(fn zero? [x]
+(fn& core.zero? [x]
   "Test if value is zero."
   (= x 0))
 
-(fn pos? [x]
+(fn& core.pos? [x]
   "Test if `x' is greater than zero."
   (> x 0))
 
-(fn neg? [x]
+(fn& core.neg? [x]
   "Test if `x' is less than zero."
   (< x 0))
 
-(fn even? [x]
+(fn& core.even? [x]
   "Test if value is even."
   (= (% x 2) 0))
 
-(fn odd? [x]
+(fn& core.odd? [x]
   "Test if value is odd."
   (not (even? x)))
 
-(fn string? [x]
+(fn& core.string? [x]
   "Test if `x' is a string."
   (= (type x) :string))
 
-(fn int? [x]
+(fn& core.boolean? [x]
+  "Test if `x' is a Boolean"
+  (= (type x) :boolean))
+
+(fn& core.true? [x]
+  "Test if `x' is `true'"
+  (= x true))
+
+(fn& core.false? [x]
+  "Test if `x' is `false'"
+  (= x false))
+
+(fn& core.int? [x]
   "Test if `x' is a number without floating point data."
   (and (= (type x) :number)
        (= x (math.floor x))))
 
-(fn pos-int? [x]
+(fn& core.pos-int? [x]
   "Test if `x' is a positive integer."
   (and (int? x)
        (pos? x)))
 
-(fn neg-int? [x]
+(fn& core.neg-int? [x]
   "Test if `x' is a negetive integer."
   (and (int? x)
        (neg? x)))
 
-(fn double? [x]
+(fn& core.double? [x]
   "Test if `x' is a number with floating point data."
   (and (= (type x) :number)
        (~= x (math.floor x))))
 
-(fn empty? [x]
+(fn& core.empty? [x]
   "Check if collection is empty."
   (match (type x)
     :table (= (next x) nil)
     :string (= x "")
     _ (error "empty?: unsupported collection")))
 
-(fn not-empty [x]
+(fn& core.not-empty [x]
   "If `x' is empty, returns `nil', otherwise `x'."
   (if (not (empty? x))
       x))
 
 ;; sequence manipulating functions
 
-(fn seq [tbl]
+(fn& core.seq [tbl]
   "Create sequential table.
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `tbl' is an
 associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
-If `tbl' is sequential table, leaves it unchanged."
+If `tbl' is sequential table, returns its shallow copy."
   (when-some [_ (and tbl (next tbl))]
     (var assoc? false)
-    (let [res []]
+    (let [assoc []
+          seq []]
       (each [k v (pairs tbl)]
         (if (and (not assoc?)
                  (not (= (type k) :number)))
             (set assoc? true))
-        (insert res [k v]))
-      (if assoc? res tbl))))
+        (insert assoc [k v])
+        (tset seq k v))
+      (if assoc? assoc seq))))
 
 (macro -safe-seq [tbl]
   "Create sequential table, or empty table if `seq' returned `nil'."
   `(or (seq ,tbl) []))
 
-(fn first [tbl]
+(fn& core.first [tbl]
   "Return first element of an indexed table."
-  (when-some [tbl tbl]
-    (. (seq tbl) 1)))
+  (when-some [tbl (seq tbl)]
+    (. tbl 1)))
 
-(fn rest [tbl]
+(fn& core.rest [tbl]
   "Returns table of all elements of indexed table but the first one."
-  (if-some [tbl tbl]
-    [(unpack (seq tbl) 2)]
+  (if-some [tbl (seq tbl)]
+    [(unpack tbl 2)]
     []))
 
-(fn* conj
+(fn& core.last [tbl]
+  (when-some [tbl (seq tbl)]
+    (var (i v) (next tbl))
+    (while i
+      (local (_i _v) (next tbl i))
+      (if _i (set v _v))
+      (set i _i))
+    v))
+
+(fn& core.butlast [tbl]
+  (when-some [tbl (seq tbl)]
+    (table.remove tbl (length tbl))
+    (when (not (empty? tbl))
+      tbl)))
+
+
+(fn* core.conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
   ([] [])
   ([tbl] tbl)
@@ -154,13 +186,13 @@ If `tbl' is sequential table, leaves it unchanged."
        (let [[y & xs] xs] (apply -consj (-consj tbl x) y xs))
        (-consj tbl x))))
 
-(fn cons [x tbl]
+(fn& core.cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   (when-some [x x]
     (doto (-safe-seq tbl)
       (insert 1 x))))
 
-(fn* concat
+(fn* core.concat
   "Concatenate tables."
   ([] nil)
   ([x] (-safe-seq x))
@@ -168,7 +200,7 @@ If `tbl' is sequential table, leaves it unchanged."
   ([x y & xs]
    (apply concat (into (-safe-seq x) (-safe-seq y)) xs)))
 
-(fn* reduce
+(fn* core.reduce
   "Reduce indexed table using function `f' and optional initial value `val'.
 
 ([f table])
@@ -199,7 +231,7 @@ val and f is not called."
            val))
      val)))
 
-(fn* reduce-kv
+(fn* core.reduce-kv
   "Reduces an associative table using function `f' and initial value `val'.
 
 ([f val table])
@@ -215,7 +247,7 @@ ordinals."  [f val tbl]
     (set res (f res k v)))
   res)
 
-(fn* mapv
+(fn* core.mapv
   "Maps function `f' over one or more tables.
 
 Accepts arbitrary amount of tables, calls `seq' on each of it.
@@ -269,21 +301,21 @@ ignored. Returns a table of results."
          (insert res tmp)))
      res)))
 
-(fn filter [pred tbl]
+(fn& core.filter [pred tbl]
   (when-let [tbl (seq tbl)]
     (let [f (first tbl) r (rest tbl)]
-          (if (pred f)
-              (cons f (filter pred r))
-              (filter pred r)))))
+      (if (pred f)
+          (cons f (filter pred r))
+          (filter pred r)))))
 
-(fn -kvseq [tbl]
+(fn& core.-kvseq [tbl]
   "Transforms any table kind to key-value sequence."
   (let [res []]
     (each [k v (pairs tbl)]
       (insert res [k v]))
     res))
 
-(fn* eq?
+(fn* core.eq?
   "Deep compare values."
   ([x] true)
   ([x y]
@@ -294,9 +326,9 @@ ignored. Returns a table of results."
   ([x y & xs]
    (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))
 
-(fn identity [x] x)
+(fn& core.identity [x] x)
 
-(fn* comp
+(fn* core.comp
   ([] identity)
   ([f] f)
   ([f g]
@@ -309,20 +341,20 @@ ignored. Returns a table of results."
   ([f g & fs]
    (reduce comp (-consj fs g f))))
 
-(fn* every?
+(fn* core.every?
   [pred tbl]
   (if (empty? tbl) true
       (pred (first tbl)) (every? pred (rest tbl))
       false))
 
-(fn* some
+(fn* core.some
   [pred tbl]
   (when-let [tbl (seq tbl)]
     (or (pred (first tbl)) (some pred (rest tbl)))))
 
 (local not-any? (comp #(not $) some))
 
-(fn complement [f]
+(fn& core.complement [f]
   "Takes a function `f' and returns the function that takes the same
 amount of arguments as `f', has the same effect, and returns the
 oppisite truth value."
@@ -332,11 +364,11 @@ oppisite truth value."
     ([a b] (not (f a b)))
     ([a b & cs] (not (apply f a b cs)))))
 
-(fn constantly [x]
+(fn& core.constantly [x]
   "Returns a function that takes any number of arguments and returns `x'."
   (fn [...] x))
 
-(fn* range
+(fn* core.range
   "return range of of numbers from `lower' to `upper' with optional `step'."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
@@ -346,20 +378,19 @@ oppisite truth value."
        (insert res i))
      res)))
 
-(fn reverse [tbl]
+(fn& core.reverse [tbl]
   (when-some [tbl (seq tbl)]
     (reduce -consj [] tbl)))
 
-(fn inc [x] (+ x 1))
-(fn dec [x] (- x 1))
+(fn& core.inc [x] (+ x 1))
+(fn& core.dec [x] (- x 1))
 
-
-(fn* assoc
-  "Associate key `k' with value `v' in associative `tbl'."
+(fn* core.assoc
+  "Associate key `k' with value `v' in `tbl'."
   ([tbl k v] (doto tbl (tset k v)))
   ([tbl k v & kvs]
-   (tset tbl k v)
    (assert (zero? (% (length kvs) 2)) "expected even amount key-value args")
+   (tset tbl k v)
    (var [i k v] [1 nil nil])
    (var (i k) (next kvs))
    (while i
@@ -368,41 +399,4 @@ oppisite truth value."
      (set (i k) (next kvs i)))
    tbl))
 
-{: apply
- : seq
- : first
- : rest
- : conj
- : cons
- : concat
- : reduce
- : reduce-kv
- : mapv
- : filter
- : map?
- : seq?
- : nil?
- : zero?
- : pos?
- : neg?
- : even?
- : odd?
- : int?
- : pos-int?
- : neg-int?
- : double?
- : string?
- : empty?
- : not-empty
- : eq?
- : identity
- : comp
- : every?
- : some
- : complement
- : constantly
- : range
- : reverse
- : inc
- : dec
- : assoc}
+core

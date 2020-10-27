@@ -1,4 +1,5 @@
-(import-macros {: fn*} :macros.fn)
+(import-macros {: fn* : fn&} :macros.fn)
+(local core {})
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
@@ -6,7 +7,7 @@
   (and (assert-compile (sequence? bindings) "expected binding table" [])
        (assert-compile (= (length bindings) 2) "expected exactly two forms in binding vector." bindings)))
 
-(fn* if-let
+(fn* core.if-let
   ([bindings then]
    (if-let bindings then nil))
   ([bindings then else]
@@ -18,7 +19,7 @@
               ,then)
             ,else)))))
 
-(fn* when-let
+(fn* core.when-let
   [bindings & body]
   (-check-bindings bindings)
   (let [[form test] bindings]
@@ -27,7 +28,7 @@
            (let [,form tmp#]
              ,(unpack body))))))
 
-(fn* if-some
+(fn* core.if-some
   ([bindings then]
    (if-some bindings then nil))
   ([bindings then else]
@@ -39,7 +40,7 @@
             (let [,form tmp#]
               ,then))))))
 
-(fn* when-some
+(fn* core.when-some
   [bindings & body]
   (-check-bindings bindings)
   (let [[form test] bindings]
@@ -56,7 +57,7 @@
       :else))
 
 ;; based on `seq' from `core.fnl'
-(fn into [to from]
+(fn& core.into [to from]
   (local to-type (-table-type to))
   (local from-type (-table-type from))
   `(let [to# ,to
@@ -106,9 +107,4 @@
        :else (error "expected table as first argument"))
      to#))
 
-
-{: if-let
- : when-let
- : if-some
- : when-some
- : into}
+core
