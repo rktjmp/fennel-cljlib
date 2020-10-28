@@ -56,55 +56,86 @@
       (table? tbl) :table
       :else))
 
-;; based on `seq' from `core.fnl'
+(fn -table-type-fn []
+  `(fn [tbl#]
+     (let [t# (type tbl#)]
+       (if (= t# :table)
+           (let [(k# _#) (next tbl#)]
+             (if (and (= (type k#) :number) (= k# 1)) :seq
+                 (= k# nil) :empty
+                 :table))
+           :else))))
+
+(fn -seq-fn []
+  `(fn [tbl#]
+     (var assoc# false)
+     (let [res# []
+           insert# table.insert]
+       (each [k# v# (pairs tbl#)]
+         (if (and (not assoc#)
+                  (not (= (type k#) :number)))
+             (set assoc# true))
+         (insert# res# [k# v#]))
+       (if assoc# res# tbl#))))
+
 (fn& core.into [to from]
-  (local to-type (-table-type to))
-  (local from-type (-table-type from))
-  `(let [to# ,to
-         from# ,from
-         insert# table.insert
-         table-type# (fn [tbl#]
-                       (let [t# (type tbl#)]
-                         (if (= t# :table)
-                             (let [(k# _#) (next tbl#)]
-                               (if (and (= (type k#) :number) (= k# 1)) :seq
-                                   (= k# nil) :empty
-                                   :table))
-                             :else)))
-         seq# (fn [tbl#]
-                (var assoc# false)
-                (let [res# []]
-                  (each [k# v# (pairs tbl#)]
-                    (if (and (not assoc#)
-                             (not (= (type k#) :number)))
-                        (set assoc# true))
-                    (insert# res# [k# v#]))
-                  (if assoc# res# tbl#)))
-         to-type# ,to-type
-         to-type# (if (= to-type# :else)
-                      (table-type# to#)
-                      to-type#)
-         from-type# ,from-type
-         from-type# (if (= from-type# :else)
-                        (table-type# from#)
-                        from-type#)]
-     (match to-type#
-       :seq (do (each [_# v# (ipairs (seq# from#))]
-                  (insert# to# v#)))
-       :table (match from-type#
-                :seq (each [_# [k# v#] (ipairs from#)]
-                       (tset to# k# v#))
-                :table (each [k# v# (pairs from#)]
-                         (tset to# k# v#))
-                :empty to#
-                :else (error "expected table as second argument"))
-       ;; If we could not deduce type, it means that
-       ;; we've got empty table.  We use will default
-       ;; to sequential table, because it will never
-       ;; break when converting into
-       :empty (do (each [_# v# (ipairs (seq# from#))]
-                    (insert# to# v#)))
-       :else (error "expected table as first argument"))
-     to#))
+  (let [to-type (-table-type to)
+        from-type (-table-type from)]
+    (if (and (= to-type :seq) (= from-type :seq))
+        `(let [to# ,to
+               insert# table.insert]
+           (each [_# v# (ipairs ,from)]
+             (insert# to# v#))
+           to#)
+        (= to-type :seq)
+        `(let [to# ,to
+               seq# ,(-seq-fn)
+               insert# table.insert]
+           (each [_# v# (ipairs (seq# ,from))]
+             (insert# to# v#))
+           to#)
+        (and (= to-type :table) (= from-type :seq))
+        `(let [to# ,to]
+           (each [_# [k# v#] (ipairs ,from)]
+             (tset to# k# v#))
+           to#)
+        (and (= to-type :table) (= from-type :table))
+        `(let [to# ,to
+               from# ,from]
+           (each [k# v# (pairs from#)]
+             (tset to# k# v#))
+           to#)
+        (= to-type :table)
+        `(let [to# ,to
+               from# ,from]
+           (match (,(-table-type-fn) from#)
+             :seq (each [_# [k# v#] (ipairs from#)]
+                    (tset to# k# v#))
+             :table (each [k# v# (pairs from#)]
+                      (tset to# k# v#))
+             :else (error "expected table as second argument"))
+           to#)
+        `(let [to# ,to
+               from# ,from
+               insert# table.insert
+               table-type# ,(-table-type-fn)
+               seq# ,(-seq-fn)]
+           (match (table-type# to#)
+             :seq (each [_# v# (ipairs (seq# from#))]
+                    (insert# to# v#))
+             :table (match (table-type# from#)
+                      :seq (each [_# [k# v#] (ipairs from#)]
+                             (tset to# k# v#))
+                      :table (each [k# v# (pairs from#)]
+                               (tset to# k# v#))
+                      :else (error "expected table as second argument"))
+             ;; If we could not deduce type, it means that
+             ;; we've got empty table.  We use will default
+             ;; to sequential table, because it will never
+             ;; break when converting into
+             :empty (each [_# v# (ipairs (seq# from#))]
+                      (insert# to# v#))
+             :else (error "expected table as first argument"))
+           to#))))
 
 core
