@@ -17,16 +17,23 @@ test:
 	@fennel core_test.fnl
 	@fennel macros_test.fnl
 
-test-coverage:
-	@sh coverage.sh
-
-coverage: | clean all luacov-stats
+luacov: | clean all luacov-stats
 	luacov
+
+luacov-console: | luacov
+	@mv core_test.lua core_test.lua.tmp
+	@mv macros_test.lua macros_test.lua.tmp
+	luacov-console .
+	@mv core_test.lua.tmp core_test.lua
+	@mv macros_test.lua.tmp macros_test.lua
 
 luacov-stats: core_test.lua macros_test.lua
 	@lua -lluarocks.loader -lluacov $<
 
 help:
-	@echo "make       -- run tests and create lua library"
-	@echo "make test  -- run tests"
-	@echo "make clean -- remove lua files"
+	@echo "make                -- run tests and create lua library" >&2
+	@echo "make test           -- run tests" >&2
+	@echo "make clean          -- remove lua files" >&2
+	@echo "make luacov         -- build coverage report (requires working tests)" >&2
+	@echo "make luacov-console -- build coverage report (requires working tests)" >&2
+	@echo "make help           -- print this message and exit" >&2
