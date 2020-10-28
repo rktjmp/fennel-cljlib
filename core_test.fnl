@@ -7,6 +7,8 @@
   : seq
   : first
   : rest
+  : last
+  : butlast
   : conj
   : cons
   : concat
@@ -27,6 +29,9 @@
   : neg-int?
   : double?
   : string?
+  : boolean?
+  : false?
+  : true?
   : empty?
   : not-empty
   : eq?
@@ -148,7 +153,25 @@
     (assert* (even? 2))
     (assert* (even? -2))
     (assert* (not (even? 23)))
-    (assert* (not (even? -23)))))
+    (assert* (not (even? -23))))
+
+  (testing true?
+    (assert* (true? true))
+    (assert* (not (true? false)))
+    (assert* (not (true? 10)))
+    (assert* (not (true? :true))))
+
+  (testing false?
+    (assert* (false? false))
+    (assert* (not (false? true)))
+    (assert* (not (false? 10)))
+    (assert* (not (false? :true))))
+
+  (testing boolean?
+    (assert* (boolean? true))
+    (assert* (boolean? false))
+    (assert* (not (boolean? :false)))
+    (assert* (not (boolean? (fn [] true))))))
 
 (deftest sequence-functions
   (testing seq
@@ -237,9 +260,19 @@
     (assert-eq (first [1 2 3]) 1)
     (assert-eq (first {:a 1}) [:a 1]))
 
+  (testing last
+    (assert-eq (last [1 2 3]) 3)
+    (assert-eq (last []) nil)
+    (assert-eq (last nil) nil)
+    (assert-eq (last {:a 1}) [:a 1]))
+
   (testing rest
     (assert-eq (rest [1 2 3]) [2 3])
     (assert-eq (rest {:a 1}) []))
+
+  (testing butlast
+    (assert-eq (butlast [1 2 3]) [1 2])
+    (assert-eq (butlast {:a 1}) nil))
 
   (testing reduce-kv
     (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6))
