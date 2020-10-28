@@ -301,14 +301,14 @@ ignored. Returns a table of results."
          (insert res tmp)))
      res)))
 
-(fn& core.filter [pred tbl]
+(fn* core.filter [pred tbl]
   (when-let [tbl (seq tbl)]
     (let [f (first tbl) r (rest tbl)]
       (if (pred f)
           (cons f (filter pred r))
           (filter pred r)))))
 
-(fn& core.-kvseq [tbl]
+(fn -kvseq [tbl]
   "Transforms any table kind to key-value sequence."
   (let [res []]
     (each [k v (pairs tbl)]

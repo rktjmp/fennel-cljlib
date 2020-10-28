@@ -1,6 +1,6 @@
 #!/bin/env sh
 
-fns=$(grep "^(fn" core.fnl macros/core.fnl | cut -f2 --delimiter=" " | grep -v "^-")
+fns=$(grep "^(fn[&*] core." core.fnl macros/core.fnl | cut -f2 --delimiter=" " | cut -f2 --delimiter=".")
 tsts=$(
     for fn in $fns; do
         fn=$(echo "$fn" | sed "s/\?/\\\?/")
