@@ -111,7 +111,7 @@ This is possible because =fn*= separates the namespace part from the function na
 See =core.fnl= for more examples.
 
 ** =fn&=
-Works similarly to Fennel's =fn=, by creating ordinary function without arity semantics, except does the namespace automation like =fn*,= and has the same order of arguments as the latter:
+Works similarly to Fennel's =fn=, by creating ordinary function without arity semantics, except does the namespace automation like =fn*=, and has the same order of arguments as the latter:
 
 #+begin_src fennel
   (local ns {})
