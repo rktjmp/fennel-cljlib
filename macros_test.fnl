@@ -29,7 +29,14 @@
     (let [a (fn [] {:a 1})
           b (fn [] [[:b 2]])]
       (assert-eq (into (a) (b)) {:a 1 :b 2})
-      (assert-eq (into (b) (a)) [[:b 2] [:a 1]]))
+      (assert-eq (into (b) (a)) [[:b 2] [:a 1]])
+      (let [c []]
+        (assert-eq (into c (b)) [[:b 2]]))
+      (let [c []]
+        (assert-eq (into c (a)) [[:a 1]]))
+      (let [c []]
+        (assert-eq (into (b) c) (b))
+        (assert-eq (into (a) c) (a))))
 
     (let [a {}
           b []]

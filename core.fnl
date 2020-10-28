@@ -167,12 +167,10 @@ If `tbl' is sequential table, returns its shallow copy."
      (let [tbl (or tbl [])]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
-           (insert tbl x))
-       tbl)))
+           (insert tbl x))))
+   tbl)
   ([tbl x & xs]
-   (if (> (length xs) 0)
-       (let [[y & xs] xs] (apply conj (conj tbl x) y xs))
-       (conj tbl x))))
+   (apply conj (conj tbl x) xs)))
 
 (fn* -consj
   "Like conj but joins at the front. Modifies `tbl'."
@@ -188,9 +186,10 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn& core.cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
-  (when-some [x x]
+  (if-some [x x]
     (doto (-safe-seq tbl)
-      (insert 1 x))))
+      (insert 1 x))
+    tbl))
 
 (fn* core.concat
   "Concatenate tables."
@@ -198,7 +197,7 @@ If `tbl' is sequential table, returns its shallow copy."
   ([x] (-safe-seq x))
   ([x y] (into (-safe-seq x) (-safe-seq y)))
   ([x y & xs]
-   (apply concat (into (-safe-seq x) (-safe-seq y)) xs)))
+   (apply concat (concat x y) xs)))
 
 (fn* core.reduce
   "Reduce indexed table using function `f' and optional initial value `val'.
@@ -216,7 +215,7 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
   ([f tbl]
-   (when-some [tbl (seq tbl)]
+   (let [tbl (-safe-seq tbl)]
      (match (length tbl)
        0 (f)
        1 (. tbl 1)
@@ -224,12 +223,11 @@ val and f is not called."
        _ (let [[a b & rest] tbl]
            (reduce f (f a b) rest)))))
   ([f val tbl]
-   (if-some [tbl (seq tbl)]
+   (let [tbl (-safe-seq tbl)]
      (let [[x & xs] tbl]
-       (if (not (= x nil))
-           (reduce f (f val x) xs)
-           val))
-     val)))
+       (if (nil? x)
+           val
+           (reduce f (f val x) xs))))))
 
 (fn* core.reduce-kv
   "Reduces an associative table using function `f' and initial value `val'.
@@ -337,7 +335,7 @@ ignored. Returns a table of results."
      ([x] (f (g x)))
      ([x y] (f (g x y)))
      ([x y z] (f (g x y z)))
-     ([x y z & args] (apply f g x y z args))))
+     ([x y z & args] (f (g x y z (unpack args))))))
   ([f g & fs]
    (reduce comp (-consj fs g f))))
 
@@ -352,7 +350,7 @@ ignored. Returns a table of results."
   (when-let [tbl (seq tbl)]
     (or (pred (first tbl)) (some pred (rest tbl)))))
 
-(local not-any? (comp #(not $) some))
+(set core.not-any? (comp #(not $) some))
 
 (fn& core.complement [f]
   "Takes a function `f' and returns the function that takes the same
