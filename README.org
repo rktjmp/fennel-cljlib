@@ -390,7 +390,7 @@ Other predicates are self-explanatory:
 ** =eq?=
 Deep compare values.
 If given two tables, recursively calls =eq?= on each field until one of the tables exhausted.
-Other values are compared with === operator.
+Other values are compared with default equality operator.
 
 ** =comp=
 Compose functions into one function.
