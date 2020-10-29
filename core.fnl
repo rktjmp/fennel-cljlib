@@ -397,7 +397,7 @@ oppisite truth value."
      (set (i k) (next kvs i)))
    tbl))
 
-(fn& core.get
+(fn* core.get
   "Get value from the table by accessing it with a `key'.
 Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
@@ -407,14 +407,18 @@ found in the table."
      res
      not-found)))
 
-(fn& core.get-in
+(fn* core.get-in
   "Get value from nested set of tables by providing key sequence.
 Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
   ([tbl keys] (get-in tbl keys nil))
   ([tbl keys not-found]
-   (if-some [res (. tbl (. keys 1))]
-     (get-in tbl [(unpack tbl 2)] not-found)
-     not-found)))
+   (var res tbl)
+   (var t tbl)
+   (each [_ k (ipairs keys)]
+     (if-some [v (. t k)]
+       (set [res t] [v v])
+       (set res not-found)))
+   res))
 
 core
