@@ -1,21 +1,24 @@
-stages:
-    - test5.3
-    - test5.4
+---
 
-test5.3:
+stages:
+    - test
+
+test:Lua5.3:
     image: alpine:3.12.1
-    stage: test5.3
+    stage: test
     before_script:
         - apk add lua5.3 luarocks5.3 make
         - luarocks-5.3 install fennel
     script:
-        - make test
+        - LUA=lua5.3 make test
 
-test5.4:
-    image: alpine:3.12.1
-    stage: test5.4
+test:Lua5.4:
+    image: ubuntu:20.10
+    stage: test
     before_script:
-        - apk add lua5.4 luarocks5.4 make
-        - luarocks-5.4 install fennel
+        - ln -snf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+        - echo Europe/Moscow > /etc/timezone
+        - apt-get update && apt-get install -y lua5.4 luarocks make >/dev/null
+        - luarocks install fennel
     script:
-        - make test
+        - LUA=lua5.4 make test
