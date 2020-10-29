@@ -46,7 +46,9 @@
   : reverse
   : inc
   : dec
-  : assoc}
+  : assoc
+  : get
+  : get-in}
  (require :core))
 
 (deftest equality
@@ -425,3 +427,19 @@
   (testing dec
     (assert-eq (dec 1) 0)
     (assert-eq (dec -1) -2)))
+
+(deftest table-access
+  (testing get
+    (assert-eq (get {:key1 10 :key2 20} :key1) 10)
+    (assert-eq (get {:key1 10 :key2 20} :key1 false) 10)
+    (assert-eq (get {:key1 10 :key2 20} :key3 false) false)
+    (assert-eq (get {:key1 10 :key2 20} :key3) nil))
+
+  (testing get
+    (local t {:a {:b {:c 10}}})
+    (assert-eq (get t [:a]) {:b {:c 10}})
+    (assert-eq (get t [:a :b]) {:c 10})
+    (assert-eq (get t [:a :b :c]) 10)
+    (assert-eq (get t [:a :b :c] false) 10)
+    (assert-eq (get t [:a :b :d] false) false)
+    (assert-eq (get t [:a :b :d]) nil)))
