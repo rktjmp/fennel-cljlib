@@ -1,11 +1,21 @@
 stages:
-    - test
+    - test5.3
+    - test5.4
 
-test:
+test5.3:
     image: alpine:3.12.1
-    stage: test
+    stage: test5.3
     before_script:
         - apk add lua5.3 luarocks5.3 make
         - luarocks-5.3 install fennel
+    script:
+        - make test
+
+test5.4:
+    image: alpine:3.12.1
+    stage: test5.4
+    before_script:
+        - apk add lua5.4 luarocks5.4 make
+        - luarocks-5.4 install fennel
     script:
         - make test
