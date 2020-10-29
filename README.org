@@ -16,7 +16,7 @@ List of macros provided by the library.
 
 ** =fn*=
 Clojure's =fn= equivalent.
-Returns a function of fixed arity by doing runtime dispatch, based on argument amount.
+Returns a function of fixed amount of arguments by doing runtime dispatch based on argument count.
 Capable of producing multi-arity functions:
 
 #+begin_src fennel
@@ -64,11 +64,11 @@ Both variants support up to one arity with =& more=:
 
 One extra capability of =fn*= is that it is possible to declare namespaced functions and use those literally in the same scope, and withing the function itself.
 
-For example, imagene you want to create function =plus= in namespace =ns=, that sums arbitary amount of integers, and quickly test it before providing the namespace:
+For example, imagine you want to create function =plus= in namespace =ns=, that sums arbitrary amount of integers, and quickly test it before providing the namespace:
 
 #+begin_src fennel
-  (local clj (require :cljlib.core))
-  (import-macros {: fn*} :cljlib.macros.fn)
+  (local clj (require :core))
+  (import-macros {: fn*} :macros.fn)
 
   (local ns {})
 
@@ -87,7 +87,7 @@ For example, imagene you want to create function =plus= in namespace =ns=, that 
 #+end_src
 
 Note, that =plus= is used without =ns= part, e.g. not =namespace.plus=.
-If we =require= this code from file in the repl, we will see that our =ns= has single function =plus=:
+If we =require= this code from file in the REPL, we will see that our =ns= has single function =plus=:
 
 #+begin_src fennel
   >> (local ns (require :module))
@@ -240,7 +240,7 @@ Works mostly like in Clojure, but, since Fennel doesn't have list object, it ret
 
 See =into= on how to transform such sequence back into associative table.
 
-** =first= and =rest=
+** =first=, =last=, =butlast=, and =rest=
 =first= returns first value of a table.
 It call =seq= on it, so this takes linear time for any kind of table.
 As a consequence, associative tables are supported:
@@ -251,8 +251,20 @@ As a consequence, associative tables are supported:
   ;; => ["host" "localhost"]
 #+end_src
 
-=last= works the same way, but returns everything except first argument as a table.
-It also calls =seq= on its argument.
+=last= returns the last argument from table:
+
+#+begin_src fennel
+  (last [1 2 3]) ;; => 3
+  (last {:a 1 :b 2}) ;; => [:b 2]
+#+end_src
+
+=butlast= returns everything from the table, except the last item:
+
+#+begin_src fennel
+  (butlast [1 2 3]) ;; => [1 2]
+#+end_src
+
+=rest= works the same way, but returns everything except first item of a table.
 
 #+begin_src fennel
   (rest [1 2 3]) ;; => [2 3]
@@ -260,7 +272,8 @@ It also calls =seq= on its argument.
   ;; => [["port" 2344] ["options" {}]]
 #+end_src
 
-These functions are expensive, therefore should be avoided when table type is known beforehand.
+All these functions call =seq= on its argument, therefore expect everything to happen in linear time.
+Because of that these functions are expensive, therefore should be avoided when table type is known beforehand, and the table can be manipulated with =.= or =get=.
 
 ** =conj= and =cons=
 Append and prepend item to the table.
@@ -278,6 +291,13 @@ It puts values in order given into the table:
 
 #+begin_src fennel
   (conj [] 1 2 3) ;; => [1 2 3]
+#+end_src
+
+It is also possible to add items to associative table:
+
+#+begin_src fennel
+  (conj {:a 1} [:b 2]) ;; => {:a 1 :b 2}
+  (conj {:a 1} [:b 2] [:a 0]) ;; => {:a 0 :b 2}
 #+end_src
 
 Both functions return the resulting table, so it is possible to nest calls to both of these.
@@ -339,8 +359,6 @@ Then it maps function over the associative map, by passing initial value as a fi
   ;; => 20
 #+end_src
 
-#  LocalWords:  Luajit VM arity runtime multi Cljlib fn mapv kv
-
 ** Predicate functions
 Set of functions, that are small but useful with =mapv= or =reduce=.
 These are commonly used so it makes sense to have that, without defining via anonymous function or =#= shorthand every time.
@@ -352,14 +370,37 @@ These are commonly used so it makes sense to have that, without defining via ano
 
 Other predicates are self-explanatory:
 
-- =nil?=
-- =even?=
-- =odd?=
+- =any?=
+- =assoc?=
+- =boolean?=
 - =double?=
+- =empty?=
+- =even?=
+- =every?=
+- =false?=
 - =int?=
-- =pos?=
-- =pos-int?=
 - =neg?=
-- =neg-int?=
-- =zero?=
+- =nil?=
+- =odd?=
+- =pos?=
 - =string?=
+- =true?=
+- =zero?=
+
+** =eq?=
+Deep compare values.
+If given two tables, recursively calls =eq?= on each field until one of the tables exhausted.
+Other values are compared with === operator.
+
+** =comp=
+Compose functions into one function.
+
+#+begin_src fennel
+  (fn square [x] (^ x 2))
+  (fn inc [x] (+ x 1))
+
+  ((comp square inc) 5) ;; => 36
+#+end_src
+
+#  LocalWords:  Luajit VM arity runtime multi Cljlib fn mapv kv REPL
+#  LocalWords:  namespaced namespace eq
