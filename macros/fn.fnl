@@ -1,5 +1,6 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
+(local sort table.sort)
 
 (fn multisym->sym [s]
   (if (multi-sym? s)
@@ -36,6 +37,26 @@
           (list 'let [args ['...]] (list 'do (unpack body)))
           (has-amp? args)))
 
+(fn contains? [tbl x]
+  (var res false)
+  (each [i v (ipairs tbl)]
+    (if (= v x)
+        (do (set res i)
+            (lua :break))))
+  res)
+
+(fn grows-by-one? [tbl]
+  (let [t []]
+    (each [_ v (ipairs tbl)] (insert t v))
+    (sort t)
+    (var prev nil)
+    (each [_ cur (ipairs t)]
+      (if prev
+          (when (~= (+ prev 1) cur)
+            (lua "return false")))
+      (set prev cur))
+    prev))
+
 (fn arity-dispatcher [len fixed body& name]
   ;; Forms an `if' expression with all fixed arities first, then `&'
   ;; arity, if present, and default error message as last arity.
@@ -55,11 +76,13 @@
   ;; Lastly the catchall branch is added to `if' expression, which
   ;; ensures that only valid amount of arguments were passed to
   ;; function, which are defined by previous branches.
-  (let [bodies '(if)]
+  (let [bodies '(if)
+        lengths []]
     (var max nil)
     (each [fixed-len body (pairs (doto fixed))]
       (when (or (not max) (> fixed-len max))
         (set max fixed-len))
+      (insert lengths fixed-len)
       (insert bodies (list '= len fixed-len))
       (insert bodies body))
     (when body&
@@ -67,11 +90,14 @@
         (assert-compile (not (and max (<= more-len max))) "fn*: arity with `& more' must have more arguments than maximum arity without `& more'.
 
 * Try adding more arguments before `&'" arity)
+        (insert lengths more-len)
         (insert bodies (list '>= len (- more-len 1)))
         (insert bodies body)))
-    (insert bodies (list 'error
-                         (.. "wrong argument amount"
-                             (if name (.. " for "  name) "")) 2))
+    (if (not (and (grows-by-one? lengths)
+                  (contains? lengths 0)))
+        (insert bodies (list 'error
+                             (.. "wrong argument amount"
+                                 (if name (.. " for "  name) "")) 2)))
     bodies))
 
 (fn single-arity-body [args fname]
