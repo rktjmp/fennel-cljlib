@@ -3,7 +3,7 @@
 stages:
     - test
 
-test:Lua5.3:
+Lua 5.3:
     image: alpine:3.12.1
     stage: test
     before_script:
@@ -12,7 +12,7 @@ test:Lua5.3:
     script:
         - LUA=lua5.3 make test
 
-test:Lua5.4:
+Lua 5.4:
     image: ubuntu:20.10
     stage: test
     before_script:
