@@ -13,9 +13,12 @@ ${LUASOURCES}: $(FNLSOURCES)
 	fennel --lua $(LUA) --compile $< > $@
 
 clean:
-	rm -f *.lua luacov*
+	rm -f *.lua
 
-test:
+clean-all: clean
+	rm -f luacov*
+
+test: clean
 	@fennel --lua $(LUA) core_test.fnl
 	@fennel --lua $(LUA) macros_test.fnl
 
@@ -39,3 +42,5 @@ help:
 	@echo "make luacov         -- build coverage report (requires working tests)" >&2
 	@echo "make luacov-console -- build coverage report (requires working tests)" >&2
 	@echo "make help           -- print this message and exit" >&2
+
+-include .depend.mk
