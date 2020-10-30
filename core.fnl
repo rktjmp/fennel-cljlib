@@ -380,8 +380,8 @@ oppisite truth value."
   (when-some [tbl (seq tbl)]
     (reduce -consj [] tbl)))
 
-(fn& core.inc [x] (+ x 1))
-(fn& core.dec [x] (- x 1))
+(fn* core.inc "Increase number by one" [x] (+ x 1))
+(fn* core.dec "Decrease number by one" [x] (- x 1))
 
 (fn* core.assoc
   "Associate key `k' with value `v' in `tbl'."

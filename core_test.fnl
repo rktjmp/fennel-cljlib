@@ -423,10 +423,15 @@
 (deftest math-functions
   (testing inc
     (assert-eq (inc 1) 2)
-    (assert-eq (inc -1) 0))
+    (assert-eq (inc -1) 0)
+    (assert* (not (pcall inc)))
+    (assert* (not (pcall inc nil))))
+
   (testing dec
     (assert-eq (dec 1) 0)
-    (assert-eq (dec -1) -2)))
+    (assert-eq (dec -1) -2)
+    (assert* (not (pcall dec)))
+    (assert* (not (pcall dec nil)))))
 
 (deftest table-access
   (testing get
