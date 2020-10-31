@@ -127,7 +127,7 @@ If `tbl' is sequential table, returns its shallow copy."
         (tset seq k v))
       (if assoc? assoc seq))))
 
-(macro -safe-seq [tbl]
+(macro safe-seq [tbl]
   "Create sequential table, or empty table if `seq' returned `nil'."
   `(or (seq ,tbl) []))
 
@@ -172,7 +172,7 @@ If `tbl' is sequential table, returns its shallow copy."
   ([tbl x & xs]
    (apply conj (conj tbl x) xs)))
 
-(fn* -consj
+(fn* consj
   "Like conj but joins at the front. Modifies `tbl'."
   ([] [])
   ([tbl] tbl)
@@ -180,22 +180,20 @@ If `tbl' is sequential table, returns its shallow copy."
    (when-some [x x]
      (doto tbl (insert 1 x))))
   ([tbl x & xs]
-   (if (> (length xs) 0)
-       (let [[y & xs] xs] (apply -consj (-consj tbl x) y xs))
-       (-consj tbl x))))
+   (apply consj (consj tbl x) xs)))
 
 (fn& core.cons [x tbl]
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   (if-some [x x]
-    (doto (-safe-seq tbl)
+    (doto (safe-seq tbl)
       (insert 1 x))
     tbl))
 
 (fn* core.concat
   "Concatenate tables."
   ([] nil)
-  ([x] (-safe-seq x))
-  ([x y] (into (-safe-seq x) (-safe-seq y)))
+  ([x] (safe-seq x))
+  ([x y] (into (safe-seq x) (safe-seq y)))
   ([x y & xs]
    (apply concat (concat x y) xs)))
 
@@ -215,7 +213,7 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
   ([f tbl]
-   (let [tbl (-safe-seq tbl)]
+   (let [tbl (safe-seq tbl)]
      (match (length tbl)
        0 (f)
        1 (. tbl 1)
@@ -223,7 +221,7 @@ val and f is not called."
        _ (let [[a b & rest] tbl]
            (reduce f (f a b) rest)))))
   ([f val tbl]
-   (let [tbl (-safe-seq tbl)]
+   (let [tbl (safe-seq tbl)]
      (let [[x & xs] tbl]
        (if (nil? x)
            val
@@ -241,7 +239,7 @@ contains no entries, returns `val' and `f' is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
 ordinals."  [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (-safe-seq tbl))]
+  (each [_ [k v] (pairs (safe-seq tbl))]
     (set res (f res k v)))
   res)
 
@@ -256,14 +254,14 @@ any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
    (local res [])
-   (each [_ v (ipairs (-safe-seq tbl))]
+   (each [_ v (ipairs (safe-seq tbl))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
   ([f t1 t2]
    (let [res []
-         t1 (-safe-seq t1)
-         t2 (-safe-seq t2)]
+         t1 (safe-seq t1)
+         t2 (safe-seq t2)]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (while (and i1 i2)
@@ -274,9 +272,9 @@ ignored. Returns a table of results."
      res))
   ([f t1 t2 t3]
    (let [res []
-         t1 (-safe-seq t1)
-         t2 (-safe-seq t2)
-         t3 (-safe-seq t3)]
+         t1 (safe-seq t1)
+         t2 (safe-seq t2)
+         t3 (safe-seq t3)]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (var (i3 v3) (next t3))
@@ -292,9 +290,9 @@ ignored. Returns a table of results."
                 (when (->> tbls
                            (mapv #(~= (next $) nil))
                            (reduce #(and $1 $2)))
-                  (cons (mapv #(first (-safe-seq $)) tbls) (step (mapv rest tbls)))))
+                  (cons (mapv #(first (safe-seq $)) tbls) (step (mapv rest tbls)))))
          res []]
-     (each [_ v (ipairs (step (-consj tbls t3 t2 t1)))]
+     (each [_ v (ipairs (step (concat [t1 t2 t3] tbls)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
      res)))
@@ -306,7 +304,7 @@ ignored. Returns a table of results."
           (cons f (filter pred r))
           (filter pred r)))))
 
-(fn -kvseq [tbl]
+(fn kvseq [tbl]
   "Transforms any table kind to key-value sequence."
   (let [res []]
     (each [k v (pairs tbl)]
@@ -318,8 +316,8 @@ ignored. Returns a table of results."
   ([x] true)
   ([x y]
    (if (and (= (type x) :table) (= (type y) :table))
-       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. y k) v)) (-kvseq x)))
-            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. x k) v)) (-kvseq y))))
+       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
+            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
        (= x y)))
   ([x y & xs]
    (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))
@@ -337,7 +335,7 @@ ignored. Returns a table of results."
      ([x y z] (f (g x y z)))
      ([x y z & args] (f (g x y z (unpack args))))))
   ([f g & fs]
-   (reduce comp (-consj fs g f))))
+   (reduce comp (concat [f g] fs))))
 
 (fn* core.every?
   [pred tbl]
@@ -378,7 +376,7 @@ oppisite truth value."
 
 (fn& core.reverse [tbl]
   (when-some [tbl (seq tbl)]
-    (reduce -consj [] tbl)))
+    (reduce consj [] tbl)))
 
 (fn* core.inc "Increase number by one" [x] (+ x 1))
 (fn* core.dec "Decrease number by one" [x] (- x 1))
