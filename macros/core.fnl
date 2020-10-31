@@ -138,4 +138,33 @@
              :else (error "expected table as first argument"))
            to#))))
 
+(fn first [tbl]
+  (. tbl 1))
+
+(fn rest [tbl]
+  [(unpack tbl 2)])
+
+(fn string? [x]
+  (= (type x) :string))
+
+(fn* core.defmulti
+  [name & opts]
+  (let [docstring (if (string? (first opts)) (first opts))
+        opts (if docstring (rest opts) opts)
+        dispatch-fn (first opts)]
+    `(local ,name
+            (let [multimethods# {}]
+              (setmetatable {} {:__call
+                                (fn [_# ...]
+                                  ,docstring
+                                  ((or (. multimethods# (,dispatch-fn ...))
+                                       (. multimethods# :default)) ...))
+                                :multimethods multimethods#})))))
+
+(fn* core.defmethod
+  [multifn dispatch-val & fn-tail]
+  `(tset (. (getmetatable ,multifn) :multimethods)
+         ,dispatch-val
+         (fn ,(unpack fn-tail))))
+
 core

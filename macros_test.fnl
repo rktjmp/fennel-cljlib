@@ -1,6 +1,6 @@
-(import-macros {: if-let : when-let : if-some : when-some : into} :macros.core)
+(import-macros {: if-let : when-let : if-some : when-some : into : defmethod : defmulti} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
-(local {: eq?} (require :core)) ;; required for testing
+(local {: eq? : identity} (require :core)) ;; required for testing
 
 (deftest into
   (testing into
@@ -66,3 +66,24 @@
     (assert-eq (if-some [a [1 2 3]] a :nothing) [1 2 3])
     (assert-eq (if-some [a false] a :nothing) false)
     (assert-eq (if-some [a nil] a :nothing) :nothing)))
+
+(deftest multimethods
+  (testing defmethod
+    (defmulti fac identity)
+    (defmethod fac 0 [_] 1)
+    (defmethod fac :default [x] (* x (fac (- x 1))))
+    (assert-eq (fac 42) 7538058755741581312)
+
+    (defmulti send-data (fn [protocol data] protocol))
+    (defmethod send-data :http [protocol data] (.. data " will be sent over HTTP"))
+    (defmethod send-data :icap [protocol data] (.. data " will be sent over ICAP"))
+    (assert-eq (send-data :http 42) "42 will be sent over HTTP")
+    (assert-eq (send-data :icap 42) "42 will be sent over ICAP")
+
+    (defmulti send-message (fn [message] (. message :protocol)))
+    (defmethod send-message :http [message] (.. "sending " (. message :message) " over HTTP"))
+    (defmethod send-message :icap [message] (.. "sending " (. message :message) " over ICAP"))
+    (assert-eq (send-message {:protocol :http :message "ваыв"})
+               "sending ваыв over HTTP")
+    (assert-eq (send-message {:protocol :icap :message 42})
+               "sending 42 over ICAP")))
