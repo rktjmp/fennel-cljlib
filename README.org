@@ -221,6 +221,24 @@ However, if target table is not empty, its type can be deduced:
 Note that when converting associative table into sequential table order is determined by the =pairs= function.
 Also note that if variable stores the table has both integer key 1, and other associative keys, the type will be the same as of sequential table.
 
+** =defmulti= and =defmethod=
+A bit more simple implementations of Clojure's =defmulti= and =defmethod=.
+=defmulti= macros returns an empty table with =__call= metamethod, that calls dispatching function on its arguments.
+Methods are defined inside =multimethods= table, which is also stored in the metatable.
+
+=defmethod= adds a new method to the metatable of given =multifn=.
+It accepts the multi-fn table as its first argument, the dispatch value as second, and Fennel's arglist followed by the body:
+
+#+begin_src fennel
+  (defmulti fac (fn [x] x))
+
+  (defmethod fac 0 [_] 1)
+  (defmethod fac :default [x] (* x (fac (- x 1))))
+
+  (fac 4) ;; => 24
+#+end_src
+
+=:default= is a special method which gets called when no other methods were found for given dispatch value.
 
 * Functions
 Here are some important functions from the library.
