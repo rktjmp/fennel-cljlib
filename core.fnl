@@ -3,7 +3,7 @@
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
 (import-macros {: fn* : fn&} :macros.fn)
-(import-macros {: when-some : if-some : when-let : into} :macros.core)
+(import-macros {: when-some : if-some : when-let} :macros.core)
 
 (fn* core.apply
   "Apply `f' to the argument list formed by prepending intervening
@@ -193,7 +193,11 @@ If `tbl' is sequential table, returns its shallow copy."
   "Concatenate tables."
   ([] nil)
   ([x] (safe-seq x))
-  ([x y] (into (safe-seq x) (safe-seq y)))
+  ([x y] (let [to (safe-seq x)
+               from (safe-seq y)]
+           (each [_ v (ipairs from)]
+             (insert to v))
+           to))
   ([x y & xs]
    (apply concat (concat x y) xs)))
 
