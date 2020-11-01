@@ -1,0 +1,9 @@
+-- -*- mode: lua; -*-
+-- setting default behaviors for luacov. For documentation on the options,
+-- see https://keplerproject.github.io/luacov/doc/modules/luacov.defaults.html
+
+return {
+  runreport = true,
+  statsfile = "luacov.stats.out";
+  reportfile = "luacov.report.out";
+}
