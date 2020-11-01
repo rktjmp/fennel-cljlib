@@ -22,7 +22,7 @@ test: clean
 	@fennel --lua $(LUA) core_test.fnl
 	@fennel --lua $(LUA) macros_test.fnl
 
-luacov: | clean all luacov-stats
+luacov: | clean-all all luacov-stats
 	luacov
 
 luacov-console: | luacov

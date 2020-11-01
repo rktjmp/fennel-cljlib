@@ -2,6 +2,7 @@
 
 stages:
     - test
+    - coverage
 
 Lua 5.3:
     image: alpine:3.12.1
@@ -22,3 +23,15 @@ Lua 5.4:
         - luarocks install fennel
     script:
         - LUA=lua5.4 make test
+
+Coverage:
+    image: alpine:3.12.1
+    stage: coverage
+    before_script:
+        - apk add lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 make
+        - luarocks-5.3 install fennel
+        - luarocks-5.3 install luacov
+        - luarocks-5.3 install luacov-console
+    script:
+        - LUA=lua5.3 make luacov-console
+        - luacov-console -s
