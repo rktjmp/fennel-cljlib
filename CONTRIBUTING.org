@@ -45,7 +45,9 @@ When changing existing functions make sure that all tests pass.
 If some tests do not pass, make sure that these tests are written to test this function.
 If not, then, perhaps, you've broke something horribly.
 
-Before comitting changes you must run tests with =Make test=, and all of the tests must pass without errors.
+Before comitting changes you must run tests with =make test=, and all of the tests must pass without errors.
+Consider checking test coverage with =make luacov= and rendering it with your preferred reporter.
+Makefile also has =luacov-console= target, which can be used to see coverage of lua code directly in the terminal.
 
 ** Writing documentation
 If you've added new code, make sure it is covered not only by tests but also with documentation.
