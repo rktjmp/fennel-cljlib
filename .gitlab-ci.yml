@@ -34,4 +34,4 @@ Coverage:
         - luarocks-5.3 install luacov-console
     script:
         - LUA=lua5.3 make luacov-console
-        - luacov-console -s
+        - luacov-console --no-colored -s
