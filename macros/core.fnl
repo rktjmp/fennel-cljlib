@@ -184,16 +184,28 @@
      multifn#))
 
 (fn* core.def
-  [name expr]
-  (let [(s m) (multisym->sym name)]
-        (if m
-            `(local ,s (do (local ,s ,expr) (set ,name ,s) ,s))
-            `(local ,name ,expr))))
+  ([name expr] (def {} name expr))
+  ([attr-map name expr]
+   (if (not (or (table? attr-map)
+                (string? attr-map)))
+       (error "def: expected keyword or literal table as first argument" 2))
+   (let [(s multi) (multisym->sym name)
+         f (if (if (table? attr-map)
+                   (. attr-map :dynamic)
+                   (if (= attr-map :dynamic)
+                       true
+                       (error (.. "unsupported attribute keyword: :" attr-map) 2)))
+               'var 'local)]
+     (if multi
+         `(,f ,s (do (,f ,s ,expr) (set ,name ,s) ,s))
+         `(,f ,name ,expr)))))
 
 (fn* core.defonce
-  [name expr]
-  (if (in-scope? name)
-      nil
-      (def name expr)))
+  ([name expr]
+   (defonce {} name expr))
+  ([attr-map name expr]
+   (if (in-scope? (if (table? attr-map) name attr-map))
+       nil
+       (def attr-map name expr))))
 
 core

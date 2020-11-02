@@ -94,16 +94,21 @@
 
 (deftest def-macros
   (testing def
-    (def a 10)
+    (def {:dynamic true} a 10)
     (assert-eq a 10)
+    (set a 20)
+    (assert-eq a 20)
     (def a {})
     (assert-eq a {})
     (def a.b 10)
     (assert-eq a.b 10)
-    (assert-eq b 10))
+    (assert-eq b 10)
+    (def :dynamic c 10)
+    (set c 15)
+    (assert-eq c 15))
 
   (testing defonce
-    (defonce a 10)
+    (defonce {:dynamic true} a 10)
     (assert-eq a 10)
     (defonce a {})
     (assert-eq a 10)
