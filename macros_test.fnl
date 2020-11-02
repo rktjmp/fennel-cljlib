@@ -1,6 +1,6 @@
 (import-macros {: if-let : when-let : if-some : when-some : into : defmethod : defmulti} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
-(local {: eq? : identity} (require :core)) ;; required for testing
+(local {: eq : identity} (require :core)) ;; required for testing
 
 (deftest into
   (testing into

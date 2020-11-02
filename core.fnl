@@ -315,16 +315,7 @@ ignored. Returns a table of results."
       (insert res [k v]))
     res))
 
-(fn* core.eq?
-  "Deep compare values."
-  ([x] true)
-  ([x y]
-   (if (and (= (type x) :table) (= (type y) :table))
-       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. y k) v)) (kvseq x)))
-            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq? (. x k) v)) (kvseq y))))
-       (= x y)))
-  ([x y & xs]
-   (reduce #(and $1 $2) (eq? x y) (mapv #(eq? x $) xs))))
+
 
 (fn& core.identity [x] x)
 
@@ -447,5 +438,91 @@ that would apply to that value, or `nil' if none apply and no default."
   [multifn dispatch-val]
   (or (. (getmetatable multifn) :multimethods dispatch-val)
       (. (getmetatable multifn) :multimethods :default)))
+
+(fn* core.plus
+  ([] 0)
+  ([a] a)
+  ([a b] (+ a b))
+  ([a b c] (+ a b c))
+  ([a b c d] (+ a b c d))
+  ([a b c d & rest] (apply plus (+ a b c d) rest)))
+
+(fn* core.minus
+  ([] 0)
+  ([a] (- a))
+  ([a b] (- a b))
+  ([a b c] (- a b c))
+  ([a b c d] (- a b c d))
+  ([a b c d & rest] (apply minus (- a b c d) rest)))
+
+(fn* core.mul
+  ([] 1)
+  ([a] a)
+  ([a b] (* a b))
+  ([a b c] (* a b c))
+  ([a b c d] (* a b c d))
+  ([a b c d & rest] (apply mul (* a b c d) rest)))
+
+(fn* core.div
+  ([a] (/ 1 a))
+  ([a b] (/ a b))
+  ([a b c] (/ a b c))
+  ([a b c d] (/ a b c d))
+  ([a b c d & rest] (apply div (/ a b c d) rest)))
+
+(fn* core.le
+  "Returns true if nums are in monotonically non-decreasing order"
+  ([x] true)
+  ([x y] (<= x y))
+  ([x y & more]
+   (if (<= x y)
+       (if (next more 1)
+           (le y (. more 1) (unpack more 2))
+           (<= y (. more 1)))
+       false)))
+
+(fn* core.lt
+  "Returns true if nums are in monotonically decreasing order"
+  ([x] true)
+  ([x y] (< x y))
+  ([x y & more]
+   (if (< x y)
+       (if (next more 1)
+           (lt y (. more 1) (unpack more 2))
+           (< y (. more 1)))
+       false)))
+
+(fn* core.ge
+  "Returns true if nums are in monotonically non-increasing order"
+  ([x] true)
+  ([x y] (>= x y))
+  ([x y & more]
+   (if (>= x y)
+       (if (next more 1)
+           (ge y (. more 1) (unpack more 2))
+           (>= y (. more 1)))
+       false)))
+
+(fn* core.gt
+  "Returns true if nums are in monotonically increasing order"
+  ([x] true)
+  ([x y] (> x y))
+  ([x y & more]
+   (if (> x y)
+       (if (next more 1)
+           (gt y (. more 1) (unpack more 2))
+           (> y (. more 1)))
+       false)))
+
+(fn* core.eq
+  "Deep compare values."
+  ([x] true)
+  ([x y]
+   (if (and (= (type x) :table) (= (type y) :table))
+       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq (. y k) v)) (kvseq x)))
+            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq (. x k) v)) (kvseq y))))
+       (= x y)))
+  ([x y & xs]
+   (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
 
 core

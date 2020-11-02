@@ -34,7 +34,7 @@
   : true?
   : empty?
   : not-empty
-  : eq?
+  : eq
   : identity
   : comp
   : every?
@@ -52,31 +52,39 @@
   : get-method
   : methods
   : remove-method
-  : remove-all-methods}
+  : remove-all-methods
+  : plus
+  : minus
+  : mul
+  : div
+  : le
+  : ge
+  : lt
+  : gt}
  (require :core))
 
 (deftest equality
-  (testing eq?
-    (assert* (not (pcall eq?)))
+  (testing eq
+    (assert* (not (pcall eq)))
     ;; comparing basetypes
     (assert-eq 1 1)
     (assert-ne 1 2)
-    (assert* (eq? 1 1 1 1 1))
+    (assert* (eq 1 1 1 1 1))
     (assert-eq 1.0 1.0)
-    (assert* (eq? 1.0 1.0 1.0))
-    (assert* (eq? 1.0 1.0 1.0))
-    (assert* (eq? "1" "1" "1" "1" "1"))
+    (assert* (eq 1.0 1.0 1.0))
+    (assert* (eq 1.0 1.0 1.0))
+    (assert* (eq "1" "1" "1" "1" "1"))
 
     ;; deep comparison
-    (assert* (eq? []))
+    (assert* (eq []))
     (assert-eq [] [])
     (assert-eq [] {})
     (assert-eq [1 2] [1 2])
     (assert-ne [1] [1 2])
     (assert-ne [1 2] [1])
-    (assert* (eq? [1 [2]] [1 [2]] [1 [2]]))
-    (assert* (eq? [1 [2]] [1 [2]] [1 [2]]))
-    (assert* (not (eq? [1 [2]] [1 [2]] [1 [2 [3]]])))
+    (assert* (eq [1 [2]] [1 [2]] [1 [2]]))
+    (assert* (eq [1 [2]] [1 [2]] [1 [2]]))
+    (assert* (not (eq [1 [2]] [1 [2]] [1 [2 [3]]])))
 
     (let [a {:a 1 :b 2}
           b {:a 1 :b 2}]
@@ -501,3 +509,81 @@
     (assert-eq (methods f) {})
     (assert* (not (pcall remove-all-methods)))
     (assert* (not (pcall remove-all-methods f f)))))
+
+(deftest math-functions
+  (testing plus
+    (assert-eq (plus) 0)
+    (assert-eq (plus 1) 1)
+    (assert-eq (plus -1) -1)
+    (assert-eq (plus 1 2) 3)
+    (assert-eq (plus 1 2 3) 6)
+    (assert-eq (plus 1 2 3 4) 10)
+    (assert-eq (plus 1 2 3 4 5) 15))
+
+  (testing minus
+    (assert-eq (minus) 0)
+    (assert-eq (minus 1) -1)
+    (assert-eq (minus -1) 1)
+    (assert-eq (minus 1 2) -1)
+    (assert-eq (minus 1 2 3) -4)
+    (assert-eq (minus 1 2 3 4) -8)
+    (assert-eq (minus 1 2 3 4 5) -13))
+
+  (testing mul
+    (assert-eq (mul) 1)
+    (assert-eq (mul 1) 1)
+    (assert-eq (mul -1) -1)
+    (assert-eq (mul 1 2) 2)
+    (assert-eq (mul 1 2 3) 6)
+    (assert-eq (mul 1 2 3 4) 24)
+    (assert-eq (mul 1 2 3 4 5) 120))
+
+  (testing div
+    (assert* (not (pcall div)))
+    (assert-eq (div 1) 1)
+    (assert-eq (div -1) -1)
+    (assert-eq (div 1 2) (/ 1 2))
+    (assert-eq (div 1 2 3) (/ 1 2 3))
+    (assert-eq (div 1 2 3 4) (/ 1 2 3 4))
+    (assert-eq (div 1 2 3 4 5) (/ 1 2 3 4 5))))
+
+(deftest comparison-functions
+  (testing le
+    (assert* (not (pcall le)))
+    (assert* (le 1))
+    (assert* (le 1 2))
+    (assert* (le 1 2 2))
+    (assert* (le 1 2 3 4))
+    (assert* (not (le 2 1)))
+    (assert* (not (le 2 1 3)))
+    (assert* (not (le 1 2 4 3))))
+
+  (testing lt
+    (assert* (not (pcall lt)))
+    (assert* (lt 1))
+    (assert* (lt 1 2))
+    (assert* (lt 1 2 3))
+    (assert* (lt 1 2 3 4))
+    (assert* (not (lt 2 1)))
+    (assert* (not (lt 2 1 3)))
+    (assert* (not (lt 1 2 4 4))))
+
+  (testing ge
+    (assert* (not (pcall ge)))
+    (assert* (ge 2))
+    (assert* (ge 2 1))
+    (assert* (ge 3 3 2))
+    (assert* (ge 4 3 2 -1))
+    (assert* (not (ge 1 2)))
+    (assert* (not (ge 2 1 3)))
+    (assert* (not (ge 1 2 4 4))))
+
+  (testing gt
+    (assert* (not (pcall ge)))
+    (assert* (gt 2))
+    (assert* (gt 2 1))
+    (assert* (gt 3 2 1))
+    (assert* (gt 4 3 2 -1))
+    (assert* (not (gt 1 2)))
+    (assert* (not (gt 2 1 3)))
+    (assert* (not (gt 1 2 4 4)))))
