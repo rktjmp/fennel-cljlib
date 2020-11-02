@@ -3,6 +3,11 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 
+(fn multisym->sym [s]
+  (if (multi-sym? s)
+      (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
+      (values s false)))
+
 (fn check-bindings [bindings]
   (and (assert-compile (sequence? bindings) "expected binding table" [])
        (assert-compile (= (length bindings) 2) "expected exactly two forms in binding vector." bindings)))
@@ -177,5 +182,18 @@
            ,dispatch-val
            (fn ,(unpack fn-tail)))
      multifn#))
+
+(fn* core.def
+  [name expr]
+  (let [(s m) (multisym->sym name)]
+        (if m
+            `(local ,s (do (local ,s ,expr) (set ,name ,s) ,s))
+            `(local ,name ,expr))))
+
+(fn* core.defonce
+  [name expr]
+  (if (in-scope? name)
+      nil
+      (def name expr)))
 
 core

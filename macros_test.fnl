@@ -1,4 +1,4 @@
-(import-macros {: if-let : when-let : if-some : when-some : into : defmethod : defmulti} :macros.core)
+(import-macros {: if-let : when-let : if-some : when-some : into : defmethod : defmulti : defonce : def} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
 (local {: eq : identity} (require :core)) ;; required for testing
 
@@ -91,3 +91,23 @@
                "sending ваыв over HTTP")
     (assert-eq (send-message {:protocol :icap :message 42})
                "sending 42 over ICAP")))
+
+(deftest def-macros
+  (testing def
+    (def a 10)
+    (assert-eq a 10)
+    (def a {})
+    (assert-eq a {})
+    (def a.b 10)
+    (assert-eq a.b 10)
+    (assert-eq b 10))
+
+  (testing defonce
+    (defonce a 10)
+    (assert-eq a 10)
+    (defonce a {})
+    (assert-eq a 10)
+    (defonce b {})
+    (defonce b.a 10)
+    (assert-eq b.a 10)
+    (assert-eq a 10)))
