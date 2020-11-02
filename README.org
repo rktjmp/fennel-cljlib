@@ -15,6 +15,48 @@ Even though it is project is experimental, the goals of this project are:
 * Macros
 List of macros provided by the library.
 
+** =def= and =defonce=
+=def= is wrappers around =local= which can declare variables inside namespace, and as local at the same time:
+
+#+begin_src fennel
+  >> (def ns {})
+  >> (def a 10)
+  >> a
+  10
+  >> (def ns.a 20)
+  >> a
+  20
+  >> ns.a
+  20
+#+end_src
+
+Both =ns.a= and =a= refer to the same value.
+
+=defonce= ensures that the binding isn't overriden by another =defonce=:
+
+#+begin_src fennel
+  >> (defonce ns {})
+  >> (defonce ns.a 42)
+  >> (defonce ns 10)
+  >> ns
+  {:a 42}
+  >> a
+  42
+#+end_src
+
+Both =def= and =defonce= support literal attribute table as first argument, or a :dynamic keyword, that uses Fennel =var= instead of =local=:
+
+#+begin_src fennel
+  >> (def {:dynamic true} a 10)
+  >> (set a 20)
+  >> a
+  20
+  >> (defonce :dynamic b 40)
+  >> (set b 42)
+  >> b
+  42
+#+end_src
+
 ** =fn*=
 Clojure's =fn= equivalent.
 Returns a function of fixed amount of arguments by doing runtime dispatch based on argument count.
@@ -63,14 +105,9 @@ Both variants support up to one arity with =& more=:
   (add 1 2 3 4) ;; => 10
 #+end_src
 
-One extra capability of =fn*= is that it is possible to declare namespaced functions and use those literally in the same scope, and withing the function itself.
-
-For example, imagine you want to create function =plus= in namespace =ns=, that sums arbitrary amount of integers, and quickly test it before providing the namespace:
+One extra capability of =fn*= supports the same semantic as =def= regarding namespaces:
 
 #+begin_src fennel
-  (local clj (require :core))
-  (import-macros {: fn*} :macros.fn)
-
   (local ns {})
 
   (fn* ns.plus
@@ -79,23 +116,16 @@ For example, imagine you want to create function =plus= in namespace =ns=, that 
     ([x y] (+ x y))
     ([x y & zs] (apply plus (+ x y) zs)))
 
-  (assert (= (plus) 0))
-  (assert (= (plus 1) 1))
-  (assert (= (plus 1 2) 3))
-  (assert (= (plus 1 2 3 4) 10))
-
   ns
 #+end_src
 
-Note, that =plus= is used without =ns= part, e.g. not =namespace.plus=.
+Note, that =plus= is used without =ns= part, e.g. not =ns.plus=.
 If we =require= this code from file in the REPL, we will see that our =ns= has single function =plus=:
 
 #+begin_src fennel
   >> (local ns (require :module))
   >> ns
-  {
-      add #<function 0xbada55code>
-  }
+  {add #<function 0xbada55code>}
 #+end_src
 
 This is possible because =fn*= separates the namespace part from the function name, and creates a =local= variable with the same name as function, then defines the function within lexical scope of =do=, sets =namespace.foo= to it and returns the function object to the outer scope.
