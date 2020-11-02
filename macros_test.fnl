@@ -68,6 +68,10 @@
     (assert-eq (if-some [a nil] a :nothing) :nothing)))
 
 (deftest multimethods
+  (testing defmulti
+    (defmulti x (fn [x] x))
+    (assert-eq (defmulti x (fn [x] (+ x 1))) nil))
+
   (testing defmethod
     (defmulti fac identity)
     (defmethod fac 0 [_] 1)

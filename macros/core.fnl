@@ -152,21 +152,23 @@
   (let [docstring (if (string? (first opts)) (first opts))
         opts (if docstring (rest opts) opts)
         dispatch-fn (first opts)]
-    `(local ,name
-            (let [multimethods# {}]
-              (setmetatable
-               {}
-               {:__call
-                (fn [_# ...]
-                  ,docstring
-                  (let [dispatch-value# (,dispatch-fn ...)]
-                    ((or (. multimethods# dispatch-value#)
-                         (. multimethods# :default)
-                         (error (.. "No method in multimethod '"
-                                    ,(tostring name)
-                                    "' for dispatch value: "
-                                    dispatch-value#) 2)) ...)))
-                :multimethods multimethods#})))))
+    (if (in-scope? name)
+        nil
+        `(local ,name
+                (let [multimethods# {}]
+                  (setmetatable
+                   {}
+                   {:__call
+                    (fn [_# ...]
+                      ,docstring
+                      (let [dispatch-value# (,dispatch-fn ...)]
+                        ((or (. multimethods# dispatch-value#)
+                             (. multimethods# :default)
+                             (error (.. "No method in multimethod '"
+                                        ,(tostring name)
+                                        "' for dispatch value: "
+                                        dispatch-value#) 2)) ...)))
+                    :multimethods multimethods#}))))))
 
 (fn* core.defmethod
   [multifn dispatch-val & fn-tail]

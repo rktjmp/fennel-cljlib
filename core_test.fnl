@@ -1,5 +1,5 @@
 (import-macros {: fn*} :macros.fn)
-(import-macros {: into} :macros.core)
+(import-macros {: into : defmethod : defmulti} :macros.core)
 (import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
 
 (local
@@ -48,7 +48,11 @@
   : dec
   : assoc
   : get
-  : get-in}
+  : get-in
+  : get-method
+  : methods
+  : remove-method
+  : remove-all-methods}
  (require :core))
 
 (deftest equality
@@ -453,3 +457,47 @@
     (assert-eq (get-in t []) t)
     (assert* (not (pcall get-in)))
     (assert* (not (pcall get-in {})))))
+
+(deftest methods
+  (testing methods
+    (defmulti f identity)
+    (defmethod f :a [_] :a)
+    (defmethod f :b [_] :b)
+    (defmethod f :c [x] (* x x))
+    (assert-eq (methods f) (. (getmetatable f) :multimethods))
+    (assert* (not (pcall methods)))
+    (assert* (not (pcall methods f f))))
+
+  (testing get-method
+    (defmulti f identity)
+    (defmethod f :a [_] :a)
+    (defmethod f :b [_] :b)
+    (defmethod f :c [x] (* x x))
+    (assert-eq ((get-method f :a) 10) :a)
+    (assert-eq ((get-method f :b) 20) :b)
+    (assert-eq ((get-method f :c) 4) 16)
+    (assert* (not (pcall get-method)))
+    (assert* (not (pcall get-method f)))
+    (assert* (not (pcall get-method f :a :b))))
+
+  (testing remove-method
+    (defmulti f identity)
+    (defmethod f :a [_] :a)
+    (defmethod f :b [_] :b)
+    (remove-method f :a)
+    (assert-eq (get-method f :a) nil)
+    (defmethod f :default [_] :default)
+    (assert-eq (get-method f :a) (get-method f :default))
+    (assert* (not (pcall remove-method)))
+    (assert* (not (pcall remove-method f)))
+    (assert* (not (pcall remove-method f :a :b))))
+
+  (testing remove-all-methods
+    (defmulti f identity)
+    (defmethod f :a [_] :a)
+    (defmethod f :b [_] :b)
+    (defmethod f :default [_] :default)
+    (remove-all-methods f)
+    (assert-eq (methods f) {})
+    (assert* (not (pcall remove-all-methods)))
+    (assert* (not (pcall remove-all-methods f f)))))

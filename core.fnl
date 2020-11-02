@@ -423,4 +423,29 @@ found in the table."
        (set res not-found)))
    res))
 
+(fn* core.remove-method
+  [multifn dispatch-val]
+  (tset (. (getmetatable multifn) :multimethods) dispatch-val nil)
+  multifn)
+
+(fn* core.remove-all-methods
+  "Removes all of the methods of multimethod"
+  [multifn]
+  (let [mtable (. (getmetatable multifn) :multimethods)]
+    (each [k _ (pairs mtable)]
+      (tset mtable k nil))
+    multifn))
+
+(fn* core.methods
+  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
+  [multifn]
+  (. (getmetatable multifn) :multimethods))
+
+(fn* core.get-method
+  "Given a multimethod and a dispatch value, returns the dispatch `fn'
+that would apply to that value, or `nil' if none apply and no default."
+  [multifn dispatch-val]
+  (or (. (getmetatable multifn) :multimethods dispatch-val)
+      (. (getmetatable multifn) :multimethods :default)))
+
 core
