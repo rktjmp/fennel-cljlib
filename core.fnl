@@ -294,16 +294,16 @@ ignored. Returns a table of results."
                 (when (->> tbls
                            (mapv #(~= (next $) nil))
                            (reduce #(and $1 $2)))
-                  (cons (mapv #(first (safe-seq $)) tbls) (step (mapv rest tbls)))))
+                  (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))))
          res []]
-     (each [_ v (ipairs (step (concat [t1 t2 t3] tbls)))]
+     (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
      res)))
 
 (fn* core.filter [pred tbl]
   (when-let [tbl (seq tbl)]
-    (let [f (first tbl) r (rest tbl)]
+    (let [f (. tbl 1) r [(unpack tbl 2)]]
       (if (pred f)
           (cons f (filter pred r))
           (filter pred r)))))
@@ -339,18 +339,18 @@ ignored. Returns a table of results."
      ([x y z] (f (g x y z)))
      ([x y z & args] (f (g x y z (unpack args))))))
   ([f g & fs]
-   (reduce comp (concat [f g] fs))))
+   (reduce comp (consj fs g f))))
 
 (fn* core.every?
   [pred tbl]
   (if (empty? tbl) true
-      (pred (first tbl)) (every? pred (rest tbl))
+      (pred (. tbl 1)) (every? pred [(unpack tbl 2)])
       false))
 
 (fn* core.some
   [pred tbl]
   (when-let [tbl (seq tbl)]
-    (or (pred (first tbl)) (some pred (rest tbl)))))
+    (or (pred (. tbl 1)) (some pred [(unpack tbl 2)]))))
 
 (set core.not-any? (comp #(not $) some))
 
