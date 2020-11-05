@@ -2,6 +2,31 @@
 (local insert table.insert)
 (local sort table.sort)
 
+(fn with-meta [val meta]
+  `(let [val# ,val
+         (res# fennel#) (pcall require :fennel)]
+     (if res#
+         (each [k# v# (pairs ,meta)]
+           (fennel#.metadata:set val# k# v#)))
+     val#))
+
+(fn gen-arglist-doc [args]
+  (if (list? (. args 1))
+      (let [arglist []
+            open (if (> (length args) 1) "\n  [" "")
+            close (if (= open "") "" "]")]
+        (each [i v (ipairs args)]
+          (table.insert
+           arglist
+           (.. open (table.concat (gen-arglist-doc v) " ") close)))
+        arglist)
+
+      (sequence? (. args 1))
+      (let [arglist []]
+        (each [_ v (ipairs (. args 1))]
+          (table.insert arglist (tostring v)))
+        arglist)))
+
 (fn multisym->sym [s]
   (if (multi-sym? s)
       (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
@@ -169,19 +194,6 @@ argument list:
      ([person] (print (.. \"Hello, \" person \"!\")))
      ([greeting person] (print (.. greeting \", \" person \"!\"))))
 
-Note that functions created with `fn*' when inspected with `doc'
-command will always show its arguments as `...', because the
-resulting function actually accepts variable amount of arguments, but
-we check the amount and doing destructuring in runtime.
-
-(doc greet)
-
-(greet ...)
-  greet a `person', optionally specifying default `greeting'.
-
-When defining multi-arity functions it is handy to include accepted
-arities in the docstring.
-
 Argument lists follow the same destruction rules as in `let'.
 Variadic arguments with `...' are not supported.
 
@@ -214,7 +226,9 @@ and `g' respectively."
         args (if (sym? name-wo-namespace)
                  (if (string? doc?) [...] [doc? ...])
                  [name-wo-namespace doc? ...])
+        arglist-doc (gen-arglist-doc args)
         [x] args
+
         body (if (sequence? x) (single-arity-body args fname)
                  (list? x) (multi-arity-body args fname)
                  (assert-compile false "fn*: expected parameters table.
@@ -226,9 +240,9 @@ and `g' respectively."
                     (do
                       (fn ,name-wo-namespace [...] ,docstring ,body)
                       (set ,name ,name-wo-namespace)
-                      ,name-wo-namespace))
-            `(fn ,name [...] ,docstring ,body))
-        `(fn [...] ,docstring ,body))))
+                      ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring})))
+            `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring})))
+        (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring}))))
 
 (fn fn& [name doc? args ...]
   "Create (anonymous) function.
@@ -240,6 +254,7 @@ namespaced functions.  See `fn*' for more info."
         arg-list (if (sym? name-wo-namespace)
                  (if (string? doc?) args doc?)
                  name-wo-namespace)
+        arglist-doc (gen-arglist-doc arg-list)
         body (if (sym? name)
                  (if (string? doc?)
                      [doc? ...]
@@ -251,9 +266,9 @@ namespaced functions.  See `fn*' for more info."
                     (do
                       (fn ,name-wo-namespace ,arg-list ,(unpack body))
                       (set ,name ,name-wo-namespace)
-                      ,name-wo-namespace))
-            `(fn ,name ,arg-list ,(unpack body)))
-        `(fn ,arg-list ,(unpack body)))))
+                      ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring})))
+            `(local ,name ,(with-meta `(fn ,name ,arg-list ,(unpack body)) `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring})))
+        (with-meta `(fn ,arg-list ,(unpack body)) `{:fnl/arglist ,arglist-doc :fnl/docstring ,docstring}))))
 
 {: fn* : fn&}
 

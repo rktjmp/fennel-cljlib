@@ -152,6 +152,19 @@
 (fn string? [x]
   (= (type x) :string))
 
+(fn* core.with-meta [val meta]
+  `(let [val# ,val
+         (res# fennel#) (pcall require :fennel)]
+     (if res#
+         (each [k# v# (pairs ,meta)]
+           (fennel#.metadata:set val# k# v#)))
+     val#))
+
+(fn* core.meta [v]
+  `(let [(res# fennel#) (pcall require :fennel)]
+     (if res#
+         (. fennel#.metadata ,v))))
+
 (fn* core.defmulti
   [name & opts]
   (let [docstring (if (string? (first opts)) (first opts))
@@ -162,7 +175,7 @@
         `(local ,name
                 (let [multimethods# {}]
                   (setmetatable
-                   {}
+                   ,(with-meta {} {:fnl/docstring docstring})
                    {:__call
                     (fn [_# ...]
                       ,docstring
@@ -186,25 +199,24 @@
 (fn* core.def
   ([name expr] (def {} name expr))
   ([attr-map name expr]
-   (if (not (or (table? attr-map)
-                (string? attr-map)))
-       (error "def: expected keyword or literal table as first argument" 2))
-   (let [(s multi) (multisym->sym name)
-         f (if (if (table? attr-map)
-                   (. attr-map :dynamic)
-                   (if (= attr-map :dynamic)
-                       true
-                       (error (.. "unsupported attribute keyword: :" attr-map) 2)))
-               'var 'local)]
+   (let [attr-map (if (table? attr-map) attr-map
+                      (string? attr-map) {attr-map true}
+                      (error "def: expected keyword or literal table as first argument" 2))
+         (s multi) (multisym->sym name)
+         docstring (or (. attr-map :doc)
+                       (. attr-map :fnl/docstring))
+         f (if (. attr-map :dynamic) 'var 'local)]
      (if multi
-         `(,f ,s (do (,f ,s ,expr) (set ,name ,s) ,s))
-         `(,f ,name ,expr)))))
+         `(,f ,s (do (,f ,s ,expr)
+                     (set ,name ,s)
+                     ,(with-meta s {:fnl/docstring docstring})))
+         `(,f ,name ,(with-meta expr {:fnl/docstring docstring}))))))
 
 (fn* core.defonce
   ([name expr]
    (defonce {} name expr))
   ([attr-map name expr]
-   (if (in-scope? (if (table? attr-map) name attr-map))
+   (if (in-scope? name)
        nil
        (def attr-map name expr))))
 
