@@ -21,100 +21,119 @@ arguments to `args'."
      (f a b c d (unpack flat-args)))))
 
 ;; predicate functions
-(fn& core.map? [tbl]
+(fn& core.map?
   "Check whether `tbl' is an associative table."
+  [tbl]
   (if (= (type tbl) :table)
       (let [(k _) (next tbl)]
         (and (~= k nil) (or (~= (type k) :number)
                             (~= k 1))))))
 
-(fn& core.seq? [tbl]
+(fn& core.seq?
   "Check whether `tbl' is an sequential table."
+  [tbl]
   (if (= (type tbl) :table)
       (let [(k _) (next tbl)]
         (and (~= k nil) (= (type k) :number) (= k 1)))))
 
 
-(fn& core.nil? [x]
+(fn& core.nil?
   "Test if value is nil."
+  [x]
   (= x nil))
 
-(fn& core.zero? [x]
+(fn& core.zero?
   "Test if value is zero."
+  [x]
   (= x 0))
 
-(fn& core.pos? [x]
+(fn& core.pos?
   "Test if `x' is greater than zero."
+  [x]
   (> x 0))
 
-(fn& core.neg? [x]
+(fn& core.neg?
   "Test if `x' is less than zero."
+  [x]
   (< x 0))
 
-(fn& core.even? [x]
+(fn& core.even?
   "Test if value is even."
+  [x]
   (= (% x 2) 0))
 
-(fn& core.odd? [x]
+(fn& core.odd?
   "Test if value is odd."
+  [x]
   (not (even? x)))
 
-(fn& core.string? [x]
+(fn& core.string?
   "Test if `x' is a string."
+  [x]
   (= (type x) :string))
 
-(fn& core.boolean? [x]
+(fn& core.boolean?
   "Test if `x' is a Boolean"
+  [x]
   (= (type x) :boolean))
 
-(fn& core.true? [x]
+(fn& core.true?
   "Test if `x' is `true'"
+  [x]
   (= x true))
 
-(fn& core.false? [x]
+(fn& core.false?
   "Test if `x' is `false'"
+  [x]
   (= x false))
 
-(fn& core.int? [x]
+(fn& core.int?
   "Test if `x' is a number without floating point data."
+  [x]
   (and (= (type x) :number)
        (= x (math.floor x))))
 
-(fn& core.pos-int? [x]
+(fn& core.pos-int?
   "Test if `x' is a positive integer."
+  [x]
   (and (int? x)
        (pos? x)))
 
-(fn& core.neg-int? [x]
+(fn& core.neg-int?
   "Test if `x' is a negetive integer."
+  [x]
   (and (int? x)
        (neg? x)))
 
-(fn& core.double? [x]
+(fn& core.double?
   "Test if `x' is a number with floating point data."
+  [x]
   (and (= (type x) :number)
        (~= x (math.floor x))))
 
-(fn& core.empty? [x]
+(fn& core.empty?
   "Check if collection is empty."
+  [x]
   (match (type x)
     :table (= (next x) nil)
     :string (= x "")
     _ (error "empty?: unsupported collection")))
 
-(fn& core.not-empty [x]
+(fn& core.not-empty
   "If `x' is empty, returns `nil', otherwise `x'."
+  [x]
   (if (not (empty? x))
       x))
 
 ;; sequence manipulating functions
 
-(fn& core.seq [tbl]
+(fn& core.seq
   "Create sequential table.
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `tbl' is an
 associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
 If `tbl' is sequential table, returns its shallow copy."
+  [tbl]
   (when-some [_ (and tbl (next tbl))]
     (var assoc? false)
     (let [assoc []
@@ -131,18 +150,23 @@ If `tbl' is sequential table, returns its shallow copy."
   "Create sequential table, or empty table if `seq' returned `nil'."
   `(or (seq ,tbl) []))
 
-(fn& core.first [tbl]
-  "Return first element of an indexed table."
+(fn& core.first
+  "Return first element of a table. Calls `seq' on its argument."
+  [tbl]
   (when-some [tbl (seq tbl)]
     (. tbl 1)))
 
-(fn& core.rest [tbl]
-  "Returns table of all elements of indexed table but the first one."
+(fn& core.rest
+  "Returns table of all elements of a table but the first one. Calls
+  `seq' on its argument."
+  [tbl]
   (if-some [tbl (seq tbl)]
     [(unpack tbl 2)]
     []))
 
-(fn& core.last [tbl]
+(fn& core.last
+  "Returns the last element of a table. Calls `seq' on its argument."
+  [tbl]
   (when-some [tbl (seq tbl)]
     (var (i v) (next tbl))
     (while i
@@ -151,7 +175,10 @@ If `tbl' is sequential table, returns its shallow copy."
       (set i _i))
     v))
 
-(fn& core.butlast [tbl]
+(fn& core.butlast
+  "Returns everything but the last element of a table as a new
+  table. Calls `seq' on its argument."
+  [tbl]
   (when-some [tbl (seq tbl)]
     (table.remove tbl (length tbl))
     (when (not (empty? tbl))
@@ -182,8 +209,9 @@ If `tbl' is sequential table, returns its shallow copy."
   ([tbl x & xs]
    (apply consj (consj tbl x) xs)))
 
-(fn& core.cons [x tbl]
+(fn& core.cons
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
+  [x tbl]
   (if-some [x x]
     (doto (safe-seq tbl)
       (insert 1 x))
@@ -317,7 +345,10 @@ ignored. Returns a table of results."
 
 
 
-(fn& core.identity [x] x)
+(fn& core.identity
+  "Returns its argument."
+  [x]
+  x)
 
 (fn* core.comp
   ([] identity)
@@ -345,18 +376,20 @@ ignored. Returns a table of results."
 
 (set core.not-any? (comp #(not $) some))
 
-(fn& core.complement [f]
+(fn& core.complement
   "Takes a function `f' and returns the function that takes the same
 amount of arguments as `f', has the same effect, and returns the
 oppisite truth value."
+  [f]
   (fn*
     ([] (not (f)))
     ([a] (not (f a)))
     ([a b] (not (f a b)))
     ([a b & cs] (not (apply f a b cs)))))
 
-(fn& core.constantly [x]
+(fn& core.constantly
   "Returns a function that takes any number of arguments and returns `x'."
+  [x]
   (fn [...] x))
 
 (fn* core.range
@@ -369,7 +402,9 @@ oppisite truth value."
        (insert res i))
      res)))
 
-(fn& core.reverse [tbl]
+(fn& core.reverse
+  "Returns table with same items as in `tbl' but in reverse order."
+  [tbl]
   (when-some [tbl (seq tbl)]
     (reduce consj [] tbl)))
 
