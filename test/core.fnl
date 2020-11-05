@@ -1,6 +1,6 @@
 (import-macros {: fn*} :macros.fn)
 (import-macros {: into : defmethod : defmulti} :macros.core)
-(import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
+(import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test.test)
 
 (local
  {: apply

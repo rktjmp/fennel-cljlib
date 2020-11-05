@@ -5,23 +5,23 @@
   ([expr1 expr2]
    (assert-eq expr1 expr2 nil))
   ([expr1 expr2 msg]
-  `(let [left# ,expr1
-         right# ,expr2
-         view# (require :fennelview)]
-     (assert (eq left# right#) (or ,msg (.. "equality assertion failed
-  Left: " (view# left#) "
-  Right: " (view# right#) "\n"))))))
+   `(let [left# ,expr1
+          right# ,expr2
+          (res# view#) (pcall require :fennelview)]
+      (assert (eq left# right#) (or ,msg (.. "equality assertion failed
+  Left: " ((if res# view# tostring) left#) "
+  Right: " ((if res# view# tostring) right#) "\n"))))))
 
 (fn* assert-ne
   ([expr1 expr2]
    (assert-ne expr1 expr2 nil))
   ([expr1 expr2 msg]
-  `(let [left# ,expr1
-         right# ,expr2
-         view# (require :fennelview)]
-     (assert (not (eq left# right#)) (or ,msg (.. "unequality assertion failed
-  Left: " (view# left#) "
-  Right: " (view# right#) "\n"))))))
+   `(let [left# ,expr1
+          right# ,expr2
+          (res# view#) (pcall require :fennelview)]
+      (assert (not (eq left# right#)) (or ,msg (.. "unequality assertion failed
+  Left: " ((if res# view# tostring) left#) "
+  Right: " ((if res# view# tostring) right#) "\n"))))))
 
 (fn* assert*
   ([expr]

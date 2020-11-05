@@ -19,18 +19,15 @@ clean-all: clean
 	rm -f luacov*
 
 test: clean
-	@fennel --lua $(LUA) core_test.fnl
-	@fennel --lua $(LUA) macros_test.fnl
+	@fennel --lua $(LUA) test/fn.fnl
+	@fennel --lua $(LUA) test/core.fnl
+	@fennel --lua $(LUA) test/macros.fnl
 
 luacov: | clean-all all luacov-stats
 	luacov
 
 luacov-console: | luacov
-	@mv core_test.lua core_test.lua.tmp
-	@mv macros_test.lua macros_test.lua.tmp
 	luacov-console .
-	@mv core_test.lua.tmp core_test.lua
-	@mv macros_test.lua.tmp macros_test.lua
 
 luacov-stats: core_test.lua macros_test.lua
 	@$(LUA) -lluarocks.loader -lluacov $<

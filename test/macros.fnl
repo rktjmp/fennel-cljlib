@@ -1,6 +1,18 @@
-(import-macros {: if-let : when-let : if-some : when-some : into : defmethod : defmulti : defonce : def} :macros.core)
-(import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test)
+(import-macros {: assert-eq : assert-ne : assert* : testing : deftest} :test.test)
 (local {: eq : identity} (require :core)) ;; required for testing
+
+(import-macros
+ {: if-let
+  : when-let
+  : if-some
+  : when-some
+  : into
+  : defmethod
+  : defmulti
+  : defonce
+  : def
+  : meta
+  : with-meta} :macros.core)
 
 (deftest into
   (testing into
@@ -116,3 +128,21 @@
     (defonce b.a 10)
     (assert-eq b.a 10)
     (assert-eq a 10)))
+
+(deftest meta
+  (testing with-meta
+    (assert-eq (meta (with-meta :a {:k :v})) {:k :v}))
+
+  (testing def-meta
+    (def {:doc "x"} x 10)
+    (assert-eq (meta x) {:fnl/docstring "x"})
+    (def {:doc "x" :dynamic true} x 10)
+    (assert-eq (meta x) {:fnl/docstring "x"}))
+
+  (testing defonce-meta
+    (defonce {:doc "x"} x 10)
+    (assert-eq (meta x) {:fnl/docstring "x"})
+    (defonce {:doc "y"} x 20)
+    (assert-eq (meta x) {:fnl/docstring "x"})
+    (defonce {:doc "y" :dynamic true} y 20)
+    (assert-eq (meta y) {:fnl/docstring "y"})))
