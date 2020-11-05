@@ -1,6 +1,6 @@
 LUA ?= lua
 
-FNLSOURCES = core.fnl core_test.fnl macros_test.fnl
+FNLSOURCES = core.fnl test/core.fnl test/macros.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 
 all: $(LUASOURCES)
@@ -14,6 +14,7 @@ ${LUASOURCES}: $(FNLSOURCES)
 
 clean:
 	rm -f *.lua
+	rm -f test/*.lua
 
 clean-all: clean
 	rm -f luacov*
@@ -27,9 +28,15 @@ luacov: | clean-all all luacov-stats
 	luacov
 
 luacov-console: | luacov
+	@mv test/core.lua test/core.lua.tmp
+	@mv test/macros.lua test/macros.lua.tmp
+	@mv test/fn.lua test/fn.lua.tmp
 	luacov-console .
+	@mv test/core.lua.tmp test/core.lua
+	@mv test/macros.lua.tmp test/macros.lua
+	@mv test/fn.lua.tmp test/fn.lua
 
-luacov-stats: core_test.lua macros_test.lua
+luacov-stats: test/core.lua test/macros.lua test/fn.lua
 	@$(LUA) -lluarocks.loader -lluacov $<
 
 help:
