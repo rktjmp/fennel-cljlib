@@ -40,10 +40,8 @@
   (testing fn&-meta
     (fn& f "docstring" [x] x)
     (assert-eq (meta f) {:fnl/docstring "docstring"
-                         ;; :fnl/arglist ["x"] ;; TODO: why this works only in REPL?
-                         })
+                         :fnl/arglist ["x"]})
 
     (fn& f "docstring" [...] [...])
     (assert-eq (meta f) {:fnl/docstring "docstring"
-                         ;; :fnl/arglist ["..."] ;; TODO: same as above
-                         })))
+                         :fnl/arglist ["..."]})))

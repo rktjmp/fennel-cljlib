@@ -20,9 +20,9 @@ clean-all: clean
 	rm -f luacov*
 
 test: clean
-	@fennel --lua $(LUA) test/fn.fnl
-	@fennel --lua $(LUA) test/core.fnl
-	@fennel --lua $(LUA) test/macros.fnl
+	@fennel --lua $(LUA) --metadata test/fn.fnl
+	@fennel --lua $(LUA) --metadata test/core.fnl
+	@fennel --lua $(LUA) --metadata test/macros.fnl
 
 luacov: | clean-all all luacov-stats
 	luacov
