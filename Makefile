@@ -1,6 +1,6 @@
 LUA ?= lua
 
-FNLSOURCES = core.fnl test/core.fnl test/macros.fnl
+FNLSOURCES = core.fnl test/core.fnl test/macros.fnl test/fn.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 
 all: $(LUASOURCES)
@@ -37,7 +37,8 @@ luacov-console: | luacov
 	@mv test/fn.lua.tmp test/fn.lua
 
 luacov-stats: test/core.lua test/macros.lua test/fn.lua
-	@$(LUA) -lluarocks.loader -lluacov $<
+	@$(foreach test, $?, $(LUA) -lluarocks.loader -lluacov $(test);)
+
 
 help:
 	@echo "make                -- run tests and create lua library" >&2

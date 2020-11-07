@@ -579,7 +579,7 @@
     (assert* (not (ge 1 2 4 4))))
 
   (testing gt
-    (assert* (not (pcall ge)))
+    (assert* (not (pcall gt)))
     (assert* (gt 2))
     (assert* (gt 2 1))
     (assert* (gt 3 2 1))
