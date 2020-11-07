@@ -10,7 +10,7 @@ all: $(LUASOURCES)
 ${LUASOURCES}: $(FNLSOURCES)
 
 %.lua: %.fnl
-	fennel --lua $(LUA) --compile $< > $@
+	fennel --lua $(LUA) --metadata --compile $< > $@
 
 clean:
 	rm -f *.lua
