@@ -4,6 +4,7 @@
 
 (local
  {: vec
+  : hash-map
   : apply
   : seq
   : first
@@ -599,3 +600,11 @@
     (assert-eq (vec 1) [1])
     (assert-eq (vec 1 2 3) [1 2 3])
     (assert-eq (getmetatable (vec 1 2 3)) {:cljlib/table-type :seq})))
+
+(deftest hash-map
+  (testing hash-map
+    (assert* (not (pcall hash-map :a)))
+    (assert-eq (hash-map) {})
+    (assert-eq (hash-map :a 1) {:a 1})
+    (assert-eq (hash-map :a 1 :b 2 :c 3) {:a 1 :b 2 :c 3})
+    (assert-eq (getmetatable (hash-map)) {:cljlib/table-type :table})))

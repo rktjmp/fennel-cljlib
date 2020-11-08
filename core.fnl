@@ -428,17 +428,28 @@ oppisite truth value."
 
 (fn* core.assoc
   "Associate key `k' with value `v' in `tbl'."
-  ([tbl k v] (doto tbl (tset k v)))
+  ([tbl k v]
+   (setmetatable
+    (doto tbl (tset k v))
+    {:cljlib/table-type :table}))
   ([tbl k v & kvs]
-   (assert (zero? (% (length kvs) 2)) "expected even amount key-value args")
+   (assert (= (% (length kvs) 2) 0)
+           (.. "no value supplied for key " (. kvs (length kvs))))
    (tset tbl k v)
-   (var [i k v] [1 nil nil])
+   (var [k v] [nil nil])
    (var (i k) (next kvs))
    (while i
      (set (i v) (next kvs i))
      (tset tbl k v)
      (set (i k) (next kvs i)))
-   tbl))
+   (setmetatable tbl {:cljlib/table-type :table})))
+
+(fn& core.hash-map
+  "Create associative table from keys and values"
+  [...]
+  (if (> (select :# ...) 0)
+      (assoc {} ...)
+      (setmetatable {} {:cljlib/table-type :table})))
 
 (fn* core.get
   "Get value from the table by accessing it with a `key'.
