@@ -2,8 +2,8 @@
 
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
-(import-macros {: fn* : fn&} :macros.fn)
-(import-macros {: when-some : if-some : when-let} :macros.core)
+(require-macros :macros.fn)
+(require-macros :macros.core)
 
 (fn* core.apply
   "Apply `f' to the argument list formed by prepending intervening

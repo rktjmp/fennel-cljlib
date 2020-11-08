@@ -1,7 +1,8 @@
-(import-macros {: fn* : fn&} :macros.fn)
+(require-macros :macros.fn)
 (local core {})
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
+(local meta-enabled (pcall _SCOPE.specials.doc (list (sym :doc) (sym :doc)) _SCOPE _CHUNK))
 
 (fn multisym->sym [s]
   (if (multi-sym? s)
@@ -152,18 +153,22 @@
 (fn string? [x]
   (= (type x) :string))
 
+(fn& core.when-meta [...]
+  (when meta-enabled `(do ,...)))
+
 (fn* core.with-meta [val meta]
-  `(let [val# ,val
-         (res# fennel#) (pcall require :fennel)]
-     (if res#
-         (each [k# v# (pairs ,meta)]
-           (fennel#.metadata:set val# k# v#)))
-     val#))
+  (if (not meta-enabled) val
+      `(let [val# ,val
+             (res# fennel#) (pcall require :fennel)]
+         (if res#
+             (each [k# v# (pairs ,meta)]
+               (fennel#.metadata:set val# k# v#)))
+         val#)))
 
 (fn* core.meta [v]
-  `(let [(res# fennel#) (pcall require :fennel)]
-     (if res#
-         (. fennel#.metadata ,v))))
+  (when-meta
+    `(let [(res# fennel#) (pcall require :fennel)]
+       (if res# (. fennel#.metadata ,v)))))
 
 (fn* core.defmulti
   [name & opts]

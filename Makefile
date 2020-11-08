@@ -10,7 +10,7 @@ all: $(LUASOURCES)
 ${LUASOURCES}: $(FNLSOURCES)
 
 %.lua: %.fnl
-	fennel --lua $(LUA) --metadata --compile $< > $@
+	fennel --lua $(LUA) --compile $< > $@
 
 clean:
 	rm -f *.lua
@@ -39,13 +39,12 @@ luacov-console: | luacov
 luacov-stats: test/core.lua test/macros.lua test/fn.lua
 	@$(foreach test, $?, $(LUA) -lluarocks.loader -lluacov $(test);)
 
-
 help:
 	@echo "make                -- run tests and create lua library" >&2
 	@echo "make test           -- run tests" >&2
 	@echo "make clean          -- remove lua files" >&2
 	@echo "make luacov         -- build coverage report (requires working tests)" >&2
-	@echo "make luacov-console -- build coverage report (requires working tests)" >&2
+	@echo "make luacov-console -- build coverage report for luacov-console (requires working tests)" >&2
 	@echo "make help           -- print this message and exit" >&2
 
 -include .depend.mk

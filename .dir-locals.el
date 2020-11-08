@@ -1,7 +1,8 @@
 ;;; Directory Local Variables
 ;;; For more information see (info "(emacs) Directory Variables")
 
-((fennel-mode . ((eval . (put 'defmethod 'fennel-indent-function 'defun))
+((fennel-mode . ((eval . (put 'when-meta 'fennel-indent-function 'defun))
+                 (eval . (put 'defmethod 'fennel-indent-function 'defun))
                  (eval . (put 'defmulti 'bfennel-indent-function 'defun))
                  (eval . (put 'deftest 'fennel-indent-function 'defun))
                  (eval . (put 'testing 'fennel-indent-function 'defun))

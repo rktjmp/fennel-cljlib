@@ -15,6 +15,52 @@ Even though it is project is experimental, the goals of this project are:
 * Macros
 List of macros provided by the library.
 
+** Metadata macros
+Metadata in Fennel is a pretty tough subject, as there's no such thing as metadata in Lua.
+Therefore, the metadata usage in Fennel is more limited compared to Clojure.
+This library provides some facilities for metadata management, which are experimental and should be used with care.
+
+There are several important gotchas about using metadata.
+
+First, note that this works only when used with Fennel, and only when =(require fennel)= works.
+For compiled Lua library this feature is turned off.
+
+Second, try to avoid using metadata with anything else than tables and functions.
+When storing function or table as a key into metatable, its address is used, while when storing string of number, the value is used.
+This, for example, may cause documentation collision, when you've set some variable holding a number value to have certain docstring, and later you've defined another variable with the same value, but different docstring.
+While this isn't a major breakage, it may confuse if someone will explore your code in the REPL with =doc=.
+
+Lastly, note that prior to Fennel 0.7.1[fn:1] =import-macros= wasn't respecting =--metadata= switch.
+So if you're using Fennel < 0.7.1 this stuff will only work if you use =require-macros= instead of =import-macros=.
+
+*** =when-meta=
+This macros is a wrapper that compiles away if metadata support was not enabled.
+What this effectively means, is that everything that is wrapped with this macro will disappear from the resulting Lua code if metadata is not enabled when compiling with =fennel --compile=.
+
+*** =with-meta=
+Attach metadata to a value.
+
+#+begin_src fennel
+  >> (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
+                           {:fnl/arglist [:x :y :z :...]
+                            :fnl/docstring "sum first three values"}))
+  >> (doc foo)
+  (foo x y z ...)
+    sum first three values
+#+end_src
+
+When metadata feature is not enabled, returns the value without additional metadata.
+
+*** =meta=
+Get metadata table from object:
+
+#+begin_src fennel
+  >> (meta (with-meta {} {:meta "data"}))
+  {
+      :meta "data"
+  }
+#+end_src
+
 ** =def= and =defonce=
 =def= is wrappers around =local= which can declare variables inside namespace, and as local at the same time:
 
@@ -32,7 +78,7 @@ List of macros provided by the library.
 
 Both =ns.a= and =a= refer to the same value.
 
-=defonce= ensures that the binding isn't overriden by another =defonce=:
+=defonce= ensures that the binding isn't overridden by another =defonce=:
 
 #+begin_src fennel
   >> (defonce ns {})
@@ -44,7 +90,7 @@ Both =ns.a= and =a= refer to the same value.
   42
 #+end_src
 
-Both =def= and =defonce= support literal attribute table as first argument, or a :dynamic keyword, that uses Fennel =var= instead of =local=:
+Both =def= and =defonce= support literal metadata table as first argument, or a :dynamic keyword, that uses Fennel =var= instead of =local=:
 
 #+begin_src fennel
   >> (def {:dynamic true} a 10)
@@ -55,6 +101,22 @@ Both =def= and =defonce= support literal attribute table as first argument, or a
   >> (set b 42)
   >> b
   42
+#+end_src
+
+Documentation string can be attached to value via =:doc= keyword.
+However it is not recommended to attach metadata to everything except tables and functions:
+
+#+begin_src fennel
+  ;; Bad, may overlap with existing documentation for 299792458, if any
+  >> (def {:doc "The speed of light in m/s"} c 299792458)
+  >> (doc c)
+  c
+    The speed of light in m/s
+
+  ;; OK
+  >> (def {:doc "default connection options"}
+          defaults {:port 1234
+                    :host localhost})
 #+end_src
 
 ** =fn*=
@@ -271,6 +333,7 @@ It accepts the multi-fn table as its first argument, the dispatch value as secon
 
 =:default= is a special method which gets called when no other methods were found for given dispatch value.
 
+
 * Functions
 Here are some important functions from the library.
 Full set can be examined by requiring the module.
@@ -452,4 +515,10 @@ Compose functions into one function.
 #+end_src
 
 #  LocalWords:  Luajit VM arity runtime multi Cljlib fn mapv kv REPL
-#  LocalWords:  namespaced namespace eq
+#  LocalWords:  namespaced namespace eq metatable Lua defonce arglist
+#  LocalWords:  namespaces defmulti defmethod metamethod butlast
+#  LocalWords:  prepend LocalWords docstring
+
+
+* Footnotes
+[fn:1] https://todo.sr.ht/~technomancy/fennel/18#event-56799

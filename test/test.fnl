@@ -1,4 +1,4 @@
-(import-macros {: fn*} :macros.fn)
+(require-macros :macros.fn)
 ;; requires `eq' from core.fnl to be available at runtime
 
 (fn* assert-eq

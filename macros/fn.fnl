@@ -1,14 +1,16 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
 (local sort table.sort)
+(local meta-enabled (pcall _SCOPE.specials.doc (list (sym :doc) (sym :doc)) _SCOPE _CHUNK))
 
 (fn with-meta [val meta]
-  `(let [val# ,val
-         (res# fennel#) (pcall require :fennel)]
-     (if res#
-         (each [k# v# (pairs ,meta)]
-           (fennel#.metadata:set val# k# v#)))
-     val#))
+  (if (not meta-enabled) val
+      `(let [val# ,val
+             (res# fennel#) (pcall require :fennel)]
+         (if res#
+             (each [k# v# (pairs ,meta)]
+               (fennel#.metadata:set val# k# v#)))
+         val#)))
 
 (fn gen-arglist-doc [args]
   (if (list? (. args 1))
@@ -252,8 +254,8 @@ namespaced functions.  See `fn*' for more info."
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
         arg-list (if (sym? name-wo-namespace)
-                 (if (string? doc?) args doc?)
-                 name-wo-namespace)
+                     (if (string? doc?) args doc?)
+                     name-wo-namespace)
         arglist-doc (gen-arglist-doc arg-list)
         body (if (sym? name)
                  (if (string? doc?)
