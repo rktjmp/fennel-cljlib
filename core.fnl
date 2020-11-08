@@ -5,6 +5,11 @@
 (require-macros :macros.fn)
 (require-macros :macros.core)
 
+(fn* core.vec
+  "Constructs sequential table out of it's arguments."
+  [& args]
+  (setmetatable args {:cljlib/table-type :seq}))
+
 (fn* core.apply
   "Apply `f' to the argument list formed by prepending intervening
 arguments to `args'."
@@ -13,28 +18,37 @@ arguments to `args'."
   ([f a b args] (f a b (unpack args)))
   ([f a b c args] (f a b c (unpack args)))
   ([f a b c d & args]
-   (let [flat-args []]
+   (let [flat-args (vec)]
      (for [i 1 (- (length args) 1)]
        (insert flat-args (. args i)))
      (each [_ a (ipairs (. args (length args)))]
        (insert flat-args a))
      (f a b c d (unpack flat-args)))))
 
+(fn fast-table-type [tbl]
+  (let [m (getmetatable tbl)]
+    (if-let [t (and m (. m :cljlib/table-type))]
+      t)))
+
 ;; predicate functions
 (fn& core.map?
   "Check whether `tbl' is an associative table."
   [tbl]
   (if (= (type tbl) :table)
-      (let [(k _) (next tbl)]
-        (and (~= k nil) (or (~= (type k) :number)
-                            (~= k 1))))))
+      (if-let [t (fast-table-type tbl)]
+        (= t :table)
+        (let [(k _) (next tbl)]
+          (and (~= k nil) (or (~= (type k) :number)
+                              (~= k 1)))))))
 
 (fn& core.seq?
   "Check whether `tbl' is an sequential table."
   [tbl]
   (if (= (type tbl) :table)
-      (let [(k _) (next tbl)]
-        (and (~= k nil) (= (type k) :number) (= k 1)))))
+      (if-let [t (fast-table-type tbl)]
+        (= t :seq)
+        (let [(k _) (next tbl)]
+          (and (~= k nil) (= (type k) :number) (= k 1))))))
 
 
 (fn& core.nil?
@@ -136,8 +150,8 @@ If `tbl' is sequential table, returns its shallow copy."
   [tbl]
   (when-some [_ (and tbl (next tbl))]
     (var assoc? false)
-    (let [assoc []
-          seq []]
+    (let [assoc (vec)
+          seq (vec)]
       (each [k v (pairs tbl)]
         (if (and (not assoc?)
                  (not (= (type k) :number)))
@@ -148,7 +162,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (macro safe-seq [tbl]
   "Create sequential table, or empty table if `seq' returned `nil'."
-  `(or (seq ,tbl) []))
+  `(or (seq ,tbl) (vec)))
 
 (fn& core.first
   "Return first element of a table. Calls `seq' on its argument."
@@ -161,8 +175,8 @@ If `tbl' is sequential table, returns its shallow copy."
   `seq' on its argument."
   [tbl]
   (if-some [tbl (seq tbl)]
-    [(unpack tbl 2)]
-    []))
+    (vec (unpack tbl 2))
+    (vec)))
 
 (fn& core.last
   "Returns the last element of a table. Calls `seq' on its argument."
@@ -187,11 +201,11 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn* core.conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
-  ([] [])
+  ([] (vec))
   ([tbl] tbl)
   ([tbl x]
    (when-some [x x]
-     (let [tbl (or tbl [])]
+     (let [tbl (or tbl (vec))]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
            (insert tbl x))))
@@ -201,7 +215,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn* consj
   "Like conj but joins at the front. Modifies `tbl'."
-  ([] [])
+  ([] (vec))
   ([tbl] tbl)
   ([tbl x]
    (when-some [x x]
@@ -285,13 +299,13 @@ table. Then applies `f' to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
-   (local res [])
+   (local res (vec))
    (each [_ v (ipairs (safe-seq tbl))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
   ([f t1 t2]
-   (let [res []
+   (let [res (vec)
          t1 (safe-seq t1)
          t2 (safe-seq t2)]
      (var (i1 v1) (next t1))
@@ -303,7 +317,7 @@ ignored. Returns a table of results."
        (set (i2 v2) (next t2 i2)))
      res))
   ([f t1 t2 t3]
-   (let [res []
+   (let [res (vec)
          t1 (safe-seq t1)
          t2 (safe-seq t2)
          t3 (safe-seq t3)]
@@ -319,11 +333,12 @@ ignored. Returns a table of results."
      res))
   ([f t1 t2 t3 & tbls]
    (let [step (fn step [tbls]
-                (when (->> tbls
+                (if (->> tbls
                            (mapv #(~= (next $) nil))
                            (reduce #(and $1 $2)))
-                  (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))))
-         res []]
+                    (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
+                    (vec)))
+         res (vec)]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
@@ -338,7 +353,7 @@ ignored. Returns a table of results."
 
 (fn kvseq [tbl]
   "Transforms any table kind to key-value sequence."
-  (let [res []]
+  (let [res (vec)]
     (each [k v (pairs tbl)]
       (insert res [k v]))
     res))
@@ -397,7 +412,7 @@ oppisite truth value."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
   ([lower upper step]
-   (let [res []]
+   (let [res (vec)]
      (for [i lower (- upper step) step]
        (insert res i))
      res)))
@@ -406,7 +421,7 @@ oppisite truth value."
   "Returns table with same items as in `tbl' but in reverse order."
   [tbl]
   (when-some [tbl (seq tbl)]
-    (reduce consj [] tbl)))
+    (reduce consj (vec) tbl)))
 
 (fn* core.inc "Increase number by one" [x] (+ x 1))
 (fn* core.dec "Decrease number by one" [x] (- x 1))

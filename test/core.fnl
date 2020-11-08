@@ -3,7 +3,8 @@
 (require-macros :test.test)
 
 (local
- {: apply
+ {: vec
+  : apply
   : seq
   : first
   : rest
@@ -147,13 +148,17 @@
 
   (testing map?
     (assert* (map? {:a 1}))
-    (assert* (not (map? {}))))
+    (assert* (not (map? {})))
+    (assert* (map? (empty {})))
+    (assert* (not (map? (empty [])))))
 
   (testing seq?
     (assert* (not (seq? [])))
     (assert* (seq? [{:a 1}]))
     (assert* (not (seq? {})))
-    (assert* (not (seq? {:a 1}))))
+    (assert* (not (seq? {:a 1})))
+    (assert* (seq? (empty [])))
+    (assert* (not (seq? (empty {})))))
 
   (testing nil?
     (assert* (nil?))
@@ -587,3 +592,10 @@
     (assert* (not (gt 1 2)))
     (assert* (not (gt 2 1 3)))
     (assert* (not (gt 1 2 4 4)))))
+
+(deftest vec
+  (testing vec
+    (assert-eq (vec) [])
+    (assert-eq (vec 1) [1])
+    (assert-eq (vec 1 2 3) [1 2 3])
+    (assert-eq (getmetatable (vec 1 2 3)) {:cljlib/table-type :seq})))

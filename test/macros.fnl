@@ -135,3 +135,10 @@
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
     (defonce {:doc "y" :dynamic true} y 20)
     (assert-eq (meta y) (when-meta {:fnl/docstring "y"}))))
+
+(deftest empty
+  (testing empty
+    (assert-eq (empty {}) {})
+    (assert-eq (empty []) {})
+    (assert-eq (getmetatable (empty [])) {:cljlib/table-type :seq})
+    (assert-eq (getmetatable (empty {})) {:cljlib/table-type :table})))

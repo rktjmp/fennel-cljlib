@@ -66,10 +66,13 @@
   `(fn [tbl#]
      (let [t# (type tbl#)]
        (if (= t# :table)
-           (let [(k# _#) (next tbl#)]
-             (if (and (= (type k#) :number) (= k# 1)) :seq
-                 (= k# nil) :empty
-                 :table))
+           (let [meta# (getmetatable tbl#)
+                 table-type# (and meta# (. meta# :cljlib/table-type))]
+             (if table-type# table-type#
+                 (let [(k# _#) (next tbl#)]
+                   (if (and (= (type k#) :number) (= k# 1)) :seq
+                       (= k# nil) :empty
+                       :table))))
            :else))))
 
 (fn seq-fn []
@@ -83,6 +86,12 @@
              (set assoc# true))
          (insert# res# [k# v#]))
        (if assoc# res# tbl#))))
+
+(fn& core.empty [tbl]
+  (let [table-type (table-type tbl)]
+    (if (= table-type :seq) `(setmetatable {} {:cljlib/table-type :seq})
+        (= table-type :table) `(setmetatable {} {:cljlib/table-type :table})
+        `(setmetatable {} {:cljlib/table-type (,(table-type-fn) ,tbl)}))))
 
 (fn& core.into [to from]
   (let [to-type (table-type to)
