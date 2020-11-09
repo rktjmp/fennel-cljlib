@@ -72,14 +72,15 @@
             (lua :break))))
   res)
 
-(fn grows-by-one? [tbl]
+(fn grows-by-one-or-equal? [tbl]
   (let [t []]
     (each [_ v (ipairs tbl)] (insert t v))
     (sort t)
     (var prev nil)
     (each [_ cur (ipairs t)]
       (if prev
-          (when (not= (+ prev 1) cur)
+          (when (and (not= (+ prev 1) cur)
+                     (not= prev cur))
             (lua "return false")))
       (set prev cur))
     prev))
@@ -117,10 +118,10 @@
         (assert-compile (not (and max (<= more-len max))) "fn*: arity with `& more' must have more arguments than maximum arity without `& more'.
 
 * Try adding more arguments before `&'" arity)
-        (insert lengths more-len)
+        (insert lengths (- more-len 1))
         (insert bodies (list '>= len (- more-len 1)))
         (insert bodies body)))
-    (if (not (and (grows-by-one? lengths)
+    (if (not (and (grows-by-one-or-equal? lengths)
                   (contains? lengths 0)))
         (insert bodies (list 'error
                              (.. "wrong argument amount"
