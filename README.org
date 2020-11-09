@@ -482,13 +482,11 @@ These are commonly used so it makes sense to have that, without defining via ano
 
 Other predicates are self-explanatory:
 
-- =any?=
 - =assoc?=
 - =boolean?=
 - =double?=
 - =empty?=
 - =even?=
-- =every?=
 - =false?=
 - =int?=
 - =neg?=
@@ -499,9 +497,9 @@ Other predicates are self-explanatory:
 - =true?=
 - =zero?=
 
-** =eq?=
+** =eq=
 Deep compare values.
-If given two tables, recursively calls =eq?= on each field until one of the tables exhausted.
+If given two tables, recursively calls =eq= on each field until one of the tables exhausted.
 Other values are compared with default equality operator.
 
 ** =comp=
@@ -519,6 +517,16 @@ Compose functions into one function.
 #  LocalWords:  namespaces defmulti defmethod metamethod butlast
 #  LocalWords:  prepend LocalWords docstring
 
+** =every?= and =not-any?=
+=every?= checks if predicate is true for every item in the table.
+=not-any?= checks if predicate is false foe every item in the table.
+
+#+begin_src fennel
+  >> (every? pos-int? [1 2 3 4])
+  true
+  >> (not-any? pos-int? [-1 -2 -3 4.2])
+  true
+#+end_src
 
 * Footnotes
 [fn:1] https://todo.sr.ht/~technomancy/fennel/18#event-56799

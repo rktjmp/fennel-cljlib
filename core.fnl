@@ -380,17 +380,22 @@ ignored. Returns a table of results."
    (reduce comp (consj fs g f))))
 
 (fn* core.every?
+  "Test if every item in `tbl' satisfies the `pred'."
   [pred tbl]
   (if (empty? tbl) true
       (pred (. tbl 1)) (every? pred [(unpack tbl 2)])
       false))
 
 (fn* core.some
+  "Test if any item in `tbl' satisfies the `pred'."
   [pred tbl]
   (when-let [tbl (seq tbl)]
     (or (pred (. tbl 1)) (some pred [(unpack tbl 2)]))))
 
-(set core.not-any? (comp #(not $) some))
+(set core.not-any?
+     (with-meta (comp #(not $) some)
+                {:fnl/docstring "Test if no item in `tbl' satisfy the `pred'."
+                 :fnl/arglist ["pred" "tbl"]}))
 
 (fn& core.complement
   "Takes a function `f' and returns the function that takes the same
