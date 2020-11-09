@@ -55,8 +55,8 @@
   : methods
   : remove-method
   : remove-all-methods
-  : plus
-  : minus
+  : add
+  : sub
   : mul
   : div
   : le
@@ -229,7 +229,7 @@
                 "Alice Watson works as chief officer at Coffee With You"]))
 
   (testing "reduce"
-    (fn* plus
+    (fn* add
       ([] 0)
       ([a] a)
       ([a b] (+ a b))
@@ -239,16 +239,16 @@
          (set res (+ res v)))
        res))
 
-    (assert-eq (reduce plus []) 0)
-    (assert-eq (reduce plus [1]) 1)
-    (assert-eq (reduce plus [1 2]) 3)
-    (assert-eq (reduce plus (range 10)) 45)
-    (assert-eq (reduce plus -3 (range 10)) 42)
-    (assert-eq (reduce plus 10 []) 10)
-    (assert-eq (reduce plus 10 [1]) 11)
-    (assert-eq (reduce plus 10 nil) 10)
+    (assert-eq (reduce add []) 0)
+    (assert-eq (reduce add [1]) 1)
+    (assert-eq (reduce add [1 2]) 3)
+    (assert-eq (reduce add (range 10)) 45)
+    (assert-eq (reduce add -3 (range 10)) 42)
+    (assert-eq (reduce add 10 []) 10)
+    (assert-eq (reduce add 10 [1]) 11)
+    (assert-eq (reduce add 10 nil) 10)
     (assert* (not (pcall reduce)))
-    (assert* (not (pcall reduce plus)))
+    (assert* (not (pcall reduce add)))
 
     (fn mapping [f]
       (fn [reducing]
@@ -260,7 +260,7 @@
           (reduce f (f init (first tbl)) (rest tbl))
           init))
 
-    (assert-eq (reduce plus (range 10)) (reduce- plus 0 (range 10))))
+    (assert-eq (reduce add (range 10)) (reduce- add 0 (range 10))))
 
   (testing "filter"
     (assert* (not (pcall filter)))
@@ -517,23 +517,23 @@
     (assert* (not (pcall remove-all-methods f f)))))
 
 (deftest math-functions
-  (testing "plus"
-    (assert-eq (plus) 0)
-    (assert-eq (plus 1) 1)
-    (assert-eq (plus -1) -1)
-    (assert-eq (plus 1 2) 3)
-    (assert-eq (plus 1 2 3) 6)
-    (assert-eq (plus 1 2 3 4) 10)
-    (assert-eq (plus 1 2 3 4 5) 15))
+  (testing "add"
+    (assert-eq (add) 0)
+    (assert-eq (add 1) 1)
+    (assert-eq (add -1) -1)
+    (assert-eq (add 1 2) 3)
+    (assert-eq (add 1 2 3) 6)
+    (assert-eq (add 1 2 3 4) 10)
+    (assert-eq (add 1 2 3 4 5) 15))
 
-  (testing "minus"
-    (assert-eq (minus) 0)
-    (assert-eq (minus 1) -1)
-    (assert-eq (minus -1) 1)
-    (assert-eq (minus 1 2) -1)
-    (assert-eq (minus 1 2 3) -4)
-    (assert-eq (minus 1 2 3 4) -8)
-    (assert-eq (minus 1 2 3 4 5) -13))
+  (testing "sub"
+    (assert-eq (sub) 0)
+    (assert-eq (sub 1) -1)
+    (assert-eq (sub -1) 1)
+    (assert-eq (sub 1 2) -1)
+    (assert-eq (sub 1 2 3) -4)
+    (assert-eq (sub 1 2 3 4) -8)
+    (assert-eq (sub 1 2 3 4 5) -13))
 
   (testing "mul"
     (assert-eq (mul) 1)

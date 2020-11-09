@@ -501,21 +501,21 @@ that would apply to that value, or `nil' if none apply and no default."
   (or (. (getmetatable multifn) :multimethods dispatch-val)
       (. (getmetatable multifn) :multimethods :default)))
 
-(fn* core.plus
+(fn* core.add
   ([] 0)
   ([a] a)
   ([a b] (+ a b))
   ([a b c] (+ a b c))
   ([a b c d] (+ a b c d))
-  ([a b c d & rest] (apply plus (+ a b c d) rest)))
+  ([a b c d & rest] (apply add (+ a b c d) rest)))
 
-(fn* core.minus
+(fn* core.sub
   ([] 0)
   ([a] (- a))
   ([a b] (- a b))
   ([a b c] (- a b c))
   ([a b c d] (- a b c d))
-  ([a b c d & rest] (apply minus (- a b c d) rest)))
+  ([a b c d & rest] (apply sub (- a b c d) rest)))
 
 (fn* core.mul
   ([] 1)
