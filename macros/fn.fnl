@@ -1,6 +1,8 @@
 (local unpack (or table.unpack _G.unpack))
 (local insert table.insert)
+(local concat table.concat)
 (local sort table.sort)
+(local gsub string.gsub)
 (local meta-enabled (pcall _SCOPE.specials.doc (list (sym :doc) (sym :doc)) _SCOPE _CHUNK))
 
 (fn with-meta [val meta]
@@ -18,20 +20,20 @@
             open (if (> (length args) 1) "\n  [" "")
             close (if (= open "") "" "]")]
         (each [i v (ipairs args)]
-          (table.insert
+          (insert
            arglist
-           (.. open (table.concat (gen-arglist-doc v) " ") close)))
+           (.. open (concat (gen-arglist-doc v) " ") close)))
         arglist)
 
       (sequence? (. args 1))
       (let [arglist []]
         (each [_ v (ipairs (. args 1))]
-          (table.insert arglist (tostring v)))
+          (insert arglist (tostring v)))
         arglist)))
 
 (fn multisym->sym [s]
   (if (multi-sym? s)
-      (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
+      (values (sym (gsub (tostring s) ".*[.]" "")) true)
       (values s false)))
 
 (fn string? [x]
@@ -46,7 +48,7 @@
         (if res (assert-compile false "only one `&' can be specified in arglist." args)
             (set res i))
         (= (tostring s) "...")
-        (assert-compile false "use of `...' in `fn*' is not permitted." args)
+        (assert-compile false "use of `...' in `fn*' is not permitted. Use `&' if you want a vararg." args)
         (and res (> i (+ res 1)))
         (assert-compile false "only one `more' argument can be supplied after `&' in arglist." args)))
   res)
@@ -115,7 +117,7 @@
       (insert bodies body))
     (when body&
       (let [[more-len body arity] body&]
-        (assert-compile (not (and max (<= more-len max))) "fn*: arity with `& more' must have more arguments than maximum arity without `& more'.
+        (assert-compile (not (and max (<= more-len max))) "fn*: arity with `&' must have more arguments than maximum arity without `&'.
 
 * Try adding more arguments before `&'" arity)
         (insert lengths (- more-len 1))
