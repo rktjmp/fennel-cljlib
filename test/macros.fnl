@@ -92,7 +92,21 @@
     (assert-eq (send-message {:protocol :http :message "ваыв"})
                "sending ваыв over HTTP")
     (assert-eq (send-message {:protocol :icap :message 42})
-               "sending 42 over ICAP")))
+               "sending 42 over ICAP"))
+
+  (testing "defmulti with dispatch on tables"
+    (defmulti encounter (fn [x y] [(. x :species) (. y :species)]))
+    (defmethod encounter [:bunny :lion] [_ _] :run)
+    (defmethod encounter [:lion :bunny] [_ _] :eat)
+    (defmethod encounter [:lion :lion] [_ _] :fight)
+    (defmethod encounter [:bunny :bunny] [_ _] :mate)
+
+    (let [l {:species :lion}
+          b {:species :bunny}]
+      (assert-eq (encounter b b) :mate)
+      (assert-eq (encounter l l) :fight)
+      (assert-eq (encounter b l) :run)
+      (assert-eq (encounter l b) :eat))))
 
 (deftest def-macros
   (testing "def"

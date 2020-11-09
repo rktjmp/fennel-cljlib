@@ -179,6 +179,21 @@
     `(let [(res# fennel#) (pcall require :fennel)]
        (if res# (. fennel#.metadata ,v)))))
 
+(fn eq-fn []
+  `(fn eq# [a# b#]
+     (if (and (= (type a#) :table) (= (type b#) :table))
+         (do (var [res# count-a# count-b#] [true 0 0])
+             (each [k# v# (pairs a#)]
+               (set res# (eq# v# (. b# k#)))
+               (set count-a# (+ count-a# 1))
+               (when (not res#) (lua :break)))
+             (when res#
+               (each [_# _# (pairs b#)]
+                 (set count-b# (+ count-b# 1)))
+               (set res# (and res# (= count-a# count-b#))))
+             res#)
+         (= a# b#))))
+
 (fn* core.defmulti
   [name & opts]
   (let [docstring (if (string? (first opts)) (first opts))
@@ -193,14 +208,25 @@
                    {:__call
                     (fn [_# ...]
                       ,docstring
-                      (let [dispatch-value# (,dispatch-fn ...)]
+                      (let [dispatch-value# (,dispatch-fn ...)
+                            (res# view#) (pcall require :fennelview)]
                         ((or (. multimethods# dispatch-value#)
                              (. multimethods# :default)
                              (error (.. "No method in multimethod '"
                                         ,(tostring name)
                                         "' for dispatch value: "
-                                        dispatch-value#) 2)) ...)))
-                    :multimethods multimethods#}))))))
+                                        ((if res# view# tostring) dispatch-value#))
+                                    2)) ...)))
+                    :multimethods (setmetatable multimethods#
+                                                {:__index
+                                                 (fn [tbl# key#]
+                                                   (let [eq# ,(eq-fn)]
+                                                     (var res# nil)
+                                                     (each [k# v# (pairs tbl#)]
+                                                       (when (eq# k# key#)
+                                                         (set res# v#)
+                                                         (lua :break)))
+                                                     res#))})}))))))
 
 (fn* core.defmethod
   [multifn dispatch-val & fn-tail]
