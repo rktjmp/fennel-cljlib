@@ -3,7 +3,7 @@
 (require-macros :test.test)
 
 (local
- {: vec
+ {: vector
   : hash-map
   : apply
   : seq
@@ -596,10 +596,10 @@
 
 (deftest vec
   (testing vec
-    (assert-eq (vec) [])
-    (assert-eq (vec 1) [1])
-    (assert-eq (vec 1 2 3) [1 2 3])
-    (assert-eq (getmetatable (vec 1 2 3)) {:cljlib/table-type :seq})))
+    (assert-eq (vector) [])
+    (assert-eq (vector 1) [1])
+    (assert-eq (vector 1 2 3) [1 2 3])
+    (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/table-type :seq})))
 
 (deftest hash-map
   (testing hash-map
