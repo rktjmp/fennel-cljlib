@@ -21,8 +21,9 @@
   ([expr1 expr2 msg]
    `(let [left# ,expr1
           right# ,expr2
-          (res# view#) (pcall require :fennelview)]
-      (assert (eq left# right#) (or ,msg (.. "equality assertion failed
+          (res# view#) (pcall require :fennelview)
+          eq# ,(eq-fn)]
+      (assert (eq# left# right#) (or ,msg (.. "equality assertion failed
   Left: " ((if res# view# tostring) left#) "
   Right: " ((if res# view# tostring) right#) "\n"))))))
 
@@ -32,8 +33,9 @@
   ([expr1 expr2 msg]
    `(let [left# ,expr1
           right# ,expr2
-          (res# view#) (pcall require :fennelview)]
-      (assert (not (eq left# right#)) (or ,msg (.. "unequality assertion failed
+          (res# view#) (pcall require :fennelview)
+          eq# ,(eq-fn)]
+      (assert (not (eq# left# right#)) (or ,msg (.. "unequality assertion failed
   Left: " ((if res# view# tostring) left#) "
   Right: " ((if res# view# tostring) right#) "\n"))))))
 
@@ -51,11 +53,11 @@
 
 (fn* testing
   "Define test function, print its name and run it."
-  [name & body]
-  (let [test-name (sym (.. (tostring name) "-test"))]
+  [description & body]
+  (let [test-name (gensym)]
     `(do (fn ,test-name []
            ,((or table.unpack _G.unpack) body))
-         (io.stderr:write (.. "running: " ,(tostring test-name) "\n"))
+         (io.stderr:write (.. "testing: " ,description "\n"))
          (,test-name))))
 
 {: assert-eq

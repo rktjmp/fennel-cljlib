@@ -66,7 +66,7 @@
  (require :core))
 
 (deftest equality
-  (testing eq
+  (testing "eq"
     (assert* (not (pcall eq)))
     ;; comparing basetypes
     (assert-eq 1 1)
@@ -107,7 +107,7 @@
     ;; different.
     (assert-eq {4 1} [nil nil nil 1])))
 
-(testing range
+(testing "range"
   (assert* (not (pcall range)))
   (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
   (assert-eq (range -5 5) [-5 -4 -3 -2 -1 0 1 2 3 4])
@@ -115,45 +115,45 @@
   (assert-eq (range 0 1 0.2) (range 0 1 0.2)))
 
 (deftest predicates
-  (testing zero?
+  (testing "zero?"
     (assert* (zero? 0))
     (assert* (zero? -0))
     (assert* (not (zero? 1))))
 
-  (testing int?
+  (testing "int?"
     (assert* (int? 1))
     (assert* (not (int? 1.1))))
 
-  (testing pos?
+  (testing "pos?"
     (assert* (pos? 1))
     (assert* (and (not (pos? 0)) (not (pos? -1)))))
 
-  (testing neg?
+  (testing "neg?"
     (assert* (neg? -1))
     (assert* (and (not (neg? 0)) (not (neg? 1)))))
 
-  (testing pos-int?
+  (testing "pos-int?"
     (assert* (pos-int? 42))
     (assert* (not (pos-int? 4.2))))
 
-  (testing neg-int?
+  (testing "neg-int?"
     (assert* (neg-int? -42))
     (assert* (not (neg-int? -4.2))))
 
-  (testing string?
+  (testing "string?"
     (assert* (string? :s)))
 
-  (testing double?
+  (testing "double?"
     (assert* (double? 3.3))
     (assert* (not (double? 3.0))))
 
-  (testing map?
+  (testing "map?"
     (assert* (map? {:a 1}))
     (assert* (not (map? {})))
     (assert* (map? (empty {})))
     (assert* (not (map? (empty [])))))
 
-  (testing seq?
+  (testing "seq?"
     (assert* (not (seq? [])))
     (assert* (seq? [{:a 1}]))
     (assert* (not (seq? {})))
@@ -161,50 +161,50 @@
     (assert* (seq? (empty [])))
     (assert* (not (seq? (empty {})))))
 
-  (testing nil?
+  (testing "nil?"
     (assert* (nil?))
     (assert* (nil? nil))
     (assert* (not (nil? 1))))
 
-  (testing odd?
+  (testing "odd?"
     (assert* (odd? 3))
     (assert* (odd? -3))
     (assert* (not (odd? 2)))
     (assert* (not (odd? -2))))
 
-  (testing even?
+  (testing "even?"
     (assert* (even? 2))
     (assert* (even? -2))
     (assert* (not (even? 23)))
     (assert* (not (even? -23))))
 
-  (testing true?
+  (testing "true?"
     (assert* (true? true))
     (assert* (not (true? false)))
     (assert* (not (true? 10)))
     (assert* (not (true? :true))))
 
-  (testing false?
+  (testing "false?"
     (assert* (false? false))
     (assert* (not (false? true)))
     (assert* (not (false? 10)))
     (assert* (not (false? :true))))
 
-  (testing boolean?
+  (testing "boolean?"
     (assert* (boolean? true))
     (assert* (boolean? false))
     (assert* (not (boolean? :false)))
     (assert* (not (boolean? (fn [] true))))))
 
 (deftest sequence-functions
-  (testing seq
+  (testing "seq"
     (assert-eq (seq []) nil)
     (assert-eq (seq {}) nil)
     (assert-eq (seq [1]) [1])
     (assert-eq (seq [1 2 3]) [1 2 3])
     (assert-eq (seq {:a 1}) [["a" 1]]))
 
-  (testing mapv
+  (testing "mapv"
     (assert* (not (pcall mapv)))
     (assert* (not (pcall mapv #(do nil))))
     (assert-eq (mapv #(* $ $) [1 2 3 4]) [1 4 9 16])
@@ -228,7 +228,7 @@
                ["Bob Smith works as secretary at Happy Days co."
                 "Alice Watson works as chief officer at Coffee With You"]))
 
-  (testing reduce
+  (testing "reduce"
     (fn* plus
       ([] 0)
       ([a] a)
@@ -262,7 +262,7 @@
 
     (assert-eq (reduce plus (range 10)) (reduce- plus 0 (range 10))))
 
-  (testing filter
+  (testing "filter"
     (assert* (not (pcall filter)))
     (assert* (not (pcall filter even?)))
     (assert-eq (filter even? (range 10)) [0 2 4 6 8])
@@ -270,7 +270,7 @@
     (assert-eq (filter map? [{:a 1} {5 1} [1 2] [] {}]) [{:a 1} {5 1}])
     (assert-eq (filter seq? [{:a 1} {5 1} [1 2] [] {}]) [[1 2]]))
 
-  (testing concat
+  (testing "concat"
     (assert-eq (concat) nil)
     (assert-eq (concat []) [])
     (assert-eq (concat [1 2 3]) [1 2 3])
@@ -287,12 +287,12 @@
     (assert* (not (pcall concat [] 2)))
     (assert* (not (pcall concat [1] 2))))
 
-  (testing reverse
+  (testing "reverse"
     (assert-eq (reverse []) nil)
     (assert-eq (reverse [1 2 3]) [3 2 1])
     (assert-eq (reverse {:a 1}) [[:a 1]]))
 
-  (testing conj
+  (testing "conj"
     (assert-eq (conj) [])
     (assert-eq (conj [1] nil) [1])
     (assert-eq (conj [] 1 2 3) [1 2 3])
@@ -301,48 +301,48 @@
     (assert-eq (conj {:a 1}) {:a 1})
     (assert-eq (conj [1] 2 3 4 5 6 7) [1 2 3 4 5 6 7]))
 
-  (testing cons
+  (testing "cons"
     (assert-eq (cons nil [1]) [1])
     (assert-eq (cons 1 []) [1])
     (assert-eq (cons 1 [0]) [1 0]))
 
-  (testing first
+  (testing "first"
     (assert-eq (first [1 2 3]) 1)
     (assert-eq (first {:a 1}) [:a 1])
     (assert-eq (first []) nil))
 
-  (testing last
+  (testing "last"
     (assert-eq (last [1 2 3]) 3)
     (assert-eq (last []) nil)
     (assert-eq (last nil) nil)
     (assert-eq (last {:a 1}) [:a 1]))
 
-  (testing rest
+  (testing "rest"
     (assert-eq (rest [1 2 3]) [2 3])
     (assert-eq (rest {:a 1}) [])
     (assert-eq (rest []) [])
     (assert-eq (rest nil) []))
 
-  (testing butlast
+  (testing "butlast"
     (assert-eq (butlast [1 2 3]) [1 2])
     (assert-eq (butlast {:a 1}) nil)
     (assert-eq (butlast []) nil)
     (assert-eq (butlast nil) nil))
 
-  (testing reduce-kv
+  (testing "reduce-kv"
     (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6)
     (assert* (not (pcall reduce-kv #(+ $1 $3) 0)))
     (assert* (not (pcall reduce-kv #(+ $1 $3))))
     (assert* (not (pcall reduce-kv))))
 
-  (testing assoc
+  (testing "assoc"
     (assert* (not (pcall assoc)))
     (assert* (not (pcall assoc {})))
     (assert-eq (assoc {} :a 1) {:a 1})
     (assert-eq (assoc {} :a 1 :b 2 :c 3 :d 4) {:a 1 :b 2 :c 3 :d 4})))
 
 (deftest function-manipulation
-  (testing constantly
+  (testing "constantly"
     (let [always-nil (constantly nil)]
       (assert-eq (always-nil) nil)
       (assert-eq (always-nil 1) nil)
@@ -352,14 +352,14 @@
       (assert* (always-true))
       (assert* (always-true false))))
 
-  (testing complement
+  (testing "complement"
     (assert* ((complement #(do false))))
     (assert* ((complement nil?) 10))
     (assert* ((complement every?) double? [1 2 3 4]))
     (assert* ((complement #(= $1 $2 $3)) 1 1 2 1))
     (assert* ((complement #(= $1 $2)) 1 2)))
 
-  (testing apply
+  (testing "apply"
     (fn* add
       ([x] x)
       ([x y] (+ x y))
@@ -374,7 +374,7 @@
     (assert* (not (pcall apply)))
     (assert* (not (pcall apply add))))
 
-  (testing comp
+  (testing "comp"
     (assert-eq ((comp) 10) 10)
     (fn square [x] (* x x))
     (assert-eq (comp square) square)
@@ -389,7 +389,7 @@
     (fn h [a b c d e f] (+ a b c d e f))
     (assert-eq ((comp inc h) 1 2 3 4 5 6) 22))
 
-  (testing identity
+  (testing "identity"
     (fn f [] nil)
     (assert-eq (identity 1) 1)
     (assert-eq (identity {:a 1 :b 2}) {:a 1 :b 2})
@@ -398,28 +398,28 @@
     (assert-eq (identity f) f)))
 
 (deftest sequence-predicates
-  (testing some
+  (testing "some"
     (assert* (not (pcall some)))
     (assert* (not (pcall some pos-int?)))
     (assert* (some pos-int? [-1 1.1 2.3 -5.5 42 10 -27]))
     (assert* (not (some pos-int? {:a 1})))
     (assert* (some pos-int? [{:a 1} "1" -1 1])))
 
-  (testing not-any?
+  (testing "not-any?"
     (assert* (not (pcall not-any?)))
     (assert* (not (pcall not-any? pos-int?)))
     (assert* (not-any? pos-int? [-1 1.1 2.3 -5.5 -42 -10 -27]))
     (assert* (not-any? pos-int? {:a 1}))
     (assert* (not (not-any? pos-int? [1 2 3 4 5]))))
 
-  (testing every?
+  (testing "every?"
     (assert* (not (pcall every?)))
     (assert* (not (pcall every? pos-int?)))
     (assert* (not (every? pos-int? [-1 1.1 2.3 -5.5 42 10 -27])))
     (assert* (not (every? pos-int? {:a 1})))
     (assert* (every? pos-int? [1 2 3 4 5])))
 
-  (testing empty?
+  (testing "empty?"
     (assert* (not (pcall empty?)))
     (assert* (empty? []))
     (assert* (empty? {}))
@@ -429,7 +429,7 @@
     (assert* (not (empty? {:a 1})))
     (assert* (not (pcall empty? 10))))
 
-  (testing not-empty
+  (testing "not-empty"
     (assert* (not (pcall not-empty)))
     (assert-eq (not-empty []) nil)
     (assert-eq (not-empty {}) nil)
@@ -439,20 +439,20 @@
     (assert-eq (not-empty {:a 1}) {:a 1})))
 
 (deftest math-functions
-  (testing inc
+  (testing "inc"
     (assert-eq (inc 1) 2)
     (assert-eq (inc -1) 0)
     (assert* (not (pcall inc)))
     (assert* (not (pcall inc nil))))
 
-  (testing dec
+  (testing "dec"
     (assert-eq (dec 1) 0)
     (assert-eq (dec -1) -2)
     (assert* (not (pcall dec)))
     (assert* (not (pcall dec nil)))))
 
 (deftest table-access
-  (testing get
+  (testing "get"
     (assert-eq (get {:key1 10 :key2 20} :key1) 10)
     (assert-eq (get {:key1 10 :key2 20} :key1 false) 10)
     (assert-eq (get {:key1 10 :key2 20} :key3 false) false)
@@ -460,7 +460,7 @@
     (assert* (not (pcall get)))
     (assert* (not (pcall get {}))))
 
-  (testing get-in
+  (testing "get-in"
     (local t {:a {:b {:c 10}}})
     (assert-eq (get-in t [:a]) {:b {:c 10}})
     (assert-eq (get-in t [:a :b]) {:c 10})
@@ -473,7 +473,7 @@
     (assert* (not (pcall get-in {})))))
 
 (deftest methods
-  (testing methods
+  (testing "methods"
     (defmulti f identity)
     (defmethod f :a [_] :a)
     (defmethod f :b [_] :b)
@@ -482,7 +482,7 @@
     (assert* (not (pcall methods)))
     (assert* (not (pcall methods f f))))
 
-  (testing get-method
+  (testing "get-method"
     (defmulti f identity)
     (defmethod f :a [_] :a)
     (defmethod f :b [_] :b)
@@ -494,7 +494,7 @@
     (assert* (not (pcall get-method f)))
     (assert* (not (pcall get-method f :a :b))))
 
-  (testing remove-method
+  (testing "remove-method"
     (defmulti f identity)
     (defmethod f :a [_] :a)
     (defmethod f :b [_] :b)
@@ -506,7 +506,7 @@
     (assert* (not (pcall remove-method f)))
     (assert* (not (pcall remove-method f :a :b))))
 
-  (testing remove-all-methods
+  (testing "remove-all-methods"
     (defmulti f identity)
     (defmethod f :a [_] :a)
     (defmethod f :b [_] :b)
@@ -517,7 +517,7 @@
     (assert* (not (pcall remove-all-methods f f)))))
 
 (deftest math-functions
-  (testing plus
+  (testing "plus"
     (assert-eq (plus) 0)
     (assert-eq (plus 1) 1)
     (assert-eq (plus -1) -1)
@@ -526,7 +526,7 @@
     (assert-eq (plus 1 2 3 4) 10)
     (assert-eq (plus 1 2 3 4 5) 15))
 
-  (testing minus
+  (testing "minus"
     (assert-eq (minus) 0)
     (assert-eq (minus 1) -1)
     (assert-eq (minus -1) 1)
@@ -535,7 +535,7 @@
     (assert-eq (minus 1 2 3 4) -8)
     (assert-eq (minus 1 2 3 4 5) -13))
 
-  (testing mul
+  (testing "mul"
     (assert-eq (mul) 1)
     (assert-eq (mul 1) 1)
     (assert-eq (mul -1) -1)
@@ -544,7 +544,7 @@
     (assert-eq (mul 1 2 3 4) 24)
     (assert-eq (mul 1 2 3 4 5) 120))
 
-  (testing div
+  (testing "div"
     (assert* (not (pcall div)))
     (assert-eq (div 1) 1)
     (assert-eq (div -1) -1)
@@ -554,7 +554,7 @@
     (assert-eq (div 1 2 3 4 5) (/ 1 2 3 4 5))))
 
 (deftest comparison-functions
-  (testing le
+  (testing "le"
     (assert* (not (pcall le)))
     (assert* (le 1))
     (assert* (le 1 2))
@@ -564,7 +564,7 @@
     (assert* (not (le 2 1 3)))
     (assert* (not (le 1 2 4 3))))
 
-  (testing lt
+  (testing "lt"
     (assert* (not (pcall lt)))
     (assert* (lt 1))
     (assert* (lt 1 2))
@@ -574,7 +574,7 @@
     (assert* (not (lt 2 1 3)))
     (assert* (not (lt 1 2 4 4))))
 
-  (testing ge
+  (testing "ge"
     (assert* (not (pcall ge)))
     (assert* (ge 2))
     (assert* (ge 2 1))
@@ -584,7 +584,7 @@
     (assert* (not (ge 2 1 3)))
     (assert* (not (ge 1 2 4 4))))
 
-  (testing gt
+  (testing "gt"
     (assert* (not (pcall gt)))
     (assert* (gt 2))
     (assert* (gt 2 1))
@@ -595,14 +595,14 @@
     (assert* (not (gt 1 2 4 4)))))
 
 (deftest vec
-  (testing vec
+  (testing "vec"
     (assert-eq (vector) [])
     (assert-eq (vector 1) [1])
     (assert-eq (vector 1 2 3) [1 2 3])
     (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/table-type :seq})))
 
 (deftest hash-map
-  (testing hash-map
+  (testing "hash-map"
     (assert* (not (pcall hash-map :a)))
     (assert-eq (hash-map) {})
     (assert-eq (hash-map :a 1) {:a 1})

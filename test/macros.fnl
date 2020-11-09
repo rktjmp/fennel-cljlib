@@ -4,7 +4,7 @@
 (require-macros :macros.core)
 
 (deftest into
-  (testing into
+  (testing "into"
     (assert-eq (into [] []) [])
     (assert-eq (into [1 2 3] []) [1 2 3])
     (assert-eq (into [1 2 3] [4 5 6]) [1 2 3 4 5 6])
@@ -48,37 +48,38 @@
       (assert-eq (into b {:a 1}) [[:a 1]]))))
 
 (deftest let-variants
-  (testing when-let
+  (testing "when-let"
     (assert-eq (when-let [a 4] a) 4)
     (assert* (not (when-let [a false] a)) "(not (when-let [a false] a))")
     (assert* (not (when-let [a nil] a)) "(not (when-let [a nil] a))"))
 
-  (testing when-some
+  (testing "when-some"
     (assert-eq (when-some [a [1 2 3]] a) [1 2 3])
     (assert-eq (when-some [a false] a) false)
     (assert* (not (when-some [a nil] a)) "(when-some [a nil] a)"))
 
-  (testing if-let
+  (testing "if-let"
     (assert-eq (if-let [a 4] a 10) 4)
     (assert-eq (if-let [a false] a 10) 10)
     (assert-eq (if-let [a nil] a 10) 10))
 
-  (testing if-some
+  (testing "if-some"
     (assert-eq (if-some [a [1 2 3]] a :nothing) [1 2 3])
     (assert-eq (if-some [a false] a :nothing) false)
     (assert-eq (if-some [a nil] a :nothing) :nothing)))
 
 (deftest multimethods
-  (testing defmulti
+  (testing "defmulti"
     (defmulti x (fn [x] x))
     (assert-eq (defmulti x (fn [x] (+ x 1))) nil))
 
-  (testing defmethod
+  (testing "defmulti defalut"
     (defmulti fac identity)
     (defmethod fac 0 [_] 1)
     (defmethod fac :default [x] (* x (fac (- x 1))))
-    (assert-eq (fac 42) 7538058755741581312)
+    (assert-eq (fac 42) 7538058755741581312))
 
+  (testing "defmulti keys"
     (defmulti send-data (fn [protocol data] protocol))
     (defmethod send-data :http [protocol data] (.. data " will be sent over HTTP"))
     (defmethod send-data :icap [protocol data] (.. data " will be sent over ICAP"))
@@ -94,7 +95,7 @@
                "sending 42 over ICAP")))
 
 (deftest def-macros
-  (testing def
+  (testing "def"
     (def {:dynamic true} a 10)
     (assert-eq a 10)
     (set a 20)
@@ -108,7 +109,7 @@
     (set c 15)
     (assert-eq c 15))
 
-  (testing defonce
+  (testing "defonce"
     (defonce {:dynamic true} a 10)
     (assert-eq a 10)
     (defonce a {})
@@ -119,16 +120,16 @@
     (assert-eq a 10)))
 
 (deftest meta
-  (testing with-meta
+  (testing "with-meta"
     (assert-eq (meta (with-meta :a {:k :v})) (when-meta {:k :v})))
 
-  (testing def-meta
+  (testing "def meta"
     (def {:doc "x"} x 10)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
     (def {:doc "x" :dynamic true} x 10)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"})))
 
-  (testing defonce-meta
+  (testing "defonce meta table"
     (defonce {:doc "x"} x 10)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
     (defonce {:doc "y"} x 20)
@@ -137,8 +138,19 @@
     (assert-eq (meta y) (when-meta {:fnl/docstring "y"}))))
 
 (deftest empty
-  (testing empty
+  (testing "empty map"
     (assert-eq (empty {}) {})
+    (assert-eq (getmetatable (empty {})) {:cljlib/table-type :table})
+    (let [a {:a 1 :b 2}]
+      (assert-eq (empty a) {})
+      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :table}))
+    (let [a {}]
+      (assert-eq (empty a) [])
+      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :empty})))
+
+  (testing "empty seq"
     (assert-eq (empty []) {})
     (assert-eq (getmetatable (empty [])) {:cljlib/table-type :seq})
-    (assert-eq (getmetatable (empty {})) {:cljlib/table-type :table})))
+    (let [a [:a 1 :b 2]]
+      (assert-eq (empty a) [])
+      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :seq}))))
