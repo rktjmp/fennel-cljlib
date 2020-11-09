@@ -79,7 +79,7 @@
     (var prev nil)
     (each [_ cur (ipairs t)]
       (if prev
-          (when (~= (+ prev 1) cur)
+          (when (not= (+ prev 1) cur)
             (lua "return false")))
       (set prev cur))
     prev))
@@ -156,7 +156,7 @@
        ,(arity-dispatcher
          'len#
          bodies
-         (if (~= (next bodies&) nil)
+         (if (not= (next bodies&) nil)
              (. bodies& 1))
          fname))))
 

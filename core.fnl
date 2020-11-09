@@ -38,8 +38,9 @@ arguments to `args'."
       (if-let [t (fast-table-type tbl)]
         (= t :table)
         (let [(k _) (next tbl)]
-          (and (~= k nil) (or (~= (type k) :number)
-                              (~= k 1)))))))
+          (and (not= k nil)
+               (or (not= (type k) :number)
+                   (not= k 1)))))))
 
 (fn& core.seq?
   "Check whether `tbl' is an sequential table."
@@ -48,7 +49,7 @@ arguments to `args'."
       (if-let [t (fast-table-type tbl)]
         (= t :seq)
         (let [(k _) (next tbl)]
-          (and (~= k nil) (= (type k) :number) (= k 1))))))
+          (and (not= k nil) (= (type k) :number) (= k 1))))))
 
 
 (fn& core.nil?
@@ -123,7 +124,7 @@ arguments to `args'."
   "Test if `x' is a number with floating point data."
   [x]
   (and (= (type x) :number)
-       (~= x (math.floor x))))
+       (not= x (math.floor x))))
 
 (fn& core.empty?
   "Check if collection is empty."
@@ -334,8 +335,8 @@ ignored. Returns a table of results."
   ([f t1 t2 t3 & tbls]
    (let [step (fn step [tbls]
                 (if (->> tbls
-                           (mapv #(~= (next $) nil))
-                           (reduce #(and $1 $2)))
+                         (mapv #(not= (next $) nil))
+                         (reduce #(and $1 $2)))
                     (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
                     (vector)))
          res (vector)]
