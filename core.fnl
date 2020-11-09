@@ -18,7 +18,7 @@ arguments to `args'."
   ([f a b args] (f a b (unpack args)))
   ([f a b c args] (f a b c (unpack args)))
   ([f a b c d & args]
-   (let [flat-args (vector)]
+   (let [flat-args (empty [])]
      (for [i 1 (- (length args) 1)]
        (insert flat-args (. args i)))
      (each [_ a (ipairs (. args (length args)))]
@@ -151,8 +151,8 @@ If `tbl' is sequential table, returns its shallow copy."
   [tbl]
   (when-some [_ (and tbl (next tbl))]
     (var assoc? false)
-    (let [assoc (vector)
-          seq (vector)]
+    (let [assoc (empty [])
+          seq (empty [])]
       (each [k v (pairs tbl)]
         (if (and (not assoc?)
                  (not (= (type k) :number)))
@@ -163,7 +163,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (macro safe-seq [tbl]
   "Create sequential table, or empty table if `seq' returned `nil'."
-  `(or (seq ,tbl) (vector)))
+  `(or (seq ,tbl) (empty [])))
 
 (fn& core.first
   "Return first element of a table. Calls `seq' on its argument."
@@ -177,7 +177,7 @@ If `tbl' is sequential table, returns its shallow copy."
   [tbl]
   (if-some [tbl (seq tbl)]
     (vector (unpack tbl 2))
-    (vector)))
+    (empty [])))
 
 (fn& core.last
   "Returns the last element of a table. Calls `seq' on its argument."
@@ -202,11 +202,11 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn* core.conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
-  ([] (vector))
+  ([] (empty []))
   ([tbl] tbl)
   ([tbl x]
    (when-some [x x]
-     (let [tbl (or tbl (vector))]
+     (let [tbl (or tbl (empty []))]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
            (insert tbl x))))
@@ -216,7 +216,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn* consj
   "Like conj but joins at the front. Modifies `tbl'."
-  ([] (vector))
+  ([] (empty []))
   ([tbl] tbl)
   ([tbl x]
    (when-some [x x]
@@ -300,13 +300,13 @@ table. Then applies `f' to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
-   (local res (vector))
+   (local res (empty []))
    (each [_ v (ipairs (safe-seq tbl))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
   ([f t1 t2]
-   (let [res (vector)
+   (let [res (empty [])
          t1 (safe-seq t1)
          t2 (safe-seq t2)]
      (var (i1 v1) (next t1))
@@ -318,7 +318,7 @@ ignored. Returns a table of results."
        (set (i2 v2) (next t2 i2)))
      res))
   ([f t1 t2 t3]
-   (let [res (vector)
+   (let [res (empty [])
          t1 (safe-seq t1)
          t2 (safe-seq t2)
          t3 (safe-seq t3)]
@@ -338,8 +338,8 @@ ignored. Returns a table of results."
                          (mapv #(not= (next $) nil))
                          (reduce #(and $1 $2)))
                     (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
-                    (vector)))
-         res (vector)]
+                    (empty [])))
+         res (empty [])]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
@@ -354,7 +354,7 @@ ignored. Returns a table of results."
 
 (fn kvseq [tbl]
   "Transforms any table kind to key-value sequence."
-  (let [res (vector)]
+  (let [res (empty [])]
     (each [k v (pairs tbl)]
       (insert res [k v]))
     res))
@@ -418,7 +418,7 @@ oppisite truth value."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
   ([lower upper step]
-   (let [res (vector)]
+   (let [res (empty [])]
      (for [i lower (- upper step) step]
        (insert res i))
      res)))
@@ -427,7 +427,7 @@ oppisite truth value."
   "Returns table with same items as in `tbl' but in reverse order."
   [tbl]
   (when-some [tbl (seq tbl)]
-    (reduce consj (vector) tbl)))
+    (reduce consj (empty []) tbl)))
 
 (fn* core.inc "Increase number by one" [x] (+ x 1))
 (fn* core.dec "Decrease number by one" [x] (- x 1))
