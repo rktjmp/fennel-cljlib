@@ -1,7 +1,5 @@
 (require-macros :test.test)
 (require-macros :macros.core)
-(local {: eq} (require :core)) ;; required for testing
-
 (require-macros :macros.fn)
 
 (deftest fn*

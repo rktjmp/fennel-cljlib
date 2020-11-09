@@ -1,5 +1,19 @@
 (require-macros :macros.fn)
-;; requires `eq' from core.fnl to be available at runtime
+
+(fn eq-fn []
+  `(fn eq# [a# b#]
+     (if (and (= (type a#) :table) (= (type b#) :table))
+         (do (var [res# count-a# count-b#] [true 0 0])
+             (each [k# v# (pairs a#)]
+               (set res# (eq# v# (. b# k#)))
+               (set count-a# (+ count-a# 1))
+               (when (not res#) (lua :break)))
+             (when res#
+               (each [_# _# (pairs b#)]
+                 (set count-b# (+ count-b# 1)))
+               (set res# (and res# (= count-a# count-b#))))
+             res#)
+         (= a# b#))))
 
 (fn* assert-eq
   ([expr1 expr2]

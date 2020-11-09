@@ -1,5 +1,5 @@
 (require-macros :test.test)
-(local {: eq : identity} (require :core)) ;; required for testing
+(local {: identity} (require :core))
 
 (require-macros :macros.core)
 
