@@ -1,4 +1,4 @@
-(require-macros :macros.fn)
+(require-macros :cljlib-macros)
 
 (fn eq-fn []
   `(fn eq# [a# b#]

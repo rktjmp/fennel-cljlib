@@ -1,6 +1,5 @@
 (require-macros :test.test)
-(require-macros :macros.core)
-(require-macros :macros.fn)
+(require-macros :cljlib-macros)
 
 (deftest fn*
   (testing "fn* meta"

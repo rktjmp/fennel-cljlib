@@ -1,5 +1,4 @@
-(require-macros :macros.fn)
-(require-macros :macros.core)
+(require-macros :cljlib-macros)
 (require-macros :test.test)
 
 (local
@@ -63,7 +62,7 @@
   : ge
   : lt
   : gt}
- (require :core))
+ (require :cljlib))
 
 (deftest equality
   (testing "comparing basetypes"

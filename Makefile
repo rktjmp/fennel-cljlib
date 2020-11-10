@@ -1,6 +1,6 @@
 LUA ?= lua
 
-FNLSOURCES = core.fnl test/core.fnl test/macros.fnl test/fn.fnl
+FNLSOURCES = cljlib.fnl test/core.fnl test/macros.fnl test/fn.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 
 all: $(LUASOURCES)

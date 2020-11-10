@@ -2,8 +2,7 @@
 
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
-(require-macros :macros.fn)
-(require-macros :macros.core)
+(require-macros :cljlib-macros)
 
 (fn* core.vector
   "Constructs sequential table out of it's arguments."

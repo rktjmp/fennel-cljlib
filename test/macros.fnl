@@ -1,7 +1,5 @@
 (require-macros :test.test)
-(local {: identity} (require :core))
-
-(require-macros :macros.core)
+(require-macros :cljlib-macros)
 
 (deftest into
   (testing "into"
@@ -74,7 +72,7 @@
     (assert-eq (defmulti x (fn [x] (+ x 1))) nil))
 
   (testing "defmulti defalut"
-    (defmulti fac identity)
+    (defmulti fac (fn [x] x))
     (defmethod fac 0 [_] 1)
     (defmethod fac :default [x] (* x (fac (- x 1))))
     (assert-eq (fac 42) 7538058755741581312))
