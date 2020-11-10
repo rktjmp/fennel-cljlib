@@ -66,18 +66,17 @@
  (require :core))
 
 (deftest equality
-  (testing "eq"
+  (testing "comparing basetypes"
     (assert* (not (pcall eq)))
-    ;; comparing basetypes
     (assert-eq 1 1)
     (assert-ne 1 2)
     (assert* (eq 1 1 1 1 1))
     (assert-eq 1.0 1.0)
     (assert* (eq 1.0 1.0 1.0))
     (assert* (eq 1.0 1.0 1.0))
-    (assert* (eq "1" "1" "1" "1" "1"))
+    (assert* (eq "1" "1" "1" "1" "1")))
 
-    ;; deep comparison
+  (testing "deep comparison"
     (assert* (eq []))
     (assert-eq [] [])
     (assert-eq [] {})
@@ -248,19 +247,20 @@
     (assert-eq (reduce add 10 [1]) 11)
     (assert-eq (reduce add 10 nil) 10)
     (assert* (not (pcall reduce)))
-    (assert* (not (pcall reduce add)))
+    (assert* (not (pcall reduce add))))
 
+  (testing "reduce reference implementation"
     (fn mapping [f]
       (fn [reducing]
         (fn [result input]
           (reducing result (f input)))))
 
-    (fn reduce- [f init tbl]
-      (if (and tbl (> (length tbl) 0))
-          (reduce f (f init (first tbl)) (rest tbl))
-          init))
+    (fn reduce- [f init [x & tbl]]
+      (if x (reduce- f (f init x) tbl) init))
 
-    (assert-eq (reduce add (range 10)) (reduce- add 0 (range 10))))
+    (assert-eq (reduce add (range 10)) (reduce- add 0 (range 10)))
+    (assert-eq (reduce ((mapping inc) add) 0 (range 10))
+               (reduce- ((mapping inc) add) 0 (range 10))))
 
   (testing "filter"
     (assert* (not (pcall filter)))
