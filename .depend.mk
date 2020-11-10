@@ -1,3 +1,4 @@
-core.lua: core.fnl macros/core.fnl macros/fn.fnl
-test/core.lua: test/core.fnl macros/core.fnl macros/fn.fnl test/test.fnl
-test/macros.lua: test/macros.fnl macros/core.fnl macros/fn.fnl test/test.fnl
+cljlib.lua: cljlib.fnl cljlib-macros.fnl
+test/core.lua: test/core.fnl cljlib-macros.fnl test/test.fnl
+test/macros.lua: test/macros.fnl cljlib-macros.fnl test/test.fnl
+test/fn.lua: test/fn.fnl cljlib-macros.fnl test/test.fnl
