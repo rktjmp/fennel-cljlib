@@ -200,7 +200,9 @@
     (assert-eq (seq {}) nil)
     (assert-eq (seq [1]) [1])
     (assert-eq (seq [1 2 3]) [1 2 3])
-    (assert-eq (seq {:a 1}) [["a" 1]]))
+    (assert-eq (seq {:a 1}) [["a" 1]])
+    (assert-eq (seq "abc") ["a" "b" "c"])
+    (assert-eq (seq "абв") ["а" "б" "в"]))
 
   (testing "mapv"
     (assert-not (pcall mapv))
@@ -224,7 +226,8 @@
                      ["Happy Days co." "Coffee With You"]
                      ["secretary" "chief officer"])
                ["Bob Smith works as secretary at Happy Days co."
-                "Alice Watson works as chief officer at Coffee With You"]))
+                "Alice Watson works as chief officer at Coffee With You"])
+    (assert-eq (table.concat (mapv string.upper "vaiv")) "VAIV"))
 
   (testing "reduce"
     (fn* add

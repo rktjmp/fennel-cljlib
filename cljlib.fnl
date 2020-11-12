@@ -147,18 +147,28 @@ Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `tbl' is an
 associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
 If `tbl' is sequential table, returns its shallow copy."
-  [tbl]
-  (when-some [_ (and tbl (next tbl))]
-    (var assoc? false)
-    (let [assoc (empty [])
-          seq (empty [])]
-      (each [k v (pairs tbl)]
-        (if (and (not assoc?)
-                 (not (= (type k) :number)))
-            (set assoc? true))
-        (insert assoc [k v])
-        (tset seq k v))
-      (if assoc? assoc seq))))
+  [col]
+  (match (type col)
+    :table
+    (when-some [_ (and col (next col))]
+      (var assoc? false)
+      (let [assoc (empty [])
+            seq (empty [])]
+        (each [k v (pairs col)]
+          (if (and (not assoc?)
+                   (not (= (type k) :number)))
+              (set assoc? true))
+          (insert assoc [k v])
+          (tset seq k v))
+        (if assoc? assoc seq)))
+    :string
+    (let [res []
+          char utf8.char]
+      (each [_ b (utf8.codes col)]
+        (insert res (char b)))
+      res)
+    :nil nil
+    _ (error "expected table or string" 2)))
 
 (macro safe-seq [tbl]
   "Create sequential table, or empty table if `seq' returned `nil'."
