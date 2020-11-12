@@ -1,4 +1,4 @@
-(require-macros :cljlib-macros)
+(local test {})
 
 (fn eq-fn []
   `(fn eq# [a# b#]
@@ -11,57 +11,48 @@
              (when res#
                (each [_# _# (pairs b#)]
                  (set count-b# (+ count-b# 1)))
-               (set res# (and res# (= count-a# count-b#))))
+               (set res# (= count-a# count-b#)))
              res#)
          (= a# b#))))
 
-(fn* assert-eq
-  ([expr1 expr2]
-   (assert-eq expr1 expr2 nil))
-  ([expr1 expr2 msg]
-   `(let [left# ,expr1
-          right# ,expr2
-          (res# view#) (pcall require :fennelview)
-          eq# ,(eq-fn)]
-      (assert (eq# left# right#) (or ,msg (.. "equality assertion failed
-  Left: " ((if res# view# tostring) left#) "
-  Right: " ((if res# view# tostring) right#) "\n"))))))
+(fn test.assert-eq
+  [expr1 expr2 msg]
+  `(let [left# ,expr1
+         right# ,expr2
+         (res# view#) (pcall require :fennelview)
+         eq# ,(eq-fn)
+         tostr# (if res# view# tostring)]
+     (assert (eq# left# right#)
+             (or ,msg (.. "equality assertion failed
+  Left: " (tostr# left#) "
+  Right: " (tostr# right#) "\n")))))
 
-(fn* assert-ne
-  ([expr1 expr2]
-   (assert-ne expr1 expr2 nil))
-  ([expr1 expr2 msg]
-   `(let [left# ,expr1
-          right# ,expr2
-          (res# view#) (pcall require :fennelview)
-          eq# ,(eq-fn)]
-      (assert (not (eq# left# right#)) (or ,msg (.. "unequality assertion failed
-  Left: " ((if res# view# tostring) left#) "
-  Right: " ((if res# view# tostring) right#) "\n"))))))
+(fn test.assert-ne
+  [expr1 expr2 msg]
+  `(let [left# ,expr1
+         right# ,expr2
+         (res# view#) (pcall require :fennelview)
+         eq# ,(eq-fn)
+         tostr# (if res# view# tostring)]
+     (assert (not (eq# left# right#))
+             (or ,msg (.. "unequality assertion failed
+  Left: " (tostr# left#) "
+  Right: " (tostr# right#) "\n")))))
 
-(fn* assert*
-  ([expr]
-   (assert* expr nil))
-  ([expr msg]
-   `(assert ,expr (.. "assertion failed for " (or ,msg ,(tostring expr))))))
+(fn test.assert*
+  [expr msg]
+  `(assert ,expr (.. "assertion failed for "
+                     (or ,msg ,(tostring expr)))))
 
-(fn* deftest [name docstring & tests]
+(fn test.deftest
+  [name ...]
   "Simple way of grouping tests"
-  `(do
-     ,docstring
-     ,((or table.unpack _G.unpack) tests)))
+  `,((or table.unpack _G.unpack) [...]))
 
-(fn* testing
+(fn test.testing
+  [description ...]
   "Define test function, print its name and run it."
-  [description & body]
-  (let [test-name (gensym)]
-    `(do (fn ,test-name []
-           ,((or table.unpack _G.unpack) body))
-         (io.stderr:write (.. "testing: " ,description "\n"))
-         (,test-name))))
+  `(do (io.stderr:write (.. "testing: " ,description "\n"))
+       ,((or table.unpack _G.unpack) [...])))
 
-{: assert-eq
- : assert-ne
- : assert*
- : deftest
- : testing}
+test
