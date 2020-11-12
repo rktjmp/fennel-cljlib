@@ -344,19 +344,31 @@ namespaced functions.  See `fn*' for more info."
                        (= k# nil) :empty
                        :table))))
            (= t# :nil) :nil
+           (= t# :string) :string
            :else))))
 
 (fn seq-fn []
-  `(fn [tbl#]
-     (var assoc# false)
-     (let [res# []
-           insert# table.insert]
-       (each [k# v# (pairs (or tbl# []))]
-         (if (and (not assoc#)
-                  (not (= (type k#) :number)))
-             (set assoc# true))
-         (insert# res# [k# v#]))
-       (if assoc# res# tbl#))))
+  `(fn [col#]
+     (let [t# (type col#)]
+       (if (= t# :table)
+           (do (var assoc# false)
+               (let [res# []
+                     insert# table.insert]
+                 (each [k# v# (pairs (or col# []))]
+                   (if (and (not assoc#)
+                            (not (= (type k#) :number)))
+                       (set assoc# true))
+                   (insert# res# [k# v#]))
+                 (if assoc# res# col#)))
+           (= t# :string)
+           (let [res# []
+                 char# utf8.char
+                 insert# table.insert]
+             (each [_# b# (utf8.codes col#)]
+               (insert# res# (char# b#)))
+             res#)
+           (= t# :nil) nil
+           (error "expected table or string" 2)))))
 
 (fn empty [tbl]
   (let [table-type (table-type tbl)]
@@ -417,6 +429,9 @@ namespaced functions.  See `fn*' for more info."
                                :seq (do (each [_# [k# v#] (ipairs (or from# []))]
                                           (tset to# k# v#))
                                         to#)
+                               :string (do (each [_# v# (ipairs (seq# from#))]
+                                             (insert# to# v#))
+                                           to#)
                                :table (do (each [k# v# (pairs (or from# []))]
                                             (tset to# k# v#))
                                           to#)

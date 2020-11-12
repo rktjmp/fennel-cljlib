@@ -50,7 +50,14 @@
       (assert-eq (into b [1 2 3]) [1 2 3]))
     (let [a {}
           b []]
-      (assert-eq (into b {:a 1}) [[:a 1]]))))
+      (assert-eq (into b {:a 1}) [[:a 1]]))
+
+    (let [a {}
+          b []]
+      (assert-eq (into a "vaiv") ["v" "a" "i" "v"])
+      (assert-eq (into b "ваыв") ["в" "а" "ы" "в"]))
+    (assert-eq (into [] "vaiv") ["v" "a" "i" "v"])
+    (assert-eq (into [] "ваыв") ["в" "а" "ы" "в"])))
 
 (deftest let-variants
   (testing "when-let"
