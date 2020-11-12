@@ -1,4 +1,4 @@
-(require-macros :test.test)
+(require-macros :tests.test)
 (require-macros :cljlib-macros)
 
 (deftest fn*

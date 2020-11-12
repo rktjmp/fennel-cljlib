@@ -3,10 +3,8 @@
 -- see https://keplerproject.github.io/luacov/doc/modules/luacov.defaults.html
 
 return {
-   ["exclude"] = {
-      "src/fennel/macros.fnl"
-   },
+   exclude = {"src/fennel/macros.fnl"},
    runreport = true,
-   statsfile = "luacov.stats.out";
-   reportfile = "luacov.report.out";
+   statsfile = "luacov.stats";
+   reportfile = "luacov.report";
 }

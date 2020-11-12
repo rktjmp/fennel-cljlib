@@ -43,16 +43,20 @@
   [expr msg]
   `(assert ,expr (.. "assertion failed for "
                      (or ,msg ,(tostring expr)))))
+(fn test.assert-not
+  [expr msg]
+  `(assert (not ,expr) (.. "assertion failed for "
+                           (or ,msg ,(tostring expr)))))
 
 (fn test.deftest
   [name ...]
   "Simple way of grouping tests"
-  `,((or table.unpack _G.unpack) [...]))
+  `(do ,...))
 
 (fn test.testing
   [description ...]
-  "Define test function, print its name and run it."
+  "Print test description and run it."
   `(do (io.stderr:write (.. "testing: " ,description "\n"))
-       ,((or table.unpack _G.unpack) [...])))
+       ,...))
 
 test

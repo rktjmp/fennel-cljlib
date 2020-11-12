@@ -1,50 +1,44 @@
 LUA ?= lua
-
-FNLSOURCES = cljlib.fnl test/core.fnl test/macros.fnl test/fn.fnl
+FENNEL ?= fennel
+FNLSOURCES = cljlib.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
+FNLTESTS = tests/fn.fnl tests/macros.fnl tests/core.fnl
+LUATESTS = $(FNLTESTS:.fnl=.lua)
+
+.PHONY: all clean distclean help test luacov luacov-console
 
 all: $(LUASOURCES)
-
-.PHONY: clean help test coverage all
 
 ${LUASOURCES}: $(FNLSOURCES)
 
 %.lua: %.fnl
-	fennel --lua $(LUA) --compile $< > $@
+	$(FENNEL) --lua $(LUA) --compile $< > $@
 
 clean:
-	rm -f *.lua
-	rm -f test/*.lua
+	find . -type f -name '*.lua' | xargs rm -f
 
-clean-all: clean
+distclean: clean
 	rm -f luacov*
 
-test: clean
-	@fennel --lua $(LUA) --metadata test/fn.fnl
-	@fennel --lua $(LUA) --metadata test/core.fnl
-	@fennel --lua $(LUA) --metadata test/macros.fnl
+test: $(FNLTESTS)
+	@$(foreach test, $?, $(FENNEL) --lua $(LUA) --metadata $(test);)
 
-luacov: | clean-all all luacov-stats
+luacov: all $(LUATESTS)
+	@$(foreach test, $(LUATESTS), $(LUA) -lluarocks.loader -lluacov $(test);)
 	luacov
 
-luacov-console: | luacov
-	@mv test/core.lua test/core.lua.tmp
-	@mv test/macros.lua test/macros.lua.tmp
-	@mv test/fn.lua test/fn.lua.tmp
+luacov-console: luacov
+	@$(foreach test, $(LUATESTS), mv $(test) $(test).tmp;)
 	luacov-console .
-	@mv test/core.lua.tmp test/core.lua
-	@mv test/macros.lua.tmp test/macros.lua
-	@mv test/fn.lua.tmp test/fn.lua
-
-luacov-stats: test/core.lua test/macros.lua test/fn.lua
-	@$(foreach test, $?, $(LUA) -lluarocks.loader -lluacov $(test);)
+	@$(foreach test, $(LUATESTS), mv $(test).tmp $(test);)
 
 help:
 	@echo "make                -- run tests and create lua library" >&2
 	@echo "make test           -- run tests" >&2
 	@echo "make clean          -- remove lua files" >&2
-	@echo "make luacov         -- build coverage report (requires working tests)" >&2
-	@echo "make luacov-console -- build coverage report for luacov-console (requires working tests)" >&2
+	@echo "make distclean      -- remove all unnecessary files" >&2
+	@echo "make luacov         -- build coverage report" >&2
+	@echo "make luacov-console -- build coverage report for luacov-console" >&2
 	@echo "make help           -- print this message and exit" >&2
 
 -include .depend.mk

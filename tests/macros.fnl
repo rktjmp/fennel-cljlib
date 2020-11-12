@@ -1,8 +1,12 @@
-(require-macros :test.test)
+(require-macros :tests.test)
 (require-macros :cljlib-macros)
 
 (deftest into
   (testing "into"
+    (assert-eq (into [] nil) [])
+    (assert-eq (into nil nil) nil)
+    (assert-eq (into nil [1 2 3]) [1 2 3])
+
     (assert-eq (into [] []) [])
     (assert-eq (into [1 2 3] []) [1 2 3])
     (assert-eq (into [1 2 3] [4 5 6]) [1 2 3 4 5 6])
@@ -11,9 +15,12 @@
     (assert-eq (into {:a 1} {}) {:a 1})
     (assert-eq (into {:a 1} {:b 2}) {:a 1 :b 2})
 
-    ;; different bodies are being used so worth testing
+    ;; different bodies are being used at compile time so worth testing
     (assert-eq (into [] {}) [])
     (assert-eq (into {} []) [])
+    (assert-eq (. (getmetatable (into [] {})) :cljlib/table-type) :seq)
+    (assert-eq (. (getmetatable (into {} [])) :cljlib/table-type) :table)
+    (let [a []] (assert-eq (. (getmetatable (into a a)) :cljlib/table-type) :seq))
 
     ;; can't transform table with more than one key-value pair, as order
     ;; is undeterminitive
@@ -48,13 +55,13 @@
 (deftest let-variants
   (testing "when-let"
     (assert-eq (when-let [a 4] a) 4)
-    (assert* (not (when-let [a false] a)) "(not (when-let [a false] a))")
-    (assert* (not (when-let [a nil] a)) "(not (when-let [a nil] a))"))
+    (assert-not (when-let [a false] a) "(not (when-let [a false] a))")
+    (assert-not (when-let [a nil] a) "(not (when-let [a nil] a))"))
 
   (testing "when-some"
     (assert-eq (when-some [a [1 2 3]] a) [1 2 3])
     (assert-eq (when-some [a false] a) false)
-    (assert* (not (when-some [a nil] a)) "(when-some [a nil] a)"))
+    (assert-not (when-some [a nil] a) "(when-some [a nil] a)"))
 
   (testing "if-let"
     (assert-eq (if-let [a 4] a 10) 4)
@@ -104,7 +111,30 @@
       (assert-eq (encounter b b) :mate)
       (assert-eq (encounter l l) :fight)
       (assert-eq (encounter b l) :run)
-      (assert-eq (encounter l b) :eat))))
+      (assert-eq (encounter l b) :eat)))
+
+  (testing "defmulti default name"
+    (defmulti f (fn [x] x) :default :my-default)
+    (defmethod f :my-default [_] 42)
+    (assert-eq (f 10) 42))
+
+
+  (testing "defmulti docstring"
+    (defmulti f "documentation" (fn [x] x))
+    (assert-eq (meta f) (when-meta {:fnl/docstring "documentation"}))
+    (defmulti g "documentation" (fn [x] x) :default 0)
+    (assert-eq (meta g) (when-meta {:fnl/docstring "documentation"})))
+
+  (testing "defmulti with multiple arity"
+    (defmulti f (fn* ([x] x) ([x y] [x y])))
+    (defmethod f :default ([_] :def) ([_ _] :def2))
+    (defmethod f :4 ([x] (.. x :2)))
+    (defmethod f [:4 :2] ([x y] 42))
+
+    (assert-eq (f 0) :def)
+    (assert-eq (f 0 1) :def2)
+    (assert-eq (f :4) :42)
+    (assert-eq (f :4 :2) 42)))
 
 (deftest def-macros
   (testing "def"

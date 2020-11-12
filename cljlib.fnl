@@ -213,15 +213,11 @@ If `tbl' is sequential table, returns its shallow copy."
   ([tbl x & xs]
    (apply conj (conj tbl x) xs)))
 
-(fn* consj
+(fn consj [...]
   "Like conj but joins at the front. Modifies `tbl'."
-  ([] (empty []))
-  ([tbl] tbl)
-  ([tbl x]
-   (when-some [x x]
-     (doto tbl (insert 1 x))))
-  ([tbl x & xs]
-   (apply consj (consj tbl x) xs)))
+  (let [[tbl x & xs] [...]]
+    (if (nil? x) tbl
+        (consj (doto tbl (insert 1 x)) (unpack xs)))))
 
 (fn& core.cons
   "Insert `x' to `tbl' at the front. Modifies `tbl'."

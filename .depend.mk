@@ -1,4 +1,4 @@
 cljlib.lua: cljlib.fnl cljlib-macros.fnl
-test/core.lua: test/core.fnl cljlib-macros.fnl test/test.fnl
-test/macros.lua: test/macros.fnl cljlib-macros.fnl test/test.fnl
-test/fn.lua: test/fn.fnl cljlib-macros.fnl test/test.fnl
+tests/core.lua: tests/core.fnl cljlib-macros.fnl tests/test.fnl cljlib.fnl
+tests/macros.lua: tests/macros.fnl cljlib-macros.fnl tests/test.fnl
+tests/fn.lua: tests/fn.fnl cljlib-macros.fnl tests/test.fnl
