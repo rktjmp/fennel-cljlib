@@ -80,6 +80,16 @@
     (assert-eq [] [])
     (assert-eq [] {})
     (assert-eq [1 2] [1 2])
+    (assert-eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+               [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]])
+    (assert* (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                 [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
+    (assert* (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                 [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                 [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
+    (assert-not (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                    [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                    [[1 [2 [3]] {[6] {:a [1 [1 [1 [1]]]]}}]]))
     (assert-ne [1] [1 2])
     (assert-ne [1 2] [1])
     (assert* (eq [1 [2]] [1 [2]] [1 [2]]))
@@ -103,7 +113,34 @@
     ;; nil 1])' both yield `{4 1}'.  From Lua's point this is not the
     ;; same thing, for example because the sizes of these tables are
     ;; different.
-    (assert-eq {4 1} [nil nil nil 1])))
+    (assert-eq {4 1} [nil nil nil 1]))
+
+  (testing "eq metadata preservation"
+    (let [a (setmetatable
+             {[1] [1 1 1]
+              [2 3] [[2 3] [2 3] [2 3] [2 3]]}
+             {:__index (fn [tbl key] (. tbl key))
+              :meta :data})
+          b (setmetatable
+             {[1] [1 1 1]
+              [2 3] [[2 3] [2 3] [2 3] [2 3] [2 3]]}
+             {:__index (fn [tbl key] (. tbl key))
+              :extra :metadata
+              :meta {:table :data}})
+          meta-a (getmetatable a)
+          meta-b (getmetatable b)
+          index-a (. meta-a :__index)
+          index-b (. meta-b :__index)]
+      (eq a b)
+      (assert-eq meta-a (getmetatable a))
+      (assert-eq meta-b (getmetatable b))
+      (assert-eq index-a (. (getmetatable a) :__index))
+      (assert-eq index-b (. (getmetatable b) :__index))
+      (eq b a)
+      (assert-eq meta-a (getmetatable a))
+      (assert-eq meta-b (getmetatable b))
+      (assert-eq index-a (. (getmetatable a) :__index))
+      (assert-eq index-b (. (getmetatable b) :__index)))))
 
 (testing "range"
   (assert-not (pcall range))

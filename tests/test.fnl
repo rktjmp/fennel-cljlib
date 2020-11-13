@@ -3,16 +3,25 @@
 (fn eq-fn []
   `(fn eq# [a# b#]
      (if (and (= (type a#) :table) (= (type b#) :table))
-         (do (var [res# count-a# count-b#] [true 0 0])
-             (each [k# v# (pairs a#)]
-               (set res# (eq# v# (. b# k#)))
-               (set count-a# (+ count-a# 1))
-               (when (not res#) (lua :break)))
-             (when res#
-               (each [_# _# (pairs b#)]
-                 (set count-b# (+ count-b# 1)))
-               (set res# (= count-a# count-b#)))
-             res#)
+         (let [oldmeta# (getmetatable b#)]
+           (setmetatable b# {:__index (fn [tbl# key#]
+                                        (var res# nil)
+                                        (each [k# v# (pairs tbl#)]
+                                          (when (eq# k# key#)
+                                            (set res# v#)
+                                            (lua :break)))
+                                        res#)})
+           (var [res# count-a# count-b#] [true 0 0])
+           (each [k# v# (pairs a#)]
+             (set res# (eq# v# (. b# k#)))
+             (set count-a# (+ count-a# 1))
+             (when (not res#) (lua :break)))
+           (when res#
+             (each [_# _# (pairs b#)]
+               (set count-b# (+ count-b# 1)))
+             (set res# (= count-a# count-b#)))
+           (setmetatable b# oldmeta#)
+           res#)
          (= a# b#))))
 
 (fn test.assert-eq

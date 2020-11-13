@@ -591,9 +591,33 @@ that would apply to that value, or `nil' if none apply and no default."
   ([x] true)
   ([x y]
    (if (and (= (type x) :table) (= (type y) :table))
-       (and (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq (. y k) v)) (kvseq x)))
-            (reduce #(and $1 $2) true (mapv (fn [[k v]] (eq (. x k) v)) (kvseq y))))
-       (= x y)))
+       (let [oldmeta (getmetatable y)]
+         ;; In case if we'll get something like
+         ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
+         ;; we have to do even deeper search
+         (setmetatable y {:__index (fn [tbl key]
+                                     (var res nil)
+                                     (each [k v (pairs tbl)]
+                                       (when (eq k key)
+                                         (set res v)
+                                         (lua :break)))
+                                     res)})
+         (var [res count-a count-b] [true 0 0])
+         (each [k v (pairs x)]
+
+
+           (set res (eq v (. y k)))
+           (set count-a (+ count-a 1))
+           (when (not res)
+             (lua :break)))
+         (when res
+           (each [_ _ (pairs y)]
+             (set count-b (+ count-b 1)))
+           (set res (= count-a count-b)))
+         ;; restoring old metatable
+         (setmetatable y oldmeta)
+         res)
+      (= x y)))
   ([x y & xs]
    (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
 
