@@ -617,4 +617,23 @@ that would apply to that value, or `nil' if none apply and no default."
   ([x y & xs]
    (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
 
+(fn& core.memoize [f]
+  "Returns a memoized version of a referentially transparent function.
+The memoized version of the function keeps a cache of the mapping from
+arguments to results and, when calls with the same arguments are
+repeated often, has higher performance at the expense of higher memory
+use."
+  (let [memo (setmetatable {} {:__index
+                               (fn [tbl key]
+                                 (each [k v (pairs tbl)]
+                                   (when (eq k key)
+                                     (lua "return v"))))})]
+    (fn [...]
+      (let [args [...]]
+        (if-some [res (. memo args)]
+          res
+          (let [res (f ...)]
+            (tset memo args res)
+            res))))))
+
 core
