@@ -170,10 +170,6 @@ If `tbl' is sequential table, returns its shallow copy."
     :nil nil
     _ (error "expected table or string" 2)))
 
-(macro safe-seq [tbl]
-  "Create sequential table, or empty table if `seq' returned `nil'."
-  `(or (seq ,tbl) (empty [])))
-
 (fn& core.first
   "Return first element of a table. Calls `seq' on its argument."
   [tbl]
@@ -233,16 +229,16 @@ If `tbl' is sequential table, returns its shallow copy."
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   [x tbl]
   (if-some [x x]
-    (doto (safe-seq tbl)
+    (doto (or (seq tbl) (empty []))
       (insert 1 x))
     tbl))
 
 (fn* core.concat
   "Concatenate tables."
   ([] nil)
-  ([x] (safe-seq x))
-  ([x y] (let [to (safe-seq x)
-               from (safe-seq y)]
+  ([x] (or (seq x) (empty [])))
+  ([x y] (let [to (or (seq x) (empty []))
+               from (or (seq y) (empty []))]
            (each [_ v (ipairs from)]
              (insert to v))
            to))
@@ -265,7 +261,7 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called."
   ([f tbl]
-   (let [tbl (safe-seq tbl)]
+   (let [tbl (or (seq tbl) (empty []))]
      (match (length tbl)
        0 (f)
        1 (. tbl 1)
@@ -273,7 +269,7 @@ val and f is not called."
        _ (let [[a b & rest] tbl]
            (reduce f (f a b) rest)))))
   ([f val tbl]
-   (let [tbl (safe-seq tbl)]
+   (let [tbl (or (seq tbl) (empty []))]
      (let [[x & xs] tbl]
        (if (nil? x)
            val
@@ -291,7 +287,7 @@ contains no entries, returns `val' and `f' is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
 ordinals."  [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (safe-seq tbl))]
+  (each [_ [k v] (pairs (or (seq tbl) (empty [])))]
     (set res (f res k v)))
   res)
 
@@ -306,14 +302,14 @@ any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
    (local res (empty []))
-   (each [_ v (ipairs (safe-seq tbl))]
+   (each [_ v (ipairs (or (seq tbl) (empty [])))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
   ([f t1 t2]
    (let [res (empty [])
-         t1 (safe-seq t1)
-         t2 (safe-seq t2)]
+         t1 (or (seq t1) (empty []))
+         t2 (or (seq t2) (empty []))]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (while (and i1 i2)
@@ -324,9 +320,9 @@ ignored. Returns a table of results."
      res))
   ([f t1 t2 t3]
    (let [res (empty [])
-         t1 (safe-seq t1)
-         t2 (safe-seq t2)
-         t3 (safe-seq t3)]
+         t1 (or (seq t1) (empty []))
+         t2 (or (seq t2) (empty []))
+         t3 (or (seq t3) (empty []))]
      (var (i1 v1) (next t1))
      (var (i2 v2) (next t2))
      (var (i3 v3) (next t3))
@@ -342,7 +338,7 @@ ignored. Returns a table of results."
                 (if (->> tbls
                          (mapv #(not= (next $) nil))
                          (reduce #(and $1 $2)))
-                    (cons (mapv #(. (safe-seq $) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
+                    (cons (mapv #(. (or (seq $) (empty [])) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
                     (empty [])))
          res (empty [])]
      (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]

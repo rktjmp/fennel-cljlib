@@ -1,68 +1,15 @@
 (require-macros :cljlib-macros)
 (require-macros :tests.test)
 
-(local
- {: vector
-  : hash-map
-  : apply
-  : seq
-  : first
-  : rest
-  : last
-  : butlast
-  : conj
-  : cons
-  : concat
-  : reduce
-  : reduce-kv
-  : mapv
-  : filter
-  : map?
-  : seq?
-  : nil?
-  : zero?
-  : pos?
-  : neg?
-  : even?
-  : odd?
-  : int?
-  : pos-int?
-  : neg-int?
-  : double?
-  : string?
-  : boolean?
-  : false?
-  : true?
-  : empty?
-  : not-empty
-  : eq
-  : identity
-  : comp
-  : every?
-  : some
-  : not-any?
-  : complement
-  : constantly
-  : range
-  : reverse
-  : inc
-  : dec
-  : assoc
-  : get
-  : get-in
-  : get-method
-  : methods
-  : remove-method
-  : remove-all-methods
-  : add
-  : sub
-  : mul
-  : div
-  : le
-  : ge
-  : lt
-  : gt}
- (require :cljlib))
+(macro require-module [module]
+  "Require module and bind all it's functions to locals."
+  `(local ,(let [destr-map# {}]
+             (each [k# _# (pairs (require module))]
+               (tset destr-map# k# (sym k#)))
+             destr-map#)
+          (require ,module)))
+
+(require-module :cljlib)
 
 (deftest equality
   (testing "comparing basetypes"
