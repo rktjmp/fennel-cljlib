@@ -10,5 +10,5 @@
                  (eval . (put 'if-some 'fennel-indent-function 1))
                  (eval . (put 'when-let 'fennel-indent-function 1))
                  (eval . (put 'if-let 'fennel-indent-function 1))
-                 (eval . (put 'fn& 'fennel-indent-function 'defun))
-                 (eval . (put 'fn* 'fennel-indent-function 'defun)))))
+                 (eval . (put 'fn+ 'fennel-indent-function 'defun))
+                 (eval . (put 'defn 'fennel-indent-function 'defun)))))

@@ -54,12 +54,6 @@
       (assert-ne a b))
 
     (assert-eq [1 2 3] {1 1 2 2 3 3})
-
-    ;; TODO: decide if this is right or not.  Looking from `seq'
-    ;; perspective, it is correct, as `(seq {4 1})' and `(seq [nil nil
-    ;; nil 1])' both yield `{4 1}'.  From Lua's point this is not the
-    ;; same thing, for example because the sizes of these tables are
-    ;; different.
     (assert-eq {4 1} [nil nil nil 1]))
 
   (testing "eq metadata preservation"
@@ -214,7 +208,7 @@
     (assert-eq (table.concat (mapv string.upper "vaiv")) "VAIV"))
 
   (testing "reduce"
-    (fn* add
+    (defn add
       ([] 0)
       ([a] a)
       ([a b] (+ a b))
@@ -241,12 +235,12 @@
         (fn [result input]
           (reducing result (f input)))))
 
-    (fn reduce- [f init [x & tbl]]
-      (if x (reduce- f (f init x) tbl) init))
+    (fn -reduce [f init [x & tbl]]
+      (if x (-reduce f (f init x) tbl) init))
 
-    (assert-eq (reduce add (range 10)) (reduce- add 0 (range 10)))
+    (assert-eq (reduce add (range 10)) (-reduce add 0 (range 10)))
     (assert-eq (reduce ((mapping inc) add) 0 (range 10))
-               (reduce- ((mapping inc) add) 0 (range 10))))
+               (-reduce ((mapping inc) add) 0 (range 10))))
 
   (testing "filter"
     (assert-not (pcall filter))
@@ -346,7 +340,7 @@
     (assert* ((complement #(= $1 $2)) 1 2)))
 
   (testing "apply"
-    (fn* add
+    (defn add
       ([x] x)
       ([x y] (+ x y))
       ([x y & zs]

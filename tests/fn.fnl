@@ -1,21 +1,21 @@
 (require-macros :tests.test)
 (require-macros :cljlib-macros)
 
-(deftest fn*
-  (testing "fn* meta"
-    (fn* f
+(deftest defn
+  (testing "defn meta"
+    (defn f
       "docstring"
       [x] x)
     (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
                                     :fnl/arglist ["x"]}))
 
-    (fn* f
+    (defn f
       "docstring"
       ([x] x))
     (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
                                     :fnl/arglist ["x"]}))
 
-    (fn* f
+    (defn f
       "docstring"
       ([x] x)
       ([x y] (+ x y)))
@@ -23,7 +23,7 @@
                                     :fnl/arglist ["\n  [x]"
                                                   "\n  [x y]"]}))
 
-    (fn* f
+    (defn f
       "docstring"
       ([x] x)
       ([x y] (+ x y))
@@ -33,12 +33,12 @@
                                                   "\n  [x y]"
                                                   "\n  [x y & z]"]}))))
 
-(deftest fn&
-  (testing "fn& meta"
-    (fn& f "docstring" [x] x)
+(deftest fn+
+  (testing "fn+ meta"
+    (fn+ f "docstring" [x] x)
     (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
                                     :fnl/arglist ["x"]}))
 
-    (fn& f "docstring" [...] [...])
+    (fn+ f "docstring" [...] [...])
     (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
                                     :fnl/arglist ["..."]}))))
