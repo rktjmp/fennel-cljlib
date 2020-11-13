@@ -4,12 +4,12 @@
 
 (require-macros :cljlib-macros)
 
-(defn core.vector
+(fn* core.vector
   "Constructs sequential table out of it's arguments."
   [& args]
   (setmetatable args {:cljlib/table-type :seq}))
 
-(defn core.apply
+(fn* core.apply
   "Apply `f' to the argument list formed by prepending intervening
 arguments to `args'."
   ([f args] (f (unpack args)))
@@ -30,7 +30,7 @@ arguments to `args'."
       t)))
 
 ;; predicate functions
-(defn core.map?
+(fn* core.map?
   "Check whether `tbl' is an associative table."
   [tbl]
   (if (= (type tbl) :table)
@@ -41,7 +41,7 @@ arguments to `args'."
                (or (not= (type k) :number)
                    (not= k 1)))))))
 
-(defn core.seq?
+(fn* core.seq?
   "Check whether `tbl' is an sequential table."
   [tbl]
   (if (= (type tbl) :table)
@@ -51,81 +51,81 @@ arguments to `args'."
           (and (not= k nil) (= (type k) :number) (= k 1))))))
 
 
-(defn core.nil?
+(fn* core.nil?
   "Test if value is nil."
   ([] true)
   ([x] (= x nil)))
 
-(defn core.zero?
+(fn* core.zero?
   "Test if value is zero."
   [x]
   (= x 0))
 
-(defn core.pos?
+(fn* core.pos?
   "Test if `x' is greater than zero."
   [x]
   (> x 0))
 
-(defn core.neg?
+(fn* core.neg?
   "Test if `x' is less than zero."
   [x]
   (< x 0))
 
-(defn core.even?
+(fn* core.even?
   "Test if value is even."
   [x]
   (= (% x 2) 0))
 
-(defn core.odd?
+(fn* core.odd?
   "Test if value is odd."
   [x]
   (not (even? x)))
 
-(defn core.string?
+(fn* core.string?
   "Test if `x' is a string."
   [x]
   (= (type x) :string))
 
-(defn core.boolean?
+(fn* core.boolean?
   "Test if `x' is a Boolean"
   [x]
   (= (type x) :boolean))
 
-(defn core.true?
+(fn* core.true?
   "Test if `x' is `true'"
   [x]
   (= x true))
 
-(defn core.false?
+(fn* core.false?
   "Test if `x' is `false'"
   [x]
   (= x false))
 
-(defn core.int?
+(fn* core.int?
   "Test if `x' is a number without floating point data."
   [x]
   (and (= (type x) :number)
        (= x (math.floor x))))
 
-(defn core.pos-int?
+(fn* core.pos-int?
   "Test if `x' is a positive integer."
   [x]
   (and (int? x)
        (pos? x)))
 
-(defn core.neg-int?
+(fn* core.neg-int?
   "Test if `x' is a negetive integer."
   [x]
   (and (int? x)
        (neg? x)))
 
-(defn core.double?
+(fn* core.double?
   "Test if `x' is a number with floating point data."
   [x]
   (and (= (type x) :number)
        (not= x (math.floor x))))
 
-(defn core.empty?
+(fn* core.empty?
   "Check if collection is empty."
   [x]
   (match (type x)
@@ -133,7 +133,7 @@ arguments to `args'."
     :string (= x "")
     _ (error "empty?: unsupported collection")))
 
-(defn core.not-empty
+(fn* core.not-empty
   "If `x' is empty, returns `nil', otherwise `x'."
   [x]
   (if (not (empty? x))
@@ -141,7 +141,7 @@ arguments to `args'."
 
 ;; sequence manipulating functions
 
-(defn core.seq
+(fn* core.seq
   "Create sequential table.
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `tbl' is an
@@ -167,13 +167,13 @@ If `tbl' is sequential table, returns its shallow copy."
       :nil nil
       _ (error (.. "expected table, string or nil") 2))))
 
-(defn core.first
+(fn* core.first
   "Return first element of a table. Calls `seq' on its argument."
   [tbl]
   (when-some [tbl (seq tbl)]
     (. tbl 1)))
 
-(defn core.rest
+(fn* core.rest
   "Returns table of all elements of a table but the first one. Calls
   `seq' on its argument."
   [tbl]
@@ -181,7 +181,7 @@ If `tbl' is sequential table, returns its shallow copy."
     (vector (unpack tbl 2))
     (empty [])))
 
-(defn core.last
+(fn* core.last
   "Returns the last element of a table. Calls `seq' on its argument."
   [tbl]
   (when-some [tbl (seq tbl)]
@@ -192,7 +192,7 @@ If `tbl' is sequential table, returns its shallow copy."
       (set i _i))
     v))
 
-(defn core.butlast
+(fn* core.butlast
   "Returns everything but the last element of a table as a new
   table. Calls `seq' on its argument."
   [tbl]
@@ -202,7 +202,7 @@ If `tbl' is sequential table, returns its shallow copy."
       tbl)))
 
 
-(defn core.conj
+(fn* core.conj
   "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
   ([] (empty []))
   ([tbl] tbl)
@@ -222,7 +222,7 @@ If `tbl' is sequential table, returns its shallow copy."
     (if (nil? x) tbl
         (consj (doto tbl (insert 1 x)) (unpack xs)))))
 
-(defn core.cons
+(fn* core.cons
   "Insert `x' to `tbl' at the front. Modifies `tbl'."
   [x tbl]
   (if-some [x x]
@@ -230,7 +230,7 @@ If `tbl' is sequential table, returns its shallow copy."
       (insert 1 x))
     tbl))
 
-(defn core.concat
+(fn* core.concat
   "Concatenate tables."
   ([] nil)
   ([x] (or (seq x) (empty [])))
@@ -242,7 +242,7 @@ If `tbl' is sequential table, returns its shallow copy."
   ([x y & xs]
    (apply concat (concat x y) xs)))
 
-(defn core.reduce
+(fn* core.reduce
   "Reduce indexed table using function `f' and optional initial value `val'.
 
 ([f table])
@@ -272,7 +272,7 @@ val and f is not called."
            val
            (reduce f (f val x) xs))))))
 
-(defn core.reduce-kv
+(fn* core.reduce-kv
   "Reduces an associative table using function `f' and initial value `val'.
 
 ([f val table])
@@ -288,7 +288,7 @@ ordinals."  [f val tbl]
     (set res (f res k v)))
   res)
 
-(defn core.mapv
+(fn* core.mapv
   "Maps function `f' over one or more tables.
 
 Accepts arbitrary amount of tables, calls `seq' on each of it.
@@ -343,7 +343,7 @@ ignored. Returns a table of results."
          (insert res tmp)))
      res)))
 
-(defn core.filter [pred tbl]
+(fn* core.filter [pred tbl]
   (if-let [tbl (seq tbl)]
     (let [f (. tbl 1)
           r [(unpack tbl 2)]]
@@ -361,16 +361,16 @@ ignored. Returns a table of results."
 
 
 
-(defn core.identity
+(fn* core.identity
   "Returns its argument."
   [x]
   x)
 
-(defn core.comp
+(fn* core.comp
   ([] identity)
   ([f] f)
   ([f g]
-   (defn
+   (fn*
      ([] (f (g)))
      ([x] (f (g x)))
      ([x y] (f (g x y)))
@@ -379,14 +379,14 @@ ignored. Returns a table of results."
   ([f g & fs]
    (reduce comp (consj fs g f))))
 
-(defn core.every?
+(fn* core.every?
   "Test if every item in `tbl' satisfies the `pred'."
   [pred tbl]
   (if (empty? tbl) true
       (pred (. tbl 1)) (every? pred [(unpack tbl 2)])
       false))
 
-(defn core.some
+(fn* core.some
   "Test if any item in `tbl' satisfies the `pred'."
   [pred tbl]
   (when-let [tbl (seq tbl)]
@@ -397,23 +397,23 @@ ignored. Returns a table of results."
                 {:fnl/docstring "Test if no item in `tbl' satisfy the `pred'."
                  :fnl/arglist ["pred" "tbl"]}))
 
-(defn core.complement
+(fn* core.complement
   "Takes a function `f' and returns the function that takes the same
 amount of arguments as `f', has the same effect, and returns the
 oppisite truth value."
   [f]
-  (defn
+  (fn*
     ([] (not (f)))
     ([a] (not (f a)))
     ([a b] (not (f a b)))
     ([a b & cs] (not (apply f a b cs)))))
 
-(defn core.constantly
+(fn* core.constantly
   "Returns a function that takes any number of arguments and returns `x'."
   [x]
   (fn [...] x))
 
-(defn core.range
+(fn* core.range
   "return range of of numbers from `lower' to `upper' with optional `step'."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
@@ -423,16 +423,16 @@ oppisite truth value."
        (insert res i))
      res)))
 
-(defn core.reverse
+(fn* core.reverse
   "Returns table with same items as in `tbl' but in reverse order."
   [tbl]
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
 
-(defn core.inc "Increase number by one" [x] (+ x 1))
-(defn core.dec "Decrease number by one" [x] (- x 1))
+(fn* core.inc "Increase number by one" [x] (+ x 1))
+(fn* core.dec "Decrease number by one" [x] (- x 1))
 
-(defn core.assoc
+(fn* core.assoc
   "Associate key `k' with value `v' in `tbl'."
   ([tbl k v]
    (setmetatable
@@ -450,12 +450,12 @@ oppisite truth value."
      (set (i k) (next kvs i)))
    (setmetatable tbl {:cljlib/table-type :table})))
 
-(defn core.hash-map
+(fn* core.hash-map
   "Create associative table from keys and values"
   ([] (empty {}))
   ([& kvs] (apply assoc {} kvs)))
 
-(defn core.get
+(fn* core.get
   "Get value from the table by accessing it with a `key'.
 Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
@@ -465,7 +465,7 @@ found in the table."
      res
      not-found)))
 
-(defn core.get-in
+(fn* core.get-in
   "Get value from nested set of tables by providing key sequence.
 Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
@@ -479,12 +479,12 @@ found in the table."
        (set res not-found)))
    res))
 
-(defn core.remove-method
+(fn* core.remove-method
   [multifn dispatch-val]
   (tset (. (getmetatable multifn) :multimethods) dispatch-val nil)
   multifn)
 
-(defn core.remove-all-methods
+(fn* core.remove-all-methods
   "Removes all of the methods of multimethod"
   [multifn]
   (let [mtable (. (getmetatable multifn) :multimethods)]
@@ -492,19 +492,19 @@ found in the table."
       (tset mtable k nil))
     multifn))
 
-(defn core.methods
+(fn* core.methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
   [multifn]
   (. (getmetatable multifn) :multimethods))
 
-(defn core.get-method
+(fn* core.get-method
   "Given a multimethod and a dispatch value, returns the dispatch `fn'
 that would apply to that value, or `nil' if none apply and no default."
   [multifn dispatch-val]
   (or (. (getmetatable multifn) :multimethods dispatch-val)
       (. (getmetatable multifn) :multimethods :default)))
 
-(defn core.add
+(fn* core.add
   ([] 0)
   ([a] a)
   ([a b] (+ a b))
@@ -512,7 +512,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d] (+ a b c d))
   ([a b c d & rest] (apply add (+ a b c d) rest)))
 
-(defn core.sub
+(fn* core.sub
   ([] 0)
   ([a] (- a))
   ([a b] (- a b))
@@ -520,7 +520,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d] (- a b c d))
   ([a b c d & rest] (apply sub (- a b c d) rest)))
 
-(defn core.mul
+(fn* core.mul
   ([] 1)
   ([a] a)
   ([a b] (* a b))
@@ -528,14 +528,14 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d] (* a b c d))
   ([a b c d & rest] (apply mul (* a b c d) rest)))
 
-(defn core.div
+(fn* core.div
   ([a] (/ 1 a))
   ([a b] (/ a b))
   ([a b c] (/ a b c))
   ([a b c d] (/ a b c d))
   ([a b c d & rest] (apply div (/ a b c d) rest)))
 
-(defn core.le
+(fn* core.le
   "Returns true if nums are in monotonically non-decreasing order"
   ([x] true)
   ([x y] (<= x y))
@@ -546,7 +546,7 @@ that would apply to that value, or `nil' if none apply and no default."
            (<= y (. more 1)))
        false)))
 
-(defn core.lt
+(fn* core.lt
   "Returns true if nums are in monotonically decreasing order"
   ([x] true)
   ([x y] (< x y))
@@ -557,7 +557,7 @@ that would apply to that value, or `nil' if none apply and no default."
            (< y (. more 1)))
        false)))
 
-(defn core.ge
+(fn* core.ge
   "Returns true if nums are in monotonically non-increasing order"
   ([x] true)
   ([x y] (>= x y))
@@ -568,7 +568,7 @@ that would apply to that value, or `nil' if none apply and no default."
            (>= y (. more 1)))
        false)))
 
-(defn core.gt
+(fn* core.gt
   "Returns true if nums are in monotonically increasing order"
   ([x] true)
   ([x y] (> x y))
@@ -579,7 +579,7 @@ that would apply to that value, or `nil' if none apply and no default."
            (> y (. more 1)))
        false)))
 
-(defn core.eq
+(fn* core.eq
   "Deep compare values."
   ([x] true)
   ([x y]
@@ -610,7 +610,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([x y & xs]
    (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
 
-(defn core.memoize [f]
+(fn* core.memoize [f]
   "Returns a memoized version of a referentially transparent function.
 The memoized version of the function keeps a cache of the mapping from
 arguments to results and, when calls with the same arguments are

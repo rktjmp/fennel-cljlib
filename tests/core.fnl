@@ -208,7 +208,7 @@
     (assert-eq (table.concat (mapv string.upper "vaiv")) "VAIV"))
 
   (testing "reduce"
-    (defn add
+    (fn* add
       ([] 0)
       ([a] a)
       ([a b] (+ a b))
@@ -340,7 +340,7 @@
     (assert* ((complement #(= $1 $2)) 1 2)))
 
   (testing "apply"
-    (defn add
+    (fn* add
       ([x] x)
       ([x y] (+ x y))
       ([x y & zs]

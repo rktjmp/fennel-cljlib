@@ -105,7 +105,7 @@ Strings are transformed into a sequence of letters."
         (if res (assert-compile false "only one `&' can be specified in arglist." args)
             (set res i))
         (= (tostring s) "...")
-        (assert-compile false "use of `...' in `defn' is not permitted. Use `&' if you want a vararg." args)
+        (assert-compile false "use of `...' in `fn*' is not permitted. Use `&' if you want a vararg." args)
         (and res (> i (+ res 1)))
         (assert-compile false "only one `more' argument can be supplied after `&' in arglist." args)))
   res)
@@ -116,7 +116,7 @@ Strings are transformed into a sequence of letters."
   ;; - the length of arglist;
   ;; - the body of the function we generate;
   ;; - position of `&' in the arglist if any.
-  (assert-compile (sequence? args) "defn: expected parameters table.
+  (assert-compile (sequence? args) "fn*: expected parameters table.
 
 * Try adding function parameters as a list of identifiers in brackets." args)
   (values (length args)
@@ -174,7 +174,7 @@ Strings are transformed into a sequence of letters."
       (table.insert bodies body))
     (when body&
       (let [[more-len body arity] body&]
-        (assert-compile (not (and max (<= more-len max))) "defn: arity with `&' must have more arguments than maximum arity without `&'.
+        (assert-compile (not (and max (<= more-len max))) "fn*: arity with `&' must have more arguments than maximum arity without `&'.
 
 * Try adding more arguments before `&'" arity)
         (table.insert lengths (- more-len 1))
@@ -210,7 +210,7 @@ Strings are transformed into a sequence of letters."
             (table.insert bodies& [amp body arity])
             (tset bodies n body))))
     (assert-compile (<= (length bodies&) 1)
-                    "defn must have only one arity with `&':"
+                    "fn* must have only one arity with `&':"
                     (. bodies& (length bodies&)))
     `(let [len# (select :# ...)]
        ,(arity-dispatcher
@@ -220,20 +220,20 @@ Strings are transformed into a sequence of letters."
              (. bodies& 1))
          fname))))
 
-(fn defn [name doc? ...]
+(fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
 Supports multiple arities by defining bodies as lists:
 
 Named function of fixed arity 2:
-(defn f [a b] (+ a b))
+(fn* f [a b] (+ a b))
 
 Function of fixed arities 1 and 2:
-(defn ([x] x)
+(fn* ([x] x)
     ([x y] (+ x y)))
 
 Named function of 2 arities, one of which accepts 0 arguments, and the
 other one or more arguments:
-(defn f
+(fn* f
   ([] nil)
   ([x & xs]
    (print x)
@@ -246,12 +246,12 @@ zero-arity body is called.
 Named functions accept additional documentation string before the
 argument list:
 
-(defn cube
+(fn* cube
      \"raise `x' to power of 3\"
      [x]
      (^ x 3))
 
-(defn greet
+(fn* greet
      \"greet a `person', optionally specifying default `greeting'.\"
      ([person] (print (.. \"Hello, \" person \"!\")))
      ([greeting person] (print (.. greeting \", \" person \"!\"))))
@@ -274,14 +274,14 @@ that instead of writing this:
 It is possible to write:
 
 (local namespace {})
-(defn namespace.f [x]
+(fn* namespace.f [x]
   (if (> x 0) (f (- x 1))))
-(defn namespace.g [x] (f (* x 100)))
+(fn* namespace.g [x] (f (* x 100)))
 
 Note that it is still possible to call `f' and `g' in current scope
 without namespace part.  `Namespace' will hold both functions as `f'
 and `g' respectively."
-  (assert-compile (not (string? name)) "defn expects symbol, vector, or list as first argument" name)
+  (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
         fname (if (sym? name-wo-namespace) (tostring name-wo-namespace))
@@ -293,7 +293,7 @@ and `g' respectively."
 
         body (if (sequence? x) (single-arity-body args fname)
                  (list? x) (multi-arity-body args fname)
-                 (assert-compile false "defn: expected parameters table.
+                 (assert-compile false "fn*: expected parameters table.
 
 * Try adding function parameters as a list of identifiers in brackets." x))]
     (if (sym? name-wo-namespace)
@@ -309,8 +309,8 @@ and `g' respectively."
 (fn fn+ [name doc? args ...]
   "Create (anonymous) function.
 Works the same as plain `fn' except supports automatic declaration of
-namespaced functions.  See `defn' for more info."
-  (assert-compile (not (string? name)) "defn expects symbol, vector, or list as first argument" name)
+namespaced functions.  See `fn*' for more info."
+  (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
         arg-list (if (sym? name-wo-namespace)
@@ -567,7 +567,7 @@ namespaced functions.  See `defn' for more info."
   `(let [multifn# ,multifn]
      (tset (. (getmetatable multifn#) :multimethods)
            ,dispatch-val
-           (do (defn f# ,...)
+           (do (fn* f# ,...)
                f#))
      multifn#))
 
@@ -598,7 +598,7 @@ namespaced functions.  See `defn' for more info."
         nil
         (def attr-map name expr))))
 
-{: defn
+{: fn*
  : fn+
  : if-let
  : when-let

@@ -133,7 +133,7 @@
     (assert-eq (meta g) (when-meta {:fnl/docstring "documentation"})))
 
   (testing "defmulti with multiple arity"
-    (defmulti f (defn ([x] x) ([x y] [x y])))
+    (defmulti f (fn* ([x] x) ([x y] [x y])))
     (defmethod f :default ([_] :def) ([_ _] :def2))
     (defmethod f :4 ([x] (.. x :2)))
     (defmethod f [:4 :2] ([x y] 42))

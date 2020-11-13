@@ -30,7 +30,7 @@ When storing function or table as a key into metatable, its address is used, whi
 This, for example, may cause documentation collision, when you've set some variable holding a number value to have certain docstring, and later you've defined another variable with the same value, but different docstring.
 While this isn't a major breakage, it may confuse if someone will explore your code in the REPL with =doc=.
 
-Lastly, note that prior to Fennel 0.7.1[fn:1] =import-macros= wasn't respecting =--metadata= switch.
+Lastly, note that prior to Fennel 0.7.1 =import-macros= wasn't respecting =--metadata= switch.
 So if you're using Fennel < 0.7.1 this stuff will only work if you use =require-macros= instead of =import-macros=.
 
 *** =when-meta=
@@ -125,12 +125,12 @@ Returns a function of fixed amount of arguments by doing runtime dispatch based 
 Capable of producing multi-arity functions:
 
 #+begin_src fennel
-  (defn square "square number" [x] (^ x 2))
+  (fn* square "square number" [x] (^ x 2))
 
   (square 9) ;; => 81.0
   (square 1 2) ;; => error
 
-  (defn range
+  (fn* range
     "Returns increasing sequence  of numbers from `lower' to `upper'.
   If `lower' is not provided, sequence starts from zero.
   Accepts optional `step'"
@@ -150,11 +150,11 @@ Capable of producing multi-arity functions:
 Both variants support up to one arity with =& more=:
 
 #+begin_src fennel
-  (defn vec [& xs] xs)
+  (fn* vec [& xs] xs)
 
   (vec 1 2 3) ;; => [1 2 3]
 
-  (defn add
+  (fn* add
     "sum two or more values"
     ([] 0)
     ([a] a)
@@ -172,7 +172,7 @@ One extra capability of =fn*= supports the same semantic as =def= regarding name
 #+begin_src fennel
   (local ns {})
 
-  (defn ns.plus
+  (fn* ns.plus
     ([] 0)
     ([x] x)
     ([x y] (+ x y))
@@ -527,6 +527,3 @@ Compose functions into one function.
   >> (not-any? pos-int? [-1 -2 -3 4.2])
   true
 #+end_src
-
-* Footnotes
-[fn:1] https://todo.sr.ht/~technomancy/fennel/18#event-56799
