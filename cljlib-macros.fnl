@@ -74,18 +74,26 @@ Strings are transformed into a sequence of letters."
 (fn gen-arglist-doc [args]
   (if (list? (. args 1))
       (let [arglist []
-            open (if (> (length args) 1) "\n  [" "")
-            close (if (= open "") "" "]")]
+            newline? (if (> (length args) 1) "\n  (" "(")]
         (each [i v (ipairs args)]
-          (table.insert
-           arglist
-           (.. open (table.concat (gen-arglist-doc v) " ") close)))
+          (let [arglist-doc (gen-arglist-doc v)]
+            (when (next arglist-doc)
+              (table.insert
+               arglist
+               (.. newline? (table.concat arglist-doc " ") ")")))))
         arglist)
 
       (sequence? (. args 1))
-      (let [arglist []]
-        (each [_ v (ipairs (. args 1))]
-          (table.insert arglist (tostring v)))
+      (let [arglist []
+            args (. args 1)
+            len (length args)]
+        (each [i v (ipairs args)]
+          (table.insert arglist
+                        (match i
+                          (1 ? (= len 1)) (.. "[" (tostring v) "]")
+                          1   (.. "[" (tostring v))
+                          len (.. (tostring v) "]")
+                          _   (tostring v))))
         arglist)))
 
 (fn multisym->sym [s]

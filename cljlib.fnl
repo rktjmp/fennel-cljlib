@@ -1,4 +1,7 @@
-(local core {})
+(local core {:_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top of Fennel."
+             :_VERSION "0.1.0"
+             :_COPYRIGHT "Copyright (C) 2020 Andrey Orst"})
+
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
 
@@ -144,9 +147,9 @@ arguments to `args`."
 (fn* core.seq
   "Create sequential table.
 Transforms original table to sequential table of key value pairs
-stored as sequential tables in linear time.  If `tbl` is an
+stored as sequential tables in linear time.  If `col` is an
 associative table, returns `[[key1 value1] ... [keyN valueN]]` table.
-If `tbl` is sequential table, returns its shallow copy."
+If `col` is sequential table, returns its shallow copy."
   [col]
   (let [res (empty [])]
     (match (type col)
@@ -169,25 +172,25 @@ If `tbl` is sequential table, returns its shallow copy."
 
 (fn* core.first
   "Return first element of a table. Calls `seq` on its argument."
-  [tbl]
-  (when-some [tbl (seq tbl)]
-    (. tbl 1)))
+  [col]
+  (when-some [col (seq col)]
+    (. col 1)))
 
 (fn* core.rest
   "Returns table of all elements of a table but the first one. Calls
   `seq` on its argument."
-  [tbl]
-  (if-some [tbl (seq tbl)]
-    (vector (unpack tbl 2))
+  [col]
+  (if-some [col (seq col)]
+    (vector (unpack col 2))
     (empty [])))
 
 (fn* core.last
   "Returns the last element of a table. Calls `seq` on its argument."
-  [tbl]
-  (when-some [tbl (seq tbl)]
-    (var (i v) (next tbl))
+  [col]
+  (when-some [col (seq col)]
+    (var (i v) (next col))
     (while i
-      (local (_i _v) (next tbl i))
+      (local (_i _v) (next col i))
       (if _i (set v _v))
       (set i _i))
     v))
@@ -195,12 +198,11 @@ If `tbl` is sequential table, returns its shallow copy."
 (fn* core.butlast
   "Returns everything but the last element of a table as a new
   table. Calls `seq` on its argument."
-  [tbl]
-  (when-some [tbl (seq tbl)]
-    (table.remove tbl (length tbl))
-    (when (not (empty? tbl))
-      tbl)))
-
+  [col]
+  (when-some [col (seq col)]
+    (table.remove col (length col))
+    (when (not (empty? col))
+      col)))
 
 (fn* core.conj
   "Insert `x` as a last element of indexed table `tbl`. Modifies `tbl`"
@@ -243,10 +245,7 @@ If `tbl` is sequential table, returns its shallow copy."
    (apply concat (concat x y) xs)))
 
 (fn* core.reduce
-  "Reduce indexed table using function `f` and optional initial value `val`.
-
-([f table])
-([f val table])
+  "Reduce collection `col` using function `f` and optional initial value `val`.
 
 `f` should be a function of 2 arguments.  If val is not supplied,
 returns the result of applying f to the first 2 items in coll, then
@@ -256,18 +255,18 @@ result of calling f with no arguments.  If coll has only 1 item, it is
 returned and f is not called.  If val is supplied, returns the result
 of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
-val and f is not called."
-  ([f tbl]
-   (let [tbl (or (seq tbl) (empty []))]
-     (match (length tbl)
+val and f is not called.  Calls `seq` on `col`."
+  ([f col]
+   (let [col (or (seq col) (empty []))]
+     (match (length col)
        0 (f)
-       1 (. tbl 1)
-       2 (f (. tbl 1) (. tbl 2))
-       _ (let [[a b & rest] tbl]
+       1 (. col 1)
+       2 (f (. col 1) (. col 2))
+       _ (let [[a b & rest] col]
            (reduce f (f a b) rest)))))
-  ([f val tbl]
-   (let [tbl (or (seq tbl) (empty []))]
-     (let [[x & xs] tbl]
+  ([f val col]
+   (let [col (or (seq col) (empty []))]
+     (let [[x & xs] col]
        (if (nil? x)
            val
            (reduce f (f val x) xs))))))
@@ -275,22 +274,20 @@ val and f is not called."
 (fn* core.reduce-kv
   "Reduces an associative table using function `f` and initial value `val`.
 
-([f val table])
-
 `f` should be a function of 3 arguments.  Returns the result of
-applying `f` to `val`, the first key and the first value in coll, then
-applying `f` to that result and the 2nd key and value, etc.  If coll
-contains no entries, returns `val` and `f` is not called.  Note that
-reduce-kv is supported on vectors, where the keys will be the
-ordinals."
-  [f val tbl]
+applying `f` to `val`, the first key and the first value in `coll`,
+then applying `f` to that result and the 2nd key and value, etc.  If
+`coll` contains no entries, returns `val` and `f` is not called.  Note
+that reduce-kv is supported on sequential tables and strings, where
+the keys will be the ordinals."
+  [f val col]
   (var res val)
-  (each [_ [k v] (pairs (or (seq tbl) (empty [])))]
+  (each [_ [k v] (pairs (or (seq col) (empty [])))]
     (set res (f res k v)))
   res)
 
 (fn* core.mapv
-  "Maps function `f` over one or more tables.
+  "Maps function `f` over one or more collections.
 
 Accepts arbitrary amount of tables, calls `seq` on each of it.
 Function `f` must take the same amount of parameters as the amount of
@@ -298,76 +295,76 @@ tables passed to `mapv`. Applies `f` over first value of each
 table. Then applies `f` to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
-  ([f tbl]
+  ([f col]
    (local res (empty []))
-   (each [_ v (ipairs (or (seq tbl) (empty [])))]
+   (each [_ v (ipairs (or (seq col) (empty [])))]
      (when-some [tmp (f v)]
        (insert res tmp)))
    res)
-  ([f t1 t2]
+  ([f col1 col2]
    (let [res (empty [])
-         t1 (or (seq t1) (empty []))
-         t2 (or (seq t2) (empty []))]
-     (var (i1 v1) (next t1))
-     (var (i2 v2) (next t2))
+         col1 (or (seq col1) (empty []))
+         col2 (or (seq col2) (empty []))]
+     (var (i1 v1) (next col1))
+     (var (i2 v2) (next col2))
      (while (and i1 i2)
        (when-some [tmp (f v1 v2)]
          (insert res tmp))
-       (set (i1 v1) (next t1 i1))
-       (set (i2 v2) (next t2 i2)))
+       (set (i1 v1) (next col1 i1))
+       (set (i2 v2) (next col2 i2)))
      res))
-  ([f t1 t2 t3]
+  ([f col1 col2 col3]
    (let [res (empty [])
-         t1 (or (seq t1) (empty []))
-         t2 (or (seq t2) (empty []))
-         t3 (or (seq t3) (empty []))]
-     (var (i1 v1) (next t1))
-     (var (i2 v2) (next t2))
-     (var (i3 v3) (next t3))
+         col1 (or (seq col1) (empty []))
+         col2 (or (seq col2) (empty []))
+         col3 (or (seq col3) (empty []))]
+     (var (i1 v1) (next col1))
+     (var (i2 v2) (next col2))
+     (var (i3 v3) (next col3))
      (while (and i1 i2 i3)
        (when-some [tmp (f v1 v2 v3)]
          (insert res tmp))
-       (set (i1 v1) (next t1 i1))
-       (set (i2 v2) (next t2 i2))
-       (set (i3 v3) (next t3 i3)))
+       (set (i1 v1) (next col1 i1))
+       (set (i2 v2) (next col2 i2))
+       (set (i3 v3) (next col3 i3)))
      res))
-  ([f t1 t2 t3 & tbls]
-   (let [step (fn step [tbls]
-                (if (->> tbls
+  ([f col1 col2 col3 & cols]
+   (let [step (fn step [cols]
+                (if (->> cols
                          (mapv #(not= (next $) nil))
                          (reduce #(and $1 $2)))
-                    (cons (mapv #(. (or (seq $) (empty [])) 1) tbls) (step (mapv #(do [(unpack $ 2)]) tbls)))
+                    (cons (mapv #(. (or (seq $) (empty [])) 1) cols) (step (mapv #(do [(unpack $ 2)]) cols)))
                     (empty [])))
          res (empty [])]
-     (each [_ v (ipairs (step (consj tbls t3 t2 t1)))]
+     (each [_ v (ipairs (step (consj cols col3 col2 col1)))]
        (when-some [tmp (apply f v)]
          (insert res tmp)))
      res)))
 
-(fn* core.filter [pred tbl]
-  (if-let [tbl (seq tbl)]
-    (let [f (. tbl 1)
-          r [(unpack tbl 2)]]
+(fn* core.filter
+  "Returns a sequential table of the items in `col` for which `pred`
+  returns logical true."
+  [pred col]
+  (if-let [col (seq col)]
+    (let [f (. col 1)
+          r [(unpack col 2)]]
       (if (pred f)
           (cons f (filter pred r))
           (filter pred r)))
     (empty [])))
 
-(fn kvseq [tbl]
+(fn* core.kvseq
   "Transforms any table kind to key-value sequence."
+  [tbl]
   (let [res (empty [])]
     (each [k v (pairs tbl)]
       (insert res [k v]))
     res))
 
-
-
-(fn* core.identity
-  "Returns its argument."
-  [x]
-  x)
+(fn* core.identity "Returns its argument." [x] x)
 
 (fn* core.comp
+  "Compose functions."
   ([] identity)
   ([f] f)
   ([f g]
@@ -481,6 +478,7 @@ found in the table."
    res))
 
 (fn* core.remove-method
+  "Remove method from `multifn` for given `dispatch-val`."
   [multifn dispatch-val]
   (tset (. (getmetatable multifn) :multimethods) dispatch-val nil)
   multifn)
@@ -615,12 +613,13 @@ that would apply to that value, or `nil` if none apply and no default."
   ([x y & xs]
    (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
 
-(fn* core.memoize [f]
+(fn* core.memoize
   "Returns a memoized version of a referentially transparent function.
 The memoized version of the function keeps a cache of the mapping from
 arguments to results and, when calls with the same arguments are
 repeated often, has higher performance at the expense of higher memory
 use."
+  [f]
   (let [memo (setmetatable {} {:__index
                                (fn [tbl key]
                                  (each [k v (pairs tbl)]
