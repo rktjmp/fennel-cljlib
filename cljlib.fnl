@@ -10,8 +10,8 @@
   (setmetatable args {:cljlib/table-type :seq}))
 
 (fn* core.apply
-  "Apply `f' to the argument list formed by prepending intervening
-arguments to `args'."
+  "Apply `f` to the argument list formed by prepending intervening
+arguments to `args`."
   ([f args] (f (unpack args)))
   ([f a args] (f a (unpack args)))
   ([f a b args] (f a b (unpack args)))
@@ -31,7 +31,7 @@ arguments to `args'."
 
 ;; predicate functions
 (fn* core.map?
-  "Check whether `tbl' is an associative table."
+  "Check whether `tbl` is an associative table."
   [tbl]
   (if (= (type tbl) :table)
       (if-let [t (fast-table-type tbl)]
@@ -42,7 +42,7 @@ arguments to `args'."
                    (not= k 1)))))))
 
 (fn* core.seq?
-  "Check whether `tbl' is an sequential table."
+  "Check whether `tbl` is an sequential table."
   [tbl]
   (if (= (type tbl) :table)
       (if-let [t (fast-table-type tbl)]
@@ -62,12 +62,12 @@ arguments to `args'."
   (= x 0))
 
 (fn* core.pos?
-  "Test if `x' is greater than zero."
+  "Test if `x` is greater than zero."
   [x]
   (> x 0))
 
 (fn* core.neg?
-  "Test if `x' is less than zero."
+  "Test if `x` is less than zero."
   [x]
   (< x 0))
 
@@ -82,45 +82,45 @@ arguments to `args'."
   (not (even? x)))
 
 (fn* core.string?
-  "Test if `x' is a string."
+  "Test if `x` is a string."
   [x]
   (= (type x) :string))
 
 (fn* core.boolean?
-  "Test if `x' is a Boolean"
+  "Test if `x` is a Boolean"
   [x]
   (= (type x) :boolean))
 
 (fn* core.true?
-  "Test if `x' is `true'"
+  "Test if `x` is `true`"
   [x]
   (= x true))
 
 (fn* core.false?
-  "Test if `x' is `false'"
+  "Test if `x` is `false`"
   [x]
   (= x false))
 
 (fn* core.int?
-  "Test if `x' is a number without floating point data."
+  "Test if `x` is a number without floating point data."
   [x]
   (and (= (type x) :number)
        (= x (math.floor x))))
 
 (fn* core.pos-int?
-  "Test if `x' is a positive integer."
+  "Test if `x` is a positive integer."
   [x]
   (and (int? x)
        (pos? x)))
 
 (fn* core.neg-int?
-  "Test if `x' is a negetive integer."
+  "Test if `x` is a negetive integer."
   [x]
   (and (int? x)
        (neg? x)))
 
 (fn* core.double?
-  "Test if `x' is a number with floating point data."
+  "Test if `x` is a number with floating point data."
   [x]
   (and (= (type x) :number)
        (not= x (math.floor x))))
@@ -134,7 +134,7 @@ arguments to `args'."
     _ (error "empty?: unsupported collection")))
 
 (fn* core.not-empty
-  "If `x' is empty, returns `nil', otherwise `x'."
+  "If `x` is empty, returns `nil`, otherwise `x`."
   [x]
   (if (not (empty? x))
       x))
@@ -144,9 +144,9 @@ arguments to `args'."
 (fn* core.seq
   "Create sequential table.
 Transforms original table to sequential table of key value pairs
-stored as sequential tables in linear time.  If `tbl' is an
-associative table, returns `[[key1 value1] ... [keyN valueN]]' table.
-If `tbl' is sequential table, returns its shallow copy."
+stored as sequential tables in linear time.  If `tbl` is an
+associative table, returns `[[key1 value1] ... [keyN valueN]]` table.
+If `tbl` is sequential table, returns its shallow copy."
   [col]
   (let [res (empty [])]
     (match (type col)
@@ -168,21 +168,21 @@ If `tbl' is sequential table, returns its shallow copy."
       _ (error (.. "expected table, string or nil") 2))))
 
 (fn* core.first
-  "Return first element of a table. Calls `seq' on its argument."
+  "Return first element of a table. Calls `seq` on its argument."
   [tbl]
   (when-some [tbl (seq tbl)]
     (. tbl 1)))
 
 (fn* core.rest
   "Returns table of all elements of a table but the first one. Calls
-  `seq' on its argument."
+  `seq` on its argument."
   [tbl]
   (if-some [tbl (seq tbl)]
     (vector (unpack tbl 2))
     (empty [])))
 
 (fn* core.last
-  "Returns the last element of a table. Calls `seq' on its argument."
+  "Returns the last element of a table. Calls `seq` on its argument."
   [tbl]
   (when-some [tbl (seq tbl)]
     (var (i v) (next tbl))
@@ -194,7 +194,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 (fn* core.butlast
   "Returns everything but the last element of a table as a new
-  table. Calls `seq' on its argument."
+  table. Calls `seq` on its argument."
   [tbl]
   (when-some [tbl (seq tbl)]
     (table.remove tbl (length tbl))
@@ -203,7 +203,7 @@ If `tbl' is sequential table, returns its shallow copy."
 
 
 (fn* core.conj
-  "Insert `x' as a last element of indexed table `tbl'. Modifies `tbl'"
+  "Insert `x` as a last element of indexed table `tbl`. Modifies `tbl`"
   ([] (empty []))
   ([tbl] tbl)
   ([tbl x]
@@ -217,13 +217,13 @@ If `tbl' is sequential table, returns its shallow copy."
    (apply conj (conj tbl x) xs)))
 
 (fn consj [...]
-  "Like conj but joins at the front. Modifies `tbl'."
+  "Like conj but joins at the front. Modifies `tbl`."
   (let [[tbl x & xs] [...]]
     (if (nil? x) tbl
         (consj (doto tbl (insert 1 x)) (unpack xs)))))
 
 (fn* core.cons
-  "Insert `x' to `tbl' at the front. Modifies `tbl'."
+  "Insert `x` to `tbl` at the front. Modifies `tbl`."
   [x tbl]
   (if-some [x x]
     (doto (or (seq tbl) (empty []))
@@ -243,12 +243,12 @@ If `tbl' is sequential table, returns its shallow copy."
    (apply concat (concat x y) xs)))
 
 (fn* core.reduce
-  "Reduce indexed table using function `f' and optional initial value `val'.
+  "Reduce indexed table using function `f` and optional initial value `val`.
 
 ([f table])
 ([f val table])
 
-`f' should be a function of 2 arguments.  If val is not supplied,
+`f` should be a function of 2 arguments.  If val is not supplied,
 returns the result of applying f to the first 2 items in coll, then
 applying f to that result and the 3rd item, etc.  If coll contains no
 items, f must accept no arguments as well, and reduce returns the
@@ -273,28 +273,29 @@ val and f is not called."
            (reduce f (f val x) xs))))))
 
 (fn* core.reduce-kv
-  "Reduces an associative table using function `f' and initial value `val'.
+  "Reduces an associative table using function `f` and initial value `val`.
 
 ([f val table])
 
-`f' should be a function of 3 arguments.  Returns the result of
-applying `f' to `val', the first key and the first value in coll, then
-applying `f' to that result and the 2nd key and value, etc.  If coll
-contains no entries, returns `val' and `f' is not called.  Note that
+`f` should be a function of 3 arguments.  Returns the result of
+applying `f` to `val`, the first key and the first value in coll, then
+applying `f` to that result and the 2nd key and value, etc.  If coll
+contains no entries, returns `val` and `f` is not called.  Note that
 reduce-kv is supported on vectors, where the keys will be the
-ordinals."  [f val tbl]
+ordinals."
+  [f val tbl]
   (var res val)
   (each [_ [k v] (pairs (or (seq tbl) (empty [])))]
     (set res (f res k v)))
   res)
 
 (fn* core.mapv
-  "Maps function `f' over one or more tables.
+  "Maps function `f` over one or more tables.
 
-Accepts arbitrary amount of tables, calls `seq' on each of it.
-Function `f' must take the same amount of parameters as the amount of
-tables passed to `mapv'. Applies `f' over first value of each
-table. Then applies `f' to second value of each table. Continues until
+Accepts arbitrary amount of tables, calls `seq` on each of it.
+Function `f` must take the same amount of parameters as the amount of
+tables passed to `mapv`. Applies `f` over first value of each
+table. Then applies `f` to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a table of results."
   ([f tbl]
@@ -380,26 +381,26 @@ ignored. Returns a table of results."
    (reduce comp (consj fs g f))))
 
 (fn* core.every?
-  "Test if every item in `tbl' satisfies the `pred'."
+  "Test if every item in `tbl` satisfies the `pred`."
   [pred tbl]
   (if (empty? tbl) true
       (pred (. tbl 1)) (every? pred [(unpack tbl 2)])
       false))
 
 (fn* core.some
-  "Test if any item in `tbl' satisfies the `pred'."
+  "Test if any item in `tbl` satisfies the `pred`."
   [pred tbl]
   (when-let [tbl (seq tbl)]
     (or (pred (. tbl 1)) (some pred [(unpack tbl 2)]))))
 
 (set core.not-any?
      (with-meta (comp #(not $) some)
-                {:fnl/docstring "Test if no item in `tbl' satisfy the `pred'."
+                {:fnl/docstring "Test if no item in `tbl` satisfy the `pred`."
                  :fnl/arglist ["pred" "tbl"]}))
 
 (fn* core.complement
-  "Takes a function `f' and returns the function that takes the same
-amount of arguments as `f', has the same effect, and returns the
+  "Takes a function `f` and returns the function that takes the same
+amount of arguments as `f`, has the same effect, and returns the
 oppisite truth value."
   [f]
   (fn*
@@ -409,12 +410,12 @@ oppisite truth value."
     ([a b & cs] (not (apply f a b cs)))))
 
 (fn* core.constantly
-  "Returns a function that takes any number of arguments and returns `x'."
+  "Returns a function that takes any number of arguments and returns `x`."
   [x]
   (fn [...] x))
 
 (fn* core.range
-  "return range of of numbers from `lower' to `upper' with optional `step'."
+  "return range of of numbers from `lower` to `upper` with optional `step`."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
   ([lower upper step]
@@ -424,7 +425,7 @@ oppisite truth value."
      res)))
 
 (fn* core.reverse
-  "Returns table with same items as in `tbl' but in reverse order."
+  "Returns table with same items as in `tbl` but in reverse order."
   [tbl]
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
@@ -433,7 +434,7 @@ oppisite truth value."
 (fn* core.dec "Decrease number by one" [x] (- x 1))
 
 (fn* core.assoc
-  "Associate key `k' with value `v' in `tbl'."
+  "Associate key `k` with value `v` in `tbl`."
   ([tbl k v]
    (setmetatable
     (doto tbl (tset k v))
@@ -456,8 +457,8 @@ oppisite truth value."
   ([& kvs] (apply assoc {} kvs)))
 
 (fn* core.get
-  "Get value from the table by accessing it with a `key'.
-Accepts additional `not-found' as a marker to return if value wasn't
+  "Get value from the table by accessing it with a `key`.
+Accepts additional `not-found` as a marker to return if value wasn't
 found in the table."
   ([tbl key] (get tbl key nil))
   ([tbl key not-found]
@@ -467,7 +468,7 @@ found in the table."
 
 (fn* core.get-in
   "Get value from nested set of tables by providing key sequence.
-Accepts additional `not-found' as a marker to return if value wasn't
+Accepts additional `not-found` as a marker to return if value wasn't
 found in the table."
   ([tbl keys] (get-in tbl keys nil))
   ([tbl keys not-found]
@@ -498,13 +499,14 @@ found in the table."
   (. (getmetatable multifn) :multimethods))
 
 (fn* core.get-method
-  "Given a multimethod and a dispatch value, returns the dispatch `fn'
-that would apply to that value, or `nil' if none apply and no default."
+  "Given a multimethod and a dispatch value, returns the dispatch `fn`
+that would apply to that value, or `nil` if none apply and no default."
   [multifn dispatch-val]
   (or (. (getmetatable multifn) :multimethods dispatch-val)
       (. (getmetatable multifn) :multimethods :default)))
 
 (fn* core.add
+  "Sum arbitrary amount of numbers."
   ([] 0)
   ([a] a)
   ([a b] (+ a b))
@@ -513,6 +515,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d & rest] (apply add (+ a b c d) rest)))
 
 (fn* core.sub
+  "Subtract arbitrary amount of numbers."
   ([] 0)
   ([a] (- a))
   ([a b] (- a b))
@@ -521,6 +524,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d & rest] (apply sub (- a b c d) rest)))
 
 (fn* core.mul
+  "Multiply arbitrary amount of numbers."
   ([] 1)
   ([a] a)
   ([a b] (* a b))
@@ -529,6 +533,7 @@ that would apply to that value, or `nil' if none apply and no default."
   ([a b c d & rest] (apply mul (* a b c d) rest)))
 
 (fn* core.div
+  "Divide arbitrary amount of numbers."
   ([a] (/ 1 a))
   ([a b] (/ a b))
   ([a b c] (/ a b c))
