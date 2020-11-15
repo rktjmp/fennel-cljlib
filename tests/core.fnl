@@ -129,13 +129,13 @@
     (assert* (map? (empty {})))
     (assert-not (map? (empty []))))
 
-  (testing "seq?"
-    (assert-not (seq? []))
-    (assert* (seq? [{:a 1}]))
-    (assert-not (seq? {}))
-    (assert-not (seq? {:a 1}))
-    (assert* (seq? (empty [])))
-    (assert-not (seq? (empty {}))))
+  (testing "vector?"
+    (assert-not (vector? []))
+    (assert* (vector? [{:a 1}]))
+    (assert-not (vector? {}))
+    (assert-not (vector? {:a 1}))
+    (assert* (vector? (empty [])))
+    (assert-not (vector? (empty {}))))
 
   (testing "nil?"
     (assert* (nil?))
@@ -248,7 +248,7 @@
     (assert-eq (filter even? (range 10)) [0 2 4 6 8])
     (assert-eq (filter odd? (range 10)) [1 3 5 7 9])
     (assert-eq (filter map? [{:a 1} {5 1} [1 2] [] {}]) [{:a 1} {5 1}])
-    (assert-eq (filter seq? [{:a 1} {5 1} [1 2] [] {}]) [[1 2]]))
+    (assert-eq (filter vector? [{:a 1} {5 1} [1 2] [] {}]) [[1 2]]))
 
   (testing "concat"
     (assert-eq (concat) nil)
@@ -574,8 +574,8 @@
     (assert-not (gt 2 1 3))
     (assert-not (gt 1 2 4 4))))
 
-(deftest vec
-  (testing "vec"
+(deftest vector
+  (testing "vector"
     (assert-eq (vector) [])
     (assert-eq (vector 1) [1])
     (assert-eq (vector 1 2 3) [1 2 3])

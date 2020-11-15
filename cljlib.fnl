@@ -44,7 +44,7 @@ arguments to `args`."
                (or (not= (type k) :number)
                    (not= k 1)))))))
 
-(fn* core.seq?
+(fn* core.vector?
   "Check whether `tbl` is an sequential table."
   [tbl]
   (if (= (type tbl) :table)
