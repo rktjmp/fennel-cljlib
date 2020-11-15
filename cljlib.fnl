@@ -265,25 +265,44 @@ val and f is not called.  Calls `seq` on `col`."
        _ (let [[a b & rest] col]
            (reduce f (f a b) rest)))))
   ([f val col]
-   (let [col (or (seq col) (empty []))]
-     (let [[x & xs] col]
-       (if (nil? x)
-           val
-           (reduce f (f val x) xs))))))
+   (if-some [reduced (when-some [m (getmetatable val)]
+                       (and m.cljlib/reduced
+                            (= m.cljlib/reduced.status :ready)
+                            m.cljlib/reduced.val))]
+     reduced
+     (let [col (or (seq col) (empty []))]
+       (let [[x & xs] col]
+         (if (nil? x)
+             val
+             (reduce f (f val x) xs)))))))
+
+(fn* core.reduced
+  "Wraps `x` in such a way so [`reduce`](#reduce) will terminate early
+  with this value."
+  [x]
+  (setmetatable
+   {} {:cljlib/reduced {:status :ready
+                        :val x}}))
 
 (fn* core.reduce-kv
   "Reduces an associative table using function `f` and initial value `val`.
 
 `f` should be a function of 3 arguments.  Returns the result of
-applying `f` to `val`, the first key and the first value in `coll`,
+applying `f` to `val`, the first key and the first value in `tbl`,
 then applying `f` to that result and the 2nd key and value, etc.  If
-`coll` contains no entries, returns `val` and `f` is not called.  Note
+`tbl` contains no entries, returns `val` and `f` is not called.  Note
 that reduce-kv is supported on sequential tables and strings, where
 the keys will be the ordinals."
-  [f val col]
+  [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (or (seq col) (empty [])))]
-    (set res (f res k v)))
+  (each [_ [k v] (pairs (or (seq tbl) (empty [])))]
+    (set res (f res k v))
+    (when-some [reduced (when-some [m (getmetatable res)]
+                          (and m.cljlib/reduced
+                               (= m.cljlib/reduced.status :ready)
+                               m.cljlib/reduced.val))]
+      (set res reduced)
+      (lua :break)))
   res)
 
 (fn* core.mapv

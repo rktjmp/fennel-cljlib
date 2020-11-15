@@ -315,6 +315,19 @@
     (assert-not (pcall reduce-kv #(+ $1 $3)))
     (assert-not (pcall reduce-kv)))
 
+  (testing "reduced"
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1]) 1)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2]) 3)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2 3 4]) 10)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2 3 4 5]) 15)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2 3 4 5 6]) -1)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 10 [1]) 11)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 10 [1 2]) -1)
+
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 1 :b 2}) 3)
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 10 :b 2}) 12)
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 {:a 10 :b 2}) -1))
+
   (testing "assoc"
     (assert-not (pcall assoc))
     (assert-not (pcall assoc {}))
