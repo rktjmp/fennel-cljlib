@@ -1,4 +1,4 @@
-# Cljlib.fnl(0.1.0)
+# Cljlib.fnl (0.1.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top of Fennel.
 
 **Table of contents**
@@ -973,7 +973,7 @@ Empty tables:
 Empty tables created with [`vector`](#vector) will pass the test:
 
 ``` fennel
-(local some-table (hash-map))
+(local some-table (vector))
 (assert (vector? some-table))
 ```
 

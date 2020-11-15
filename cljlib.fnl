@@ -130,7 +130,7 @@ Empty tables:
 Empty tables created with [`vector`](#vector) will pass the test:
 
 ``` fennel
-(local some-table (hash-map))
+(local some-table (vector))
 (assert (vector? some-table))
 ```"
   [tbl]
