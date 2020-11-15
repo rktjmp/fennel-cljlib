@@ -181,7 +181,8 @@
     (assert-eq (seq [1 2 3]) [1 2 3])
     (assert-eq (seq {:a 1}) [["a" 1]])
     (assert-eq (seq "abc") ["a" "b" "c"])
-    (assert-eq (seq "абв") ["а" "б" "в"]))
+    (assert-eq (seq "абв") ["а" "б" "в"])
+    (assert-eq (seq {12345 123}) [[12345 123]]))
 
   (testing "mapv"
     (assert-not (pcall mapv))
@@ -327,7 +328,6 @@
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 10 [1 2]) -1)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 0 [10 5]) 15)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 1 [10 7]) -1)
-
 
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 1 :b 2}) 3)
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 10 :b 2}) 12)

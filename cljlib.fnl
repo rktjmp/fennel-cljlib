@@ -273,7 +273,7 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
                (let [assoc-res (empty [])]
                  (each [k v (pairs col)]
                    (if (and (not assoc?)
-                            (not (= (type k) :number)))
+                            (map? col))
                        (set assoc? true))
                    (insert res v)
                    (insert assoc-res [k v]))
