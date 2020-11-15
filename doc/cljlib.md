@@ -1,7 +1,70 @@
-# Cljlib.fnl
+# Cljlib.fnl(0.1.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top of Fennel.
 
-Documentation for version: 0.1.0
+**Table of contents**
+- [`add`](#add)
+- [`apply`](#apply)
+- [`assoc`](#assoc)
+- [`boolean?`](#boolean?)
+- [`butlast`](#butlast)
+- [`comp`](#comp)
+- [`complement`](#complement)
+- [`concat`](#concat)
+- [`conj`](#conj)
+- [`cons`](#cons)
+- [`constantly`](#constantly)
+- [`dec`](#dec)
+- [`div`](#div)
+- [`double?`](#double?)
+- [`empty?`](#empty?)
+- [`eq`](#eq)
+- [`even?`](#even?)
+- [`every?`](#every?)
+- [`false?`](#false?)
+- [`filter`](#filter)
+- [`first`](#first)
+- [`ge`](#ge)
+- [`get`](#get)
+- [`get-in`](#get-in)
+- [`get-method`](#get-method)
+- [`gt`](#gt)
+- [`hash-map`](#hash-map)
+- [`identity`](#identity)
+- [`inc`](#inc)
+- [`int?`](#int?)
+- [`kvseq`](#kvseq)
+- [`last`](#last)
+- [`le`](#le)
+- [`lt`](#lt)
+- [`map?`](#map?)
+- [`mapv`](#mapv)
+- [`memoize`](#memoize)
+- [`methods`](#methods)
+- [`mul`](#mul)
+- [`neg-int?`](#neg-int?)
+- [`neg?`](#neg?)
+- [`nil?`](#nil?)
+- [`not-any?`](#not-any?)
+- [`not-empty`](#not-empty)
+- [`odd?`](#odd?)
+- [`pos-int?`](#pos-int?)
+- [`pos?`](#pos?)
+- [`range`](#range)
+- [`reduce`](#reduce)
+- [`reduce-kv`](#reduce-kv)
+- [`reduced`](#reduced)
+- [`remove-all-methods`](#remove-all-methods)
+- [`remove-method`](#remove-method)
+- [`rest`](#rest)
+- [`reverse`](#reverse)
+- [`seq`](#seq)
+- [`some`](#some)
+- [`string?`](#string?)
+- [`sub`](#sub)
+- [`true?`](#true?)
+- [`vector`](#vector)
+- [`vector?`](#vector?)
+- [`zero?`](#zero?)
 
 ## `add`
 Function signature:
@@ -30,7 +93,20 @@ Function signature:
 ```
 
 Apply `f` to the argument list formed by prepending intervening
-arguments to `args`.
+arguments to `args`, adn `f` must support variadic amount of
+arguments.
+
+### Examples
+Applying `print` to different arguments:
+
+``` fennel
+(apply print [1 2 3 4])
+;; prints 1 2 3 4
+(apply print 1 [2 3 4])
+;; => 1 2 3 4
+(apply print 1 2 3 4 5 6 [7 8 9])
+;; => 1 2 3 4 5 6 7 8 9
+```
 
 ## `assoc`
 Function signature:
@@ -107,7 +183,43 @@ Function signature:
   ([tbl x & xs]))
 ```
 
-Insert `x` as a last element of indexed table `tbl`. Modifies `tbl`
+Insert `x` as a last element of a table `tbl`.
+
+If `tbl` is a sequential table or empty table, inserts `x` and
+optional `xs` as final element in the table.
+
+If `tbl` is an associative table, that satisfies [`map?`](#map?) test,
+insert `[key value]` pair into the table.
+
+Mutates `tbl`.
+
+### Examples
+Adding to sequential tables:
+
+``` fennel
+(conj [] 1 2 3 4)
+;; => [1 2 3 4]
+(conj [1 2 3] 4 5)
+;; => [1 2 3 4 5]
+```
+
+Adding to associative tables:
+
+``` fennel
+(conj {:a 1} [:b 2] [:c 3])
+;; => {:a 1 :b 2 :c 3}
+```
+
+Note, that passing literal empty associative table `{}` will not work:
+
+``` fennel
+(conj {} [:a 1] [:b 2])
+;; => [[:a 1] [:b 2]]
+(conj (hash-map) [:a 1] [:b 2])
+;; => {:a 1 :b 2}
+```
+
+See [`hash-map`](#hash-map) for creating empty associative tables.
 
 ## `cons`
 Function signature:
@@ -323,6 +435,8 @@ Function signature:
 
 Test if `x` is a number without floating point data.
 
+Number is rounded with `math.floor` and compared with original number.
+
 ## `kvseq`
 Function signature:
 
@@ -374,6 +488,39 @@ Function signature:
 
 Check whether `tbl` is an associative table.
 
+Non empty associative tables are tested for two things:
+- `next` returns the key-value pair,
+- key, that is returned by the `next` is not equal to `1`.
+
+Empty tables can't be analyzed with this method, and `map?` will
+return `false`.  If you need this test pass for empty table, see
+[`hash-map`](#hash-map) for creating tables that have additional
+metadata attached for this test to work.
+
+### Examples
+Non empty tables:
+
+``` fennel
+(assert (map? {:a 1 :b 2}))
+
+(local some-table {:key :value})
+(assert (map? some-table))
+```
+
+Empty tables:
+
+``` fennel
+(local some-table {})
+(assert (not (map? some-table)))
+```
+
+Empty tables created with [`hash-map`](#hash-map) will pass the test:
+
+``` fennel
+(local some-table (hash-map))
+(assert (map? some-table))
+```
+
 ## `mapv`
 Function signature:
 
@@ -387,12 +534,37 @@ Function signature:
 
 Maps function `f` over one or more collections.
 
-Accepts arbitrary amount of tables, calls `seq` on each of it.
-Function `f` must take the same amount of parameters as the amount of
-tables passed to `mapv`. Applies `f` over first value of each
+Accepts arbitrary amount of collections, calls `seq` on each of it.
+Function `f` must take the same amount of arguments as the amount of
+tables, passed to `mapv`. Applies `f` over first value of each
 table. Then applies `f` to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
-ignored. Returns a table of results.
+ignored. Returns a sequential table of results.
+
+### Examples
+Map `string.upcase` over the string:
+
+``` fennel
+(mapv string.upper "string")
+;; => ["S" "T" "R" "I" "N" "G"]
+```
+
+Map [`mul`](#mul) over two tables:
+
+``` fennel
+(mapv mul [1 2 3 4] [1 0 -1])
+;; => [1 0 -3]
+```
+
+Basic `zipmap` implementation:
+
+``` fennel
+(fn zipmap [keys vals]
+  (into {} (mapv vector keys vals)))
+
+(zipmap [:a :b :c] [1 2 3 4])
+;; => {:a 1 :b 2 :c 3}
+```
 
 ## `memoize`
 Function signature:
@@ -536,21 +708,97 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called.  Calls `seq` on `col`.
 
+Early termination is possible with the use of [`reduced`](#reduced)
+function.
+
+### Examples
+Reduce sequence of numbers with [`add`](#add)
+
+``` fennel
+(reduce add [1 2 3 4])
+;; => 10
+(reduce add 10 [1 2 3 4])
+;; => 20
+```
+
+
+
 ## `reduce-kv`
 Function signature:
 
 ```
-(reduce-kv [f val col])
+(reduce-kv [f val tbl])
 ```
 
 Reduces an associative table using function `f` and initial value `val`.
 
 `f` should be a function of 3 arguments.  Returns the result of
-applying `f` to `val`, the first key and the first value in `coll`,
+applying `f` to `val`, the first key and the first value in `tbl`,
 then applying `f` to that result and the 2nd key and value, etc.  If
-`coll` contains no entries, returns `val` and `f` is not called.  Note
+`tbl` contains no entries, returns `val` and `f` is not called.  Note
 that reduce-kv is supported on sequential tables and strings, where
 the keys will be the ordinals.
+
+Early termination is possible with the use of [`reduced`](#reduced)
+function.
+
+### Examples
+Reduce associative table by adding values from all keys:
+
+``` fennel
+(local t {:a1 1
+          :b1 2
+          :a2 2
+          :b2 3})
+
+(reduce-kv #(+ $1 $3) 0 t)
+;; => 8
+```
+
+Reduce table by adding values from keys that start with letter `a`:
+
+``` fennel
+(local t {:a1 1
+          :b1 2
+          :a2 2
+          :b2 3})
+
+(reduce-kv (fn [res k v] (if (= (string.sub k 1 1) :a) (+ res v) res))
+           0 t)
+;; => 3
+```
+
+## `reduced`
+Function signature:
+
+```
+(reduced [x])
+```
+
+Wraps `x` in such a way so [`reduce`](#reduce) will terminate early
+with this value.
+
+### Examples
+Stop reduction is result is higher than `10`:
+
+``` fennel
+(reduce (fn [res x]
+          (if (>= res 10)
+              (reduced res)
+              (+ res x)))
+        [1 2 3])
+;; => 6
+
+(reduce (fn [res x]
+          (if (>= res 10)
+              (reduced res)
+              (+ res x)))
+        [1 2 3 4 :nil])
+;; => 10
+```
+
+Note that in second example we had `:nil` in the array, which is not a
+valid number, but we've terminated right before we've reached it.
 
 ## `remove-all-methods`
 Function signature:
@@ -574,7 +822,7 @@ Remove method from `multifn` for given `dispatch-val`.
 Function signature:
 
 ```
-(rest [seq])
+(rest [col])
 ```
 
 Returns table of all elements of a table but the first one. Calls
@@ -597,19 +845,36 @@ Function signature:
 ```
 
 Create sequential table.
+
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `col` is an
-associative table, returns `[[key1 value1] ... [keyN valueN]]` table.
-If `col` is sequential table, returns its shallow copy.
+associative table, returns sequential table of vectors with key and
+value.  If `col` is sequential table, returns its shallow copy.
 
-## `seq?`
-Function signature:
+### Examples
+Sequential tables remain as is:
 
+``` fennel
+(seq [1 2 3 4])
+;; [1 2 3 4]
 ```
-(seq? [tbl])
+
+Associative tables are transformed to format like this `[[key1 value1]
+... [keyN valueN]]` and order is non deterministic:
+
+``` fennel
+(seq {:a 1 :b 2 :c 3})
+;; [[:b 2] [:a 1] [:c 3]]
 ```
 
-Check whether `tbl` is an sequential table.
+See `into` macros for transforming this back to associative table.
+Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
+[`hash-map`](#hash-map):
+
+``` fennel
+(apply conj (hash-map) [:c 3] [[:a 1] [:b 2]])
+;; => {:a 1 :b 2 :c 3}
+```
 
 ## `some`
 Function signature:
@@ -661,6 +926,57 @@ Function signature:
 
 Constructs sequential table out of it's arguments.
 
+Sets additional metadata for function [`vector?`](#vector?) to work.
+
+### Examples
+
+``` fennel
+(local v (vector 1 2 3 4))
+(assert (eq v [1 2 3 4]))
+```
+
+## `vector?`
+Function signature:
+
+```
+(vector? [tbl])
+```
+
+Check whether `tbl` is an sequential table.
+
+Non empty sequential tables are tested for two things:
+- `next` returns the key-value pair,
+- key, that is returned by the `next` is equal to `1`.
+
+Empty tables can't be analyzed with this method, and `vector?` will
+always return `false`.  If you need this test pass for empty table,
+see [`vector`](#vector) for creating tables that have additional
+metadata attached for this test to work.
+
+### Examples
+Non empty vector:
+
+``` fennel
+(assert (vector? [1 2 3 4]))
+
+(local some-table [1 2 3])
+(assert (vector? some-table))
+```
+
+Empty tables:
+
+``` fennel
+(local some-table [])
+(assert (not (vector? some-table)))
+```
+
+Empty tables created with [`vector`](#vector) will pass the test:
+
+``` fennel
+(local some-table (hash-map))
+(assert (vector? some-table))
+```
+
 ## `zero?`
 Function signature:
 
@@ -668,7 +984,8 @@ Function signature:
 (zero? [x])
 ```
 
-Test if value is zero.
+Test if value is equal to zero.
 
 
-<!-- Generated with Fenneldoc 0.0.1-->
+<!-- Generated with Fenneldoc 0.0.1
+     https://gitlab.com/andreyorst/fenneldoc -->
