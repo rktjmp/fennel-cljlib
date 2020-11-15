@@ -83,12 +83,13 @@
       (assert-eq index-a (. (getmetatable a) :__index))
       (assert-eq index-b (. (getmetatable b) :__index)))))
 
-(testing "range"
-  (assert-not (pcall range))
-  (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
-  (assert-eq (range -5 5) [-5 -4 -3 -2 -1 0 1 2 3 4])
-  (assert-eq [0 0.2 0.4 0.6 0.8] [0 0.2 0.4 0.6 0.8])
-  (assert-eq (range 0 1 0.2) (range 0 1 0.2)))
+(deftest range
+  (testing "range"
+    (assert-not (pcall range))
+    (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
+    (assert-eq (range -5 5) [-5 -4 -3 -2 -1 0 1 2 3 4])
+    (assert-eq [0 0.2 0.4 0.6 0.8] [0 0.2 0.4 0.6 0.8])
+    (assert-eq (range 0 1 0.2) (range 0 1 0.2))))
 
 (deftest predicates
   (testing "zero?"
@@ -311,6 +312,7 @@
 
   (testing "reduce-kv"
     (assert-eq (reduce-kv #(+ $1 $3) 0 {:a 1 :b 2 :c 3}) 6)
+    (assert-eq (reduce-kv #(+ $1 $3) 0 [1 2 3]) 6)
     (assert-not (pcall reduce-kv #(+ $1 $3) 0))
     (assert-not (pcall reduce-kv #(+ $1 $3)))
     (assert-not (pcall reduce-kv)))
@@ -323,10 +325,15 @@
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2 3 4 5 6]) -1)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 10 [1]) 11)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 10 [1 2]) -1)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 0 [10 5]) 15)
+    (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 1 [10 7]) -1)
+
 
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 1 :b 2}) 3)
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 10 :b 2}) 12)
-    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 {:a 10 :b 2}) -1))
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 {:a 3 :b 3 :c 3 :d 3}) 13)
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 2 {:a 3 :b 3 :c 3 :d 3}) -1)
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 [10 12]) -1))
 
   (testing "assoc"
     (assert-not (pcall assoc))

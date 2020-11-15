@@ -285,6 +285,14 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
       :nil nil
       _ (error (.. "expected table, string or nil") 2))))
 
+(fn* core.kvseq
+  "Transforms any table kind to key-value sequence."
+  [tbl]
+  (let [res (empty [])]
+    (each [k v (pairs tbl)]
+      (insert res [k v]))
+    res))
+
 (fn* core.first
   "Return first element of a table. Calls `seq` on its argument."
   [col]
@@ -512,14 +520,13 @@ Reduce table by adding values from keys that start with letter `a`:
 ```"
   [f val tbl]
   (var res val)
-  (each [_ [k v] (pairs (or (seq tbl) (empty [])))]
+  (each [_ [k v] (ipairs (or (kvseq tbl) (empty [])))]
     (set res (f res k v))
-    (when-some [reduced (when-some [m (getmetatable res)]
-                          (and m.cljlib/reduced
-                               (= m.cljlib/reduced.status :ready)
-                               m.cljlib/reduced.val))]
-      (set res reduced)
-      (lua :break)))
+    (match (getmetatable res)
+      m (if (and m.cljlib/reduced
+                 (= m.cljlib/reduced.status :ready))
+            (do (set res m.cljlib/reduced.val)
+                (lua :break)))))
   res)
 
 (fn* core.mapv
@@ -613,14 +620,6 @@ Basic `zipmap` implementation:
           (cons f (filter pred r))
           (filter pred r)))
     (empty [])))
-
-(fn* core.kvseq
-  "Transforms any table kind to key-value sequence."
-  [tbl]
-  (let [res (empty [])]
-    (each [k v (pairs tbl)]
-      (insert res [k v]))
-    res))
 
 (fn* core.identity "Returns its argument." [x] x)
 
