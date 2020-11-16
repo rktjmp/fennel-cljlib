@@ -1,7 +1,42 @@
 # Cljlib.fnl (0.1.0)
-Fennel-cljlib - functions from Clojure's core.clj implemented on top of Fennel.
+Fennel-cljlib - functions from Clojure's core.clj implemented on top
+of Fennel.
+
+This library contains a set of functions providing functions that
+behave similarly to Clojure's equivalents.  Library itself has nothing
+Fennel specific so it should work, e.g:
+
+``` lua
+Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
+> clj = require"cljlib"
+> table.concat(clj.mapv(function (x) return x * x end, {1, 2, 3}), " ")
+-- 1 4 9
+```
+
+This example is mapping an anonymous `function` over a table,
+producing new table and concatenating it with `" "`.
+
+However this library also provides Fennel-specific set of
+[macros](./cljlib-macros.md), that provides additional facilites like
+`fn*` or `defmulti` which extend the language allowing writing code
+that looks and works mostly like Clojure.
+
+Each function in this library is created with `fn*`, which is a
+special macros for creating multi-arity functions.  So when you see
+function signature like `(foo [x])`, this means that this is function
+`foo`, that accepts exactly one argument `x`.  In contrary, functions
+created with `fn` will produce `(foo x)` signature (`x` is not inside
+brackets).
+
+Functions, which signatures look like `(foo ([x]) ([x y]) ([x y &
+zs]))`, it is a multi-arity function, which accepts either one, two,
+or three-or-more arguments.  Each `([...])` represents different body
+of a function which is choosed by checking amount of arguments passed
+to the function.  See [Clojure's doc section on multi-arity
+functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 
 **Table of contents**
+
 - [`add`](#add)
 - [`apply`](#apply)
 - [`assoc`](#assoc)
@@ -987,5 +1022,12 @@ Function signature:
 Test if value is equal to zero.
 
 
-<!-- Generated with Fenneldoc 0.0.1
+---
+
+Copyright (C) 2020 Andrey Orst
+
+License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
+
+
+<!-- Generated with Fenneldoc 0.0.4
      https://gitlab.com/andreyorst/fenneldoc -->
