@@ -17,7 +17,7 @@ This example is mapping an anonymous `function` over a table,
 producing new table and concatenating it with `" "`.
 
 However this library also provides Fennel-specific set of
-[macros](./cljlib-macros.md), that provides additional facilites like
+[macros](./cljlib-macros.md), that provides additional facilities like
 `fn*` or `defmulti` which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
@@ -31,7 +31,7 @@ brackets).
 Functions, which signatures look like `(foo ([x]) ([x y]) ([x y &
 zs]))`, it is a multi-arity function, which accepts either one, two,
 or three-or-more arguments.  Each `([...])` represents different body
-of a function which is choosed by checking amount of arguments passed
+of a function which is chosen by checking amount of arguments passed
 to the function.  See [Clojure's doc section on multi-arity
 functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 
@@ -128,7 +128,7 @@ Function signature:
 ```
 
 Apply `f` to the argument list formed by prepending intervening
-arguments to `args`, adn `f` must support variadic amount of
+arguments to `args`, and `f` must support variadic amount of
 arguments.
 
 ### Examples
@@ -755,8 +755,6 @@ Reduce sequence of numbers with [`add`](#add)
 (reduce add 10 [1 2 3 4])
 ;; => 20
 ```
-
-
 
 ## `reduce-kv`
 Function signature:

@@ -1,4 +1,4 @@
-(local core {:_VERSION "0.1.0"
+(local core {:_VERSION "0.2.0"
              :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
              :_COPYRIGHT "Copyright (C) 2020 Andrey Orst"
              :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
@@ -19,7 +19,7 @@ This example is mapping an anonymous `function` over a table,
 producing new table and concatenating it with `\" \"`.
 
 However this library also provides Fennel-specific set of
-[macros](./cljlib-macros.md), that provides additional facilites like
+[macros](./cljlib-macros.md), that provides additional facilities like
 `fn*` or `defmulti` which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
@@ -33,7 +33,7 @@ brackets).
 Functions, which signatures look like `(foo ([x]) ([x y]) ([x y &
 zs]))`, it is a multi-arity function, which accepts either one, two,
 or three-or-more arguments.  Each `([...])` represents different body
-of a function which is choosed by checking amount of arguments passed
+of a function which is chosen by checking amount of arguments passed
 to the function.  See [Clojure's doc section on multi-arity
 functions](https://clojure.org/guides/learn/functions#_multi_arity_functions)."})
 
@@ -58,7 +58,7 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 
 (fn* core.apply
   "Apply `f` to the argument list formed by prepending intervening
-arguments to `args`, adn `f` must support variadic amount of
+arguments to `args`, and `f` must support variadic amount of
 arguments.
 
 # Examples
@@ -929,3 +929,7 @@ use."
             res))))))
 
 core
+
+;; LocalWords:  cljlib Clojure's clj lua PUC mapv concat Clojure fn zs
+;; LocalWords:  defmulti multi arity eq metadata prepending variadic
+;; LocalWords:  args tbl LocalWords memoized referentially

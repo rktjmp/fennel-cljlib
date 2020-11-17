@@ -5,7 +5,8 @@
   "Require module and bind all it's functions to locals."
   `(local ,(let [destr-map# {}]
              (each [k# _# (pairs (require module))]
-               (tset destr-map# k# (sym k#)))
+               (when (not= (string.sub k# 1 1) :_)
+                 (tset destr-map# k# (sym k#))))
              destr-map#)
           (require ,module)))
 

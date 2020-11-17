@@ -145,7 +145,7 @@
 
 (deftest def-macros
   (testing "def"
-    (def {:dynamic true} a 10)
+    (def {:mutable true} a 10)
     (assert-eq a 10)
     (set a 20)
     (assert-eq a 20)
@@ -154,12 +154,12 @@
     (def a.b 10)
     (assert-eq a.b 10)
     (assert-eq b 10)
-    (def :dynamic c 10)
+    (def :mutable c 10)
     (set c 15)
     (assert-eq c 15))
 
   (testing "defonce"
-    (defonce {:dynamic true} a 10)
+    (defonce {:mutable true} a 10)
     (assert-eq a 10)
     (defonce a {})
     (assert-eq a 10)
@@ -175,7 +175,7 @@
   (testing "def meta"
     (def {:doc "x"} x 10)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
-    (def {:doc "x" :dynamic true} x 10)
+    (def {:doc "x" :mutable true} x 10)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"})))
 
   (testing "defonce meta table"
@@ -183,7 +183,7 @@
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
     (defonce {:doc "y"} x 20)
     (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
-    (defonce {:doc "y" :dynamic true} y 20)
+    (defonce {:doc "y" :mutable true} y 20)
     (assert-eq (meta y) (when-meta {:fnl/docstring "y"}))))
 
 (deftest empty

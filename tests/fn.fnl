@@ -32,13 +32,3 @@
                                     :fnl/arglist ["\n  ([x])"
                                                   "\n  ([x y])"
                                                   "\n  ([x y & z])"]}))))
-
-(deftest fn+
-  (testing "fn+ meta"
-    (fn+ f "docstring" [x] x)
-    (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
-                                    :fnl/arglist ["x"]}))
-
-    (fn+ f "docstring" [...] [...])
-    (assert-eq (meta f) (when-meta {:fnl/docstring "docstring"
-                                    :fnl/arglist ["..."]}))))
