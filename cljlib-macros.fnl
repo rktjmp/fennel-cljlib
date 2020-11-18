@@ -784,6 +784,7 @@ See [`into`](#into) for more info on how conversion is done."
                                           "' for dispatch value: "
                                           (tostr# dispatch-value#))
                                       2)) ...)))
+                      :__name "multifn"
                       :multimethods (setmetatable multimethods#
                                                   {:__index
                                                    (fn [tbl# key#]
