@@ -55,7 +55,7 @@ the tables uses tables as keys."
   Left: " (tostr# left#) "
   Right: " (tostr# right#) "\n")))))
 
-(fn test.assert*
+(fn test.assert-is
   [expr msg]
   `(assert ,expr (.. "assertion failed for "
                      (or ,msg ,(tostring expr)))))

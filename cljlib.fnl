@@ -1,4 +1,4 @@
-(local core {:_VERSION "0.2.0"
+(local core {:_VERSION "0.3.0"
              :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
              :_COPYRIGHT "Copyright (C) 2020 Andrey Orst"
              :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
@@ -303,16 +303,17 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
   [col]
   (let [res (empty [])]
     (match (type col)
-      :table (when-some [_ (next col)]
-               (var assoc? false)
-               (let [assoc-res (empty [])]
-                 (each [k v (pairs col)]
-                   (if (and (not assoc?)
-                            (map? col))
-                       (set assoc? true))
-                   (insert res v)
-                   (insert assoc-res [k v]))
-                 (if assoc? assoc-res res)))
+      :table (let [m (or (getmetatable col) {})]
+               (when-some [_ ((or m.cljlib/next next) col)]
+                 (var assoc? false)
+                 (let [assoc-res (empty [])]
+                   (each [k v (pairs col)]
+                     (if (and (not assoc?)
+                              (map? col))
+                         (set assoc? true))
+                     (insert res v)
+                     (insert assoc-res [k v]))
+                   (if assoc? assoc-res res))))
       :string (let [char utf8.char]
                 (each [_ b (utf8.codes col)]
                   (insert res (char b)))
@@ -882,7 +883,9 @@ that would apply to that value, or `nil` if none apply and no default."
   ([x] true)
   ([x y]
    (if (and (= (type x) :table) (= (type y) :table))
-       (let [oldmeta (getmetatable y)]
+       (let [x (or (. (or (getmetatable x) {}) :cljlib/inner) x)
+             y (or (. (or (getmetatable y) {}) :cljlib/inner) y)
+             oldmeta (getmetatable y)]
          ;; In case if we'll get something like
          ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
          ;; we have to do even deeper search
@@ -927,6 +930,101 @@ use."
           (let [res (f ...)]
             (tset memo args res)
             res))))))
+
+
+(fn viewset [Set]
+  "Workaround for a bug https://todo.sr.ht/~technomancy/fennel/26"
+  (let [items []
+        (res view) (pcall require :fennelview)]
+    (each [_ v (pairs Set)]
+      (insert items ((if res view tostring) v)))
+    (.. "[" (table.concat items " ") "]")))
+
+(fn* core.ordered-set
+  "Create ordered set."
+  [& xs]
+  ;; set has to be able to contain deeply nested tables so we need a
+  ;; special index for it, that compares values deeply.
+  (let [Set (setmetatable {} {:__index (fn [tbl key]
+                                         (var res nil)
+                                         (each [k v (pairs tbl)]
+                                           (when (eq k key)
+                                             (set res v)
+                                             (lua :break)))
+                                         res)})]
+    (var i 1)
+    (each [_ val (ipairs xs)]
+      (when (not (. Set val))
+        (tset Set val i)
+        (set i (+ 1 i))))
+    (fn set-ipairs []
+      "Returns stateless `ipairs` iterator for ordered set."
+      (fn iter [t i]
+        (fn loop [t k]
+          (local (k v) (next t k))
+          (if v (if (= v (+ 1 i))
+                    (values v k)
+                    (loop t k))))
+        (loop t))
+      (values iter Set 0))
+    (setmetatable []
+                  {:cljlib/inner Set
+                   :cljlib/next #(next Set $2)
+                   :cljlib/table-type :ordered-set
+                   :__len (fn []
+                            (var len 0)
+                            (each [_ _ (pairs Set)]
+                              (set len (+ 1 len)))
+                            len)
+                   :__index (fn [_ k] (if (. Set k) k))
+                   :__newindex (fn [t k]
+                                 (if (not (. Set k))
+                                     (tset Set k (+ (length t) 1))))
+                   :__ipairs set-ipairs
+                   :__pairs set-ipairs
+                   :__name "ordered set"
+                   :__fennelview viewset})))
+
+(fn* core.hash-set
+  "Create hashed set."
+  [& xs]
+  ;; same trick as for ordered set
+  (let [Set (setmetatable {} {:__index (fn [tbl key]
+                                         (var res nil)
+                                         (each [k v (pairs tbl)]
+                                           (when (eq k key)
+                                             (set res v)
+                                             (lua :break)))
+                                         res)})]
+    (each [_ k (ipairs xs)]
+      (when (not (. Set k))
+        (tset Set k true)))
+    (fn set-ipairs []
+      "Returns stateful `ipairs` iterator for hashed set."
+      (var i 0)
+      (fn iter [t _]
+        (var (k v) (next t))
+        (for [j 1 i]
+          (set (k v) (next t k)))
+        (if k (do (set i (+ i 1))
+                  (values i k))))
+      (values iter Set nil))
+    (setmetatable []
+                  {:cljlib/inner Set
+                   :cljlib/next #(next Set $2)
+                   :cljlib/table-type :hashed-set
+                   :__len (fn []
+                            (var len 0)
+                            (each [_ _ (pairs Set)]
+                              (set len (+ 1 len)))
+                            len)
+                   :__index (fn [_ k] (if (. Set k) k))
+                   :__newindex (fn [_ k v] (tset Set k (if (not (nil? v)) true)))
+                   :__ipairs set-ipairs
+                   :__pairs set-ipairs
+                   :__name "hashed set"
+                   :__fennelview #(.. "#" (viewset $))})))
+
 
 core
 
