@@ -978,7 +978,7 @@ calls will not override existing bindings:
  : defmethod
  : def
  : defonce
- :_VERSION #"0.2.0"
+ :_VERSION #"0.3.0"
  :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
  :_COPYRIGHT #"Copyright (C) 2020 Andrey Orst"
  :_DESCRIPTION #"Macros for Cljlib that implement various facilities from Clojure."}

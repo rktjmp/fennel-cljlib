@@ -37,9 +37,9 @@ For this particular project, please follow rules as described in [[https://githu
 If you see any inconsistencies with the style guide in the code, feel free to change these in a non-breaking way.
 
 If you've added new functions, each one must be covered with a set of tests.
-For that purpose this project has special =test.fnl= module, that defines such macros as =assert*=, =assert-not=, =assert-eq=, =assert-ne=, =deftest=, and =testing=.
+For that purpose this project has special =test.fnl= module, that defines such macros as =assert-is=, =assert-not=, =assert-eq=, =assert-ne=, =deftest=, and =testing=.
 Related tests should be grouped with the =deftest= macro, which defines a meaningful name for the test, and test itself must be defined within =testing= macros.
-All assertions in tests must be one with one of =assert-eq=, =assert-ne=, =assert-not=, or =assert*= macros, as these provide human readable output in the log.
+All assertions in tests must be one with one of =assert-eq=, =assert-ne=, =assert-not=, or =assert-is= macros, as these provide human readable output in the log.
 
 When changing existing functions make sure that all tests pass.
 If some tests do not pass, make sure that these tests are written to test this function.
