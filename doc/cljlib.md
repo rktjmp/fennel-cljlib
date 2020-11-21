@@ -1,4 +1,4 @@
-# Cljlib.fnl (0.1.0)
+# Cljlib.fnl (0.3.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -49,6 +49,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`cons`](#cons)
 - [`constantly`](#constantly)
 - [`dec`](#dec)
+- [`disj`](#disj)
 - [`div`](#div)
 - [`double?`](#double?)
 - [`empty?`](#empty?)
@@ -64,6 +65,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`get-method`](#get-method)
 - [`gt`](#gt)
 - [`hash-map`](#hash-map)
+- [`hash-set`](#hash-set)
 - [`identity`](#identity)
 - [`inc`](#inc)
 - [`int?`](#int?)
@@ -76,12 +78,14 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`memoize`](#memoize)
 - [`methods`](#methods)
 - [`mul`](#mul)
+- [`multifn?`](#multifn?)
 - [`neg-int?`](#neg-int?)
 - [`neg?`](#neg?)
 - [`nil?`](#nil?)
 - [`not-any?`](#not-any?)
 - [`not-empty`](#not-empty)
 - [`odd?`](#odd?)
+- [`ordered-set`](#ordered-set)
 - [`pos-int?`](#pos-int?)
 - [`pos?`](#pos?)
 - [`range`](#range)
@@ -93,6 +97,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`rest`](#rest)
 - [`reverse`](#reverse)
 - [`seq`](#seq)
+- [`set?`](#set?)
 - [`some`](#some)
 - [`string?`](#string?)
 - [`sub`](#sub)
@@ -283,6 +288,18 @@ Function signature:
 
 Decrease number by one
 
+## `disj`
+Function signature:
+
+```
+(disj 
+  ([s]) 
+  ([s k]) 
+  ([s k & ks]))
+```
+
+Remove key `k` from set `s`.
+
 ## `div`
 Function signature:
 
@@ -442,6 +459,28 @@ Function signature:
 ```
 
 Create associative table from keys and values
+
+## `hash-set`
+Function signature:
+
+```
+(hash-set [& xs])
+```
+
+Create hash set.
+
+Set is a collection of unique elements, which sore purpose is only to
+tell you if something is in the set or not.
+
+Hash set differs from ordered set in that the keys are do not have any
+particular order. New items are added at the arbitrary position by
+using [`conj`](#con) or `tset` functions, and items can be removed
+with [`disj`](#disj) or `tset` functions. Rest semantics are the same
+as for [`ordered-set`](#ordered-set)
+
+**Note**: Hash set prints as `#{a b c}`, but this construct is not
+supported by the Fennel reader, so you can't create sets with this
+syntax. Use `hash-set` function instead.
 
 ## `identity`
 Function signature:
@@ -637,6 +676,18 @@ Function signature:
 
 Multiply arbitrary amount of numbers.
 
+## `multifn?`
+Function signature:
+
+```
+(multifn? [mf])
+```
+
+Test if `mf` is an instance of `multifn`.
+
+`multifn` is a special kind of table, created with `defmulti` macros
+from `cljlib-macros.fnl`.
+
 ## `neg-int?`
 Function signature:
 
@@ -669,7 +720,7 @@ Test if value is nil.
 Function signature:
 
 ```
-(not-any? pred tbl)
+(not-any? [pred tbl])
 ```
 
 Test if no item in `tbl` satisfy the `pred`.
@@ -691,6 +742,101 @@ Function signature:
 ```
 
 Test if value is odd.
+
+## `ordered-set`
+Function signature:
+
+```
+(ordered-set [& xs])
+```
+
+Create ordered set.
+
+Set is a collection of unique elements, which sore purpose is only to
+tell you if something is in the set or not.
+
+`ordered-set` is follows the argument insertion order, unlike sorted
+sets, which apply some sorting algorithm internally. New items added
+at the end of the set. Ordered set supports removal of items via
+`tset` and [`disj`](#disj). To add element to the ordered set use
+`tset` or [`conj`](#conj). Both operations modify the set.
+
+**Note**: Hash set prints as `#{a b c}`, but this construct is not
+supported by the Fennel reader, so you can't create sets with this
+syntax. Use `hash-set` function instead.
+
+Below are some examples of how to create and manipulate sets.
+
+#### Create ordered set:
+Ordered sets are created by passing any amount of elements desired to
+be in the set:
+
+``` fennel
+>> (ordered-set)
+###{}
+>> (ordered-set :a :c :b)
+###{"a" "c" "b"}
+```
+
+Duplicate items are not added:
+
+``` fennel
+>> (ordered-set)
+###{}
+>> (ordered-set :a :c :a :a :a :a :c :b)
+###{"a" "c" "b"}
+```
+
+#### Check if set contains desired value:
+Sets are functions of their keys, so simply calling a set with a
+desired key will either return the key, or `nil`:
+
+``` fennel
+>> (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
+>> (oset [:a :b :c])
+[:a :b :c]
+>> (. oset :e)
+:e
+>> (oset [:a :b :f])
+nil
+```
+
+#### Add items to existing set:
+To add element to the set use [`conj`](#conj) or `tset`
+
+``` fennel
+>> (local oset (ordered-set :a :b :c))
+>> (conj oset :d :e)
+>> oset
+###{"a" "b" "c" "d" "e"}
+```
+
+##### Remove items from the set:
+To add element to the set use [`disj`](#disj) or `tset`
+
+``` fennel
+>> (local oset (ordered-set :a :b :c))
+>> (disj oset :b)
+>> oset
+###{"a" "c"}
+>> (tset oset :a nil)
+>> oset
+###{"c"}
+```
+
+#### Equality semantics
+Both `ordered-set` and [`hash-set`](#hash-set) implement `__eq` metamethod,
+and are compared for having the same keys without particular order and
+same size:
+
+``` fennel
+>> (= (ordered-set :a :b) (ordered-set :b :a))
+true
+>> (= (ordered-set :a :b) (ordered-set :b :a :c))
+false
+>> (= (ordered-set :a :b) (hash-set :a :b))
+true
+```
 
 ## `pos-int?`
 Function signature:
@@ -908,6 +1054,15 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
 (apply conj (hash-map) [:c 3] [[:a 1] [:b 2]])
 ;; => {:a 1 :b 2 :c 3}
 ```
+
+## `set?`
+Function signature:
+
+```
+(set? [s])
+```
+
+
 
 ## `some`
 Function signature:

@@ -39,22 +39,10 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions)."}
 
 (local insert table.insert)
 (local unpack (or table.unpack _G.unpack))
-
 (require-macros :cljlib-macros)
 
-(fn* core.vector
-  "Constructs sequential table out of it's arguments.
 
-Sets additional metadata for function [`vector?`](#vector?) to work.
-
-# Examples
-
-``` fennel
-(local v (vector 1 2 3 4))
-(assert (eq v [1 2 3 4]))
-```"
-  [& args]
-  (setmetatable args {:cljlib/table-type :seq}))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.apply
   "Apply `f` to the argument list formed by prepending intervening
@@ -84,12 +72,96 @@ Applying `print` to different arguments:
        (insert flat-args a))
      (f a b c d (unpack flat-args)))))
 
+(fn* core.add
+  "Sum arbitrary amount of numbers."
+  ([] 0)
+  ([a] a)
+  ([a b] (+ a b))
+  ([a b c] (+ a b c))
+  ([a b c d] (+ a b c d))
+  ([a b c d & rest] (apply add (+ a b c d) rest)))
+
+(fn* core.sub
+  "Subtract arbitrary amount of numbers."
+  ([] 0)
+  ([a] (- a))
+  ([a b] (- a b))
+  ([a b c] (- a b c))
+  ([a b c d] (- a b c d))
+  ([a b c d & rest] (apply sub (- a b c d) rest)))
+
+(fn* core.mul
+  "Multiply arbitrary amount of numbers."
+  ([] 1)
+  ([a] a)
+  ([a b] (* a b))
+  ([a b c] (* a b c))
+  ([a b c d] (* a b c d))
+  ([a b c d & rest] (apply mul (* a b c d) rest)))
+
+(fn* core.div
+  "Divide arbitrary amount of numbers."
+  ([a] (/ 1 a))
+  ([a b] (/ a b))
+  ([a b c] (/ a b c))
+  ([a b c d] (/ a b c d))
+  ([a b c d & rest] (apply div (/ a b c d) rest)))
+
+(fn* core.le
+  "Returns true if nums are in monotonically non-decreasing order"
+  ([x] true)
+  ([x y] (<= x y))
+  ([x y & more]
+   (if (<= x y)
+       (if (next more 1)
+           (le y (. more 1) (unpack more 2))
+           (<= y (. more 1)))
+       false)))
+
+(fn* core.lt
+  "Returns true if nums are in monotonically decreasing order"
+  ([x] true)
+  ([x y] (< x y))
+  ([x y & more]
+   (if (< x y)
+       (if (next more 1)
+           (lt y (. more 1) (unpack more 2))
+           (< y (. more 1)))
+       false)))
+
+(fn* core.ge
+  "Returns true if nums are in monotonically non-increasing order"
+  ([x] true)
+  ([x y] (>= x y))
+  ([x y & more]
+   (if (>= x y)
+       (if (next more 1)
+           (ge y (. more 1) (unpack more 2))
+           (>= y (. more 1)))
+       false)))
+
+(fn* core.gt
+  "Returns true if nums are in monotonically increasing order"
+  ([x] true)
+  ([x y] (> x y))
+  ([x y & more]
+   (if (> x y)
+       (if (next more 1)
+           (gt y (. more 1) (unpack more 2))
+           (> y (. more 1)))
+       false)))
+
+(fn* core.inc "Increase number by one" [x] (+ x 1))
+(fn* core.dec "Decrease number by one" [x] (- x 1))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;; Tests and predicates ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (fn fast-table-type [tbl]
   (let [m (getmetatable tbl)]
-    (if-let [t (and m (. m :cljlib/table-type))]
+    (if-let [t (and m (. m :cljlib/type))]
       t)))
 
-;; predicate functions
 (fn* core.map?
   "Check whether `tbl` is an associative table.
 
@@ -175,6 +247,21 @@ Empty tables created with [`vector`](#vector) will pass the test:
         (let [(k _) (next tbl)]
           (and (not= k nil) (= k 1))))))
 
+(fn* core.multifn?
+  "Test if `mf` is an instance of `multifn`.
+
+`multifn` is a special kind of table, created with `defmulti` macros
+from `cljlib-macros.fnl`."
+  [mf]
+  (= (. (or (getmetatable mf) {}) :cljlib/type) :multifn))
+
+(fn* core.set?
+  ""
+  [s]
+  (match (. (or (getmetatable s) {}) :cljlib/type)
+    :cljlib/ordered-set :cljlib/ordered-set
+    :cljlib/hash-set :cljlib/hash-set
+    _ false))
 
 (fn* core.nil?
   "Test if value is nil."
@@ -266,7 +353,22 @@ Number is rounded with `math.floor` and compared with original number."
   (if (not (empty? x))
       x))
 
-;; sequence manipulating functions
+
+;;;;;;;;;;;;;;;;;;;;;; Sequence manipuletion functions ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fn* core.vector
+  "Constructs sequential table out of it's arguments.
+
+Sets additional metadata for function [`vector?`](#vector?) to work.
+
+# Examples
+
+``` fennel
+(local v (vector 1 2 3 4))
+(assert (eq v [1 2 3 4]))
+```"
+  [& args]
+  (setmetatable args {:cljlib/type :seq}))
 
 (fn* core.seq
   "Create sequential table.
@@ -408,10 +510,23 @@ See [`hash-map`](#hash-map) for creating empty associative tables."
      (let [tbl (or tbl (empty []))]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
+           (set? tbl)
+           (tset tbl x x)
            (insert tbl x))))
    tbl)
   ([tbl x & xs]
    (apply conj (conj tbl x) xs)))
+
+(fn* core.disj
+  "Remove key `k` from set `s`."
+  ([s] (if (set? s) s
+           (error "expected either hash-set or ordered-set as first argument" 2)))
+  ([s k]
+   (if (set? s)
+       (doto s (tset k nil))
+       (error "expected either hash-set or ordered-set as first argument" 2)))
+  ([s k & ks]
+   (apply disj (disj s k) ks)))
 
 (fn consj [...]
   "Like conj but joins at the front. Modifies `tbl`."
@@ -657,22 +772,6 @@ Basic `zipmap` implementation:
           (filter pred r)))
     (empty [])))
 
-(fn* core.identity "Returns its argument." [x] x)
-
-(fn* core.comp
-  "Compose functions."
-  ([] identity)
-  ([f] f)
-  ([f g]
-   (fn*
-     ([] (f (g)))
-     ([x] (f (g x)))
-     ([x y] (f (g x y)))
-     ([x y z] (f (g x y z)))
-     ([x y z & args] (f (g x y z (unpack args))))))
-  ([f g & fs]
-   (reduce comp (consj fs g f))))
-
 (fn* core.every?
   "Test if every item in `tbl` satisfies the `pred`."
   [pred tbl]
@@ -686,26 +785,10 @@ Basic `zipmap` implementation:
   (when-let [tbl (seq tbl)]
     (or (pred (. tbl 1)) (some pred [(unpack tbl 2)]))))
 
-(set core.not-any?
-     (with-meta (comp #(not $) some)
-                {:fnl/docstring "Test if no item in `tbl` satisfy the `pred`."
-                 :fnl/arglist ["pred" "tbl"]}))
-
-(fn* core.complement
-  "Takes a function `f` and returns the function that takes the same
-amount of arguments as `f`, has the same effect, and returns the
-oppisite truth value."
-  [f]
-  (fn*
-    ([] (not (f)))
-    ([a] (not (f a)))
-    ([a b] (not (f a b)))
-    ([a b & cs] (not (apply f a b cs)))))
-
-(fn* core.constantly
-  "Returns a function that takes any number of arguments and returns `x`."
-  [x]
-  (fn [...] x))
+(fn* core.not-any?
+  "Test if no item in `tbl` satisfy the `pred`."
+  [pred tbl]
+  (some #(not (pred $)) tbl))
 
 (fn* core.range
   "return range of of numbers from `lower` to `upper` with optional `step`."
@@ -723,15 +806,114 @@ oppisite truth value."
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
 
-(fn* core.inc "Increase number by one" [x] (+ x 1))
-(fn* core.dec "Decrease number by one" [x] (- x 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Equality ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(var eq nil)
+
+(fn deep-index [tbl key]
+  "This function uses the pre-declared `eq`, which we set later on,
+because `eq` requires this function internally.  Several other
+functions also reuse this indexing method, such as sets."
+  (var res nil)
+  (each [k v (pairs tbl)]
+    (when (eq k key)
+      (set res v)
+      (lua :break)))
+  res)
+
+(set eq (fn*
+          ([x] true)
+          ([x y]
+           (if (= x y)
+               true
+               (and (= (type x) :table) (= (type y) :table))
+               (let [oldmeta (getmetatable y)]
+                 ;; In case if we'll get something like
+                 ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
+                 ;; we have to do even deeper search
+                 (setmetatable y {:__index deep-index})
+                 (var [res count-a count-b] [true 0 0])
+                 (each [k v (pairs x)]
+                   (set res (eq v (. y k)))
+                   (set count-a (+ count-a 1))
+                   (when (not res) (lua :break)))
+                 (when res
+                   (each [_ _ (pairs y)]
+                     (set count-b (+ count-b 1)))
+                   (set res (= count-a count-b)))
+                 (setmetatable y oldmeta)
+                 res)
+               false))
+          ([x y & xs]
+           (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs)))))
+
+(set core.eq (with-meta eq {:fnl/docstring "Deep compare values."}))
+
+
+;;;;;;;;;;;;;;;;;;;;;; Function manipulation functions ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fn* core.identity "Returns its argument." [x] x)
+
+(fn* core.comp
+  "Compose functions."
+  ([] identity)
+  ([f] f)
+  ([f g]
+   (fn*
+     ([] (f (g)))
+     ([x] (f (g x)))
+     ([x y] (f (g x y)))
+     ([x y z] (f (g x y z)))
+     ([x y z & args] (f (g x y z (unpack args))))))
+  ([f g & fs]
+   (reduce comp (consj fs g f))))
+
+(fn* core.complement
+  "Takes a function `f` and returns the function that takes the same
+amount of arguments as `f`, has the same effect, and returns the
+oppisite truth value."
+  [f]
+  (fn*
+    ([] (not (f)))
+    ([a] (not (f a)))
+    ([a b] (not (f a b)))
+    ([a b & cs] (not (apply f a b cs)))))
+
+(fn* core.constantly
+  "Returns a function that takes any number of arguments and returns `x`."
+  [x]
+  (fn [...] x))
+
+(fn* core.memoize
+  "Returns a memoized version of a referentially transparent function.
+The memoized version of the function keeps a cache of the mapping from
+arguments to results and, when calls with the same arguments are
+repeated often, has higher performance at the expense of higher memory
+use."
+  [f]
+  (let [memo (setmetatable {} {:__index
+                               (fn [tbl key]
+                                 (each [k v (pairs tbl)]
+                                   (when (eq k key)
+                                     (lua "return v"))))})]
+    (fn [...]
+      (let [args [...]]
+        (if-some [res (. memo args)]
+          res
+          (let [res (f ...)]
+            (tset memo args res)
+            res))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Hash map extras ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.assoc
   "Associate key `k` with value `v` in `tbl`."
   ([tbl k v]
    (setmetatable
     (doto tbl (tset k v))
-    {:cljlib/table-type :table}))
+    {:cljlib/type :table}))
   ([tbl k v & kvs]
    (assert (= (% (length kvs) 2) 0)
            (.. "no value supplied for key " (. kvs (length kvs))))
@@ -742,7 +924,7 @@ oppisite truth value."
      (set (i v) (next kvs i))
      (tset tbl k v)
      (set (i k) (next kvs i)))
-   (setmetatable tbl {:cljlib/table-type :table})))
+   (setmetatable tbl {:cljlib/type :table})))
 
 (fn* core.hash-map
   "Create associative table from keys and values"
@@ -773,257 +955,257 @@ found in the table."
        (set res not-found)))
    res))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (fn* core.remove-method
   "Remove method from `multifn` for given `dispatch-val`."
   [multifn dispatch-val]
-  (tset (. (getmetatable multifn) :multimethods) dispatch-val nil)
+  (if (multifn? multifn)
+      (tset multifn dispatch-val nil)
+      (error (.. (tostring multifn) " is not a multifn") 2))
   multifn)
 
 (fn* core.remove-all-methods
   "Removes all of the methods of multimethod"
   [multifn]
-  (let [mtable (. (getmetatable multifn) :multimethods)]
-    (each [k _ (pairs mtable)]
-      (tset mtable k nil))
-    multifn))
+  (if (multifn? multifn)
+      (each [k _ (pairs multifn)]
+        (tset multifn k nil))
+      (error (.. (tostring multifn) " is not a multifn") 2))
+  multifn)
 
 (fn* core.methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
   [multifn]
-  (. (getmetatable multifn) :multimethods))
+  (if (multifn? multifn)
+      (let [m {}]
+        (each [k v (pairs multifn)]
+          (tset m k v))
+        m)
+      (error (.. (tostring multifn) " is not a multifn") 2)))
 
 (fn* core.get-method
   "Given a multimethod and a dispatch value, returns the dispatch `fn`
 that would apply to that value, or `nil` if none apply and no default."
   [multifn dispatch-val]
-  (or (. (getmetatable multifn) :multimethods dispatch-val)
-      (. (getmetatable multifn) :multimethods :default)))
+  (if (multifn? multifn)
+      (or (. multifn dispatch-val)
+          (. multifn :default))
+      (error (.. (tostring multifn) " is not a multifn") 2)))
 
-(fn* core.add
-  "Sum arbitrary amount of numbers."
-  ([] 0)
-  ([a] a)
-  ([a b] (+ a b))
-  ([a b c] (+ a b c))
-  ([a b c d] (+ a b c d))
-  ([a b c d & rest] (apply add (+ a b c d) rest)))
 
-(fn* core.sub
-  "Subtract arbitrary amount of numbers."
-  ([] 0)
-  ([a] (- a))
-  ([a b] (- a b))
-  ([a b c] (- a b c))
-  ([a b c d] (- a b c d))
-  ([a b c d & rest] (apply sub (- a b c d) rest)))
-
-(fn* core.mul
-  "Multiply arbitrary amount of numbers."
-  ([] 1)
-  ([a] a)
-  ([a b] (* a b))
-  ([a b c] (* a b c))
-  ([a b c d] (* a b c d))
-  ([a b c d & rest] (apply mul (* a b c d) rest)))
-
-(fn* core.div
-  "Divide arbitrary amount of numbers."
-  ([a] (/ 1 a))
-  ([a b] (/ a b))
-  ([a b c] (/ a b c))
-  ([a b c d] (/ a b c d))
-  ([a b c d & rest] (apply div (/ a b c d) rest)))
-
-(fn* core.le
-  "Returns true if nums are in monotonically non-decreasing order"
-  ([x] true)
-  ([x y] (<= x y))
-  ([x y & more]
-   (if (<= x y)
-       (if (next more 1)
-           (le y (. more 1) (unpack more 2))
-           (<= y (. more 1)))
-       false)))
-
-(fn* core.lt
-  "Returns true if nums are in monotonically decreasing order"
-  ([x] true)
-  ([x y] (< x y))
-  ([x y & more]
-   (if (< x y)
-       (if (next more 1)
-           (lt y (. more 1) (unpack more 2))
-           (< y (. more 1)))
-       false)))
-
-(fn* core.ge
-  "Returns true if nums are in monotonically non-increasing order"
-  ([x] true)
-  ([x y] (>= x y))
-  ([x y & more]
-   (if (>= x y)
-       (if (next more 1)
-           (ge y (. more 1) (unpack more 2))
-           (>= y (. more 1)))
-       false)))
-
-(fn* core.gt
-  "Returns true if nums are in monotonically increasing order"
-  ([x] true)
-  ([x y] (> x y))
-  ([x y & more]
-   (if (> x y)
-       (if (next more 1)
-           (gt y (. more 1) (unpack more 2))
-           (> y (. more 1)))
-       false)))
-
-(fn* core.eq
-  "Deep compare values."
-  ([x] true)
-  ([x y]
-   (if (and (= (type x) :table) (= (type y) :table))
-       (let [x (or (. (or (getmetatable x) {}) :cljlib/inner) x)
-             y (or (. (or (getmetatable y) {}) :cljlib/inner) y)
-             oldmeta (getmetatable y)]
-         ;; In case if we'll get something like
-         ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
-         ;; we have to do even deeper search
-         (setmetatable y {:__index (fn [tbl key]
-                                     (var res nil)
-                                     (each [k v (pairs tbl)]
-                                       (when (eq k key)
-                                         (set res v)
-                                         (lua :break)))
-                                     res)})
-         (var [res count-a count-b] [true 0 0])
-         (each [k v (pairs x)]
-           (set res (eq v (. y k)))
-           (set count-a (+ count-a 1))
-           (when (not res) (lua :break)))
-         (when res
-           (each [_ _ (pairs y)]
-             (set count-b (+ count-b 1)))
-           (set res (= count-a count-b)))
-         (setmetatable y oldmeta)
-         res)
-       (= x y)))
-  ([x y & xs]
-   (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs))))
-
-(fn* core.memoize
-  "Returns a memoized version of a referentially transparent function.
-The memoized version of the function keeps a cache of the mapping from
-arguments to results and, when calls with the same arguments are
-repeated often, has higher performance at the expense of higher memory
-use."
-  [f]
-  (let [memo (setmetatable {} {:__index
-                               (fn [tbl key]
-                                 (each [k v (pairs tbl)]
-                                   (when (eq k key)
-                                     (lua "return v"))))})]
-    (fn [...]
-      (let [args [...]]
-        (if-some [res (. memo args)]
-          res
-          (let [res (f ...)]
-            (tset memo args res)
-            res))))))
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Sets ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn viewset [Set]
   "Workaround for a bug https://todo.sr.ht/~technomancy/fennel/26"
-  (let [items []
-        (res view) (pcall require :fennelview)]
+  (let [items []]
     (each [_ v (pairs Set)]
-      (insert items ((if res view tostring) v)))
-    (.. "[" (table.concat items " ") "]")))
+      (insert items ((require :fennelview) v)))
+    (.. "#{" (table.concat items " ") "}")))
+
+(fn set-newindex [Set]
+  "`__newindex` metamethod for set data structure."
+  (fn [t k v]
+    (if (= nil v)
+        (let [k (. Set k)]
+          (each [key index (pairs Set)]
+            (if (= index k) (tset Set key nil)
+                (> index k) (tset Set key (- index 1)))))
+        (if (not (. Set v))
+            (tset Set v (+ 1 (length t)))))))
+
+(fn set-length [Set]
+  "`__len` metamethod for set data structure."
+  (fn []
+    (var len 0)
+    (each [_ _ (pairs Set)]
+      (set len (+ 1 len)))
+    len))
+
+(fn set-eq [s1 s2]
+  "`__eq` metamethod for set data structure."
+  (var [size res] [0 true])
+  (each [i k (pairs s1)]
+    (set size (+ size 1))
+    (if res (set res (. s2 k))
+        (lua :break)))
+  (and res (= size (length s2))))
+
+(fn ordered-set-ipairs [Set]
+  "Returns stateless `ipairs` iterator for ordered sets."
+  (fn []
+    (fn set-next [t i]
+      (fn loop [t k]
+        (local (k v) (next t k))
+        (if v (if (= v (+ 1 i))
+                  (values v k)
+                  (loop t k))))
+      (loop t))
+    (values set-next Set 0)))
+
+(fn hash-set-ipairs [Set]
+  "Returns stateful `ipairs` iterator for hashed sets."
+  (fn []
+    (var i 0)
+    (fn iter [t _]
+      (var (k v) (next t))
+      (for [j 1 i]
+        (set (k v) (next t k)))
+      (if k (do (set i (+ i 1))
+                (values i k))))
+    (values iter Set nil)))
+
+(fn init-set [Set ...]
+  "Initializes `Set` with values specified with vararg."
+  (var i 1)
+  (each [_ val (ipairs [...])]
+    (when (not (. Set val))
+      (tset Set val i)
+      (set i (+ 1 i)))))
+
+;; Sets are bootstrapped upon previous functions.
 
 (fn* core.ordered-set
-  "Create ordered set."
+  "Create ordered set.
+
+Set is a collection of unique elements, which sore purpose is only to
+tell you if something is in the set or not.
+
+`ordered-set` is follows the argument insertion order, unlike sorted
+sets, which apply some sorting algorithm internally. New items added
+at the end of the set. Ordered set supports removal of items via
+`tset` and [`disj`](#disj). To add element to the ordered set use
+`tset` or [`conj`](#conj). Both operations modify the set.
+
+**Note**: Hash set prints as `#{a b c}`, but this construct is not
+supported by the Fennel reader, so you can't create sets with this
+syntax. Use `hash-set` function instead.
+
+Below are some examples of how to create and manipulate sets.
+
+## Create ordered set:
+Ordered sets are created by passing any amount of elements desired to
+be in the set:
+
+``` fennel
+>> (ordered-set)
+#{}
+>> (ordered-set :a :c :b)
+#{\"a\" \"c\" \"b\"}
+```
+
+Duplicate items are not added:
+
+``` fennel
+>> (ordered-set)
+#{}
+>> (ordered-set :a :c :a :a :a :a :c :b)
+#{\"a\" \"c\" \"b\"}
+```
+
+## Check if set contains desired value:
+Sets are functions of their keys, so simply calling a set with a
+desired key will either return the key, or `nil`:
+
+``` fennel
+>> (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
+>> (oset [:a :b :c])
+[:a :b :c]
+>> (. oset :e)
+:e
+>> (oset [:a :b :f])
+nil
+```
+
+## Add items to existing set:
+To add element to the set use [`conj`](#conj) or `tset`
+
+``` fennel
+>> (local oset (ordered-set :a :b :c))
+>> (conj oset :d :e)
+>> oset
+#{\"a\" \"b\" \"c\" \"d\" \"e\"}
+```
+
+### Remove items from the set:
+To add element to the set use [`disj`](#disj) or `tset`
+
+``` fennel
+>> (local oset (ordered-set :a :b :c))
+>> (disj oset :b)
+>> oset
+#{\"a\" \"c\"}
+>> (tset oset :a nil)
+>> oset
+#{\"c\"}
+```
+
+## Equality semantics
+Both `ordered-set` and [`hash-set`](#hash-set) implement `__eq` metamethod,
+and are compared for having the same keys without particular order and
+same size:
+
+``` fennel
+>> (= (ordered-set :a :b) (ordered-set :b :a))
+true
+>> (= (ordered-set :a :b) (ordered-set :b :a :c))
+false
+>> (= (ordered-set :a :b) (hash-set :a :b))
+true
+```"
   [& xs]
-  ;; set has to be able to contain deeply nested tables so we need a
-  ;; special index for it, that compares values deeply.
-  (let [Set (setmetatable {} {:__index (fn [tbl key]
-                                         (var res nil)
-                                         (each [k v (pairs tbl)]
-                                           (when (eq k key)
-                                             (set res v)
-                                             (lua :break)))
-                                         res)})]
-    (var i 1)
-    (each [_ val (ipairs xs)]
-      (when (not (. Set val))
-        (tset Set val i)
-        (set i (+ 1 i))))
-    (fn set-ipairs []
-      "Returns stateless `ipairs` iterator for ordered set."
-      (fn iter [t i]
-        (fn loop [t k]
-          (local (k v) (next t k))
-          (if v (if (= v (+ 1 i))
-                    (values v k)
-                    (loop t k))))
-        (loop t))
-      (values iter Set 0))
-    (setmetatable []
-                  {:cljlib/inner Set
+  (let [Set (setmetatable {} {:__index deep-index})
+        set-ipairs (ordered-set-ipairs Set)]
+    (apply init-set Set xs)
+    (setmetatable {}
+                  {:cljlib/type :cljlib/ordered-set
                    :cljlib/next #(next Set $2)
-                   :cljlib/table-type :ordered-set
-                   :__len (fn []
-                            (var len 0)
-                            (each [_ _ (pairs Set)]
-                              (set len (+ 1 len)))
-                            len)
-                   :__index (fn [_ k] (if (. Set k) k))
-                   :__newindex (fn [t k]
-                                 (if (not (. Set k))
-                                     (tset Set k (+ (length t) 1))))
+                   :__eq set-eq
+                   :__call #(if (. Set $2) $2)
+                   :__len (set-length Set)
+                   :__index #(match $2
+                               :cljlib/empty #(ordered-set)
+                               _ (if (. Set $2) $2))
+                   :__newindex (set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
                    :__name "ordered set"
                    :__fennelview viewset})))
 
 (fn* core.hash-set
-  "Create hashed set."
+  "Create hash set.
+
+Set is a collection of unique elements, which sore purpose is only to
+tell you if something is in the set or not.
+
+Hash set differs from ordered set in that the keys are do not have any
+particular order. New items are added at the arbitrary position by
+using [`conj`](#con) or `tset` functions, and items can be removed
+with [`disj`](#disj) or `tset` functions. Rest semantics are the same
+as for [`ordered-set`](#ordered-set)
+
+**Note**: Hash set prints as `#{a b c}`, but this construct is not
+supported by the Fennel reader, so you can't create sets with this
+syntax. Use `hash-set` function instead."
   [& xs]
-  ;; same trick as for ordered set
-  (let [Set (setmetatable {} {:__index (fn [tbl key]
-                                         (var res nil)
-                                         (each [k v (pairs tbl)]
-                                           (when (eq k key)
-                                             (set res v)
-                                             (lua :break)))
-                                         res)})]
-    (each [_ k (ipairs xs)]
-      (when (not (. Set k))
-        (tset Set k true)))
-    (fn set-ipairs []
-      "Returns stateful `ipairs` iterator for hashed set."
-      (var i 0)
-      (fn iter [t _]
-        (var (k v) (next t))
-        (for [j 1 i]
-          (set (k v) (next t k)))
-        (if k (do (set i (+ i 1))
-                  (values i k))))
-      (values iter Set nil))
-    (setmetatable []
-                  {:cljlib/inner Set
+  (let [Set (setmetatable {} {:__index deep-index})
+        set-ipairs (hash-set-ipairs Set)]
+    (apply init-set Set xs)
+    (setmetatable {}
+                  {:cljlib/type :cljlib/hash-set
                    :cljlib/next #(next Set $2)
-                   :cljlib/table-type :hashed-set
-                   :__len (fn []
-                            (var len 0)
-                            (each [_ _ (pairs Set)]
-                              (set len (+ 1 len)))
-                            len)
-                   :__index (fn [_ k] (if (. Set k) k))
-                   :__newindex (fn [_ k v] (tset Set k (if (not (nil? v)) true)))
+                   :__eq set-eq
+                   :__call #(if (. Set $2) $2)
+                   :__len (set-length Set)
+                   :__index #(match $2
+                                 :cljlib/empty #(hash-set)
+                                 _ (if (. Set $2) $2))
+                   :__newindex (set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
                    :__name "hashed set"
-                   :__fennelview #(.. "#" (viewset $))})))
+                   :__fennelview viewset})))
 
 
 core

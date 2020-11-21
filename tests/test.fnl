@@ -6,7 +6,9 @@
 This function is able to compare tables of any depth, even if one of
 the tables uses tables as keys."
   `(fn eq# [left# right#]
-     (if (and (= (type left#) :table) (= (type right#) :table))
+     (if (= left# right#)
+         true
+         (and (= (type left#) :table) (= (type right#) :table))
          (let [oldmeta# (getmetatable right#)]
            ;; In case if we'll get something like
            ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
@@ -29,7 +31,7 @@ the tables uses tables as keys."
              (set res# (= count-a# count-b#)))
            (setmetatable right# oldmeta#)
            res#)
-         (= left# right#))))
+         false)))
 
 (fn test.assert-eq
   [expr1 expr2 msg]
