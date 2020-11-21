@@ -18,9 +18,9 @@
     ;; different bodies are being used at compile time so worth testing
     (assert-eq (into [] {}) [])
     (assert-eq (into {} []) [])
-    (assert-eq (. (getmetatable (into [] {})) :cljlib/table-type) :seq)
-    (assert-eq (. (getmetatable (into {} [])) :cljlib/table-type) :table)
-    (let [a []] (assert-eq (. (getmetatable (into a a)) :cljlib/table-type) :seq))
+    (assert-eq (. (getmetatable (into [] {})) :cljlib/type) :seq)
+    (assert-eq (. (getmetatable (into {} [])) :cljlib/type) :table)
+    (let [a []] (assert-eq (. (getmetatable (into a a)) :cljlib/type) :seq))
 
     ;; can't transform table with more than one key-value pair, as order
     ;; is undeterminitive
@@ -189,17 +189,17 @@
 (deftest empty
   (testing "empty map"
     (assert-eq (empty {}) {})
-    (assert-eq (getmetatable (empty {})) {:cljlib/table-type :table})
+    (assert-eq (getmetatable (empty {})) {:cljlib/type :table})
     (let [a {:a 1 :b 2}]
       (assert-eq (empty a) {})
-      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :table}))
+      (assert-eq (getmetatable (empty a)) {:cljlib/type :table}))
     (let [a {}]
       (assert-eq (empty a) [])
-      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :empty})))
+      (assert-eq (getmetatable (empty a)) {:cljlib/type :empty})))
 
   (testing "empty seq"
     (assert-eq (empty []) {})
-    (assert-eq (getmetatable (empty [])) {:cljlib/table-type :seq})
+    (assert-eq (getmetatable (empty [])) {:cljlib/type :seq})
     (let [a [:a 1 :b 2]]
       (assert-eq (empty a) [])
-      (assert-eq (getmetatable (empty a)) {:cljlib/table-type :seq}))))
+      (assert-eq (getmetatable (empty a)) {:cljlib/type :seq}))))

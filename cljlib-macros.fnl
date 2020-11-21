@@ -94,11 +94,11 @@
   ;; Strings are transformed into a sequence of letters.
   `(fn [col#]
      (let [type# (type col#)
-           res# (setmetatable {} {:cljlib/table-type :seq})
+           res# (setmetatable {} {:cljlib/type :seq})
            insert# table.insert]
        (if (= type# :table)
            (do (var assoc?# false)
-               (let [assoc-res# (setmetatable {} {:cljlib/table-type :seq})]
+               (let [assoc-res# (setmetatable {} {:cljlib/type :seq})]
                  (each [k# v# (pairs col#)]
                    (if (and (not assoc?#)
                             (not (= (type k#) :number)))
@@ -119,7 +119,7 @@
      (let [t# (type tbl#)]
        (if (= t# :table)
            (let [meta# (getmetatable tbl#)
-                 table-type# (and meta# (. meta# :cljlib/table-type))]
+                 table-type# (and meta# (. meta# :cljlib/type))]
              (if table-type# table-type#
                  (let [(k# _#) (next tbl#)]
                    (if (and (= (type k#) :number) (= k# 1)) :seq
@@ -315,7 +315,8 @@ returns the value without additional metadata.
         (table.insert bodies (list '>= len (- more-len 1)))
         (table.insert bodies body)))
     (if (not (and (grows-by-one-or-equal? lengths)
-                  (contains? lengths 0)))
+                  (contains? lengths 0)
+                  body&))
         (table.insert bodies (list 'error
                              (.. "wrong argument amount"
                                  (if name (.. " for "  name) "")) 2)))
@@ -639,25 +640,25 @@ at runtime:
                insert# table.insert]
            (each [_# v# (ipairs (or ,from []))]
              (insert# to# v#))
-           (setmetatable to# {:cljlib/table-type :seq}))
+           (setmetatable to# {:cljlib/type :seq}))
         (= to-type :seq)
         `(let [to# (or ,to [])
                seq# ,(seq-fn)
                insert# table.insert]
            (each [_# v# (ipairs (seq# (or ,from [])))]
              (insert# to# v#))
-           (setmetatable to# {:cljlib/table-type :seq}))
+           (setmetatable to# {:cljlib/type :seq}))
         (and (= to-type :table) (= from-type :seq))
         `(let [to# (or ,to [])]
            (each [_# [k# v#] (ipairs (or ,from []))]
              (tset to# k# v#))
-           (setmetatable to# {:cljlib/table-type :table}))
+           (setmetatable to# {:cljlib/type :table}))
         (and (= to-type :table) (= from-type :table))
         `(let [to# (or ,to [])
                from# (or ,from [])]
            (each [k# v# (pairs from#)]
              (tset to# k# v#))
-           (setmetatable to# {:cljlib/table-type :table}))
+           (setmetatable to# {:cljlib/type :table}))
         (= to-type :table)
         `(let [to# (or ,to [])
                from# (or ,from [])]
@@ -667,7 +668,7 @@ at runtime:
              :table (each [k# v# (pairs from#)]
                       (tset to# k# v#))
              :else (error "expected table as second argument" 2))
-           (setmetatable to# {:cljlib/table-type :table}))
+           (setmetatable to# {:cljlib/type :table}))
         ;; runtime branch
         `(let [to# ,to
                from# ,from
@@ -677,28 +678,28 @@ at runtime:
                to-type# (table-type# to#)
                to# (or to# []) ;; secure nil
                res# (match to-type#
-                      :seq (do (each [_# v# (ipairs (seq# from#))]
-                                 (insert# to# v#))
-                               to#)
+                      ;; Sequence or empty table
+                      (seq1# ? (or (= seq1# :seq) (= seq1# :empty)))
+                      (do (each [_# v# (ipairs (seq# from#))]
+                            (insert# to# v#))
+                          to#)
+                      ;; associative table
                       :table (match (table-type# from#)
-                               :seq (do (each [_# [k# v#] (ipairs (or from# []))]
-                                          (tset to# k# v#))
-                                        to#)
-                               :string (do (each [_# v# (ipairs (seq# from#))]
-                                             (insert# to# v#))
-                                           to#)
+                               (seq2# ? (or (= seq2# :seq) (= seq2# :string)))
+                               (do (each [_# [k# v#] (ipairs (or from# []))]
+                                     (tset to# k# v#))
+                                   to#)
                                :table (do (each [k# v# (pairs (or from# []))]
                                             (tset to# k# v#))
                                           to#)
                                :empty to#
                                :else (error "expected table as second argument" 2))
-                      ;; If we could not deduce type, it means that
-                      ;; we've got empty table.  We use will default
-                      ;; to sequential table, because it will never
-                      ;; break when converting into
-                      :empty (do (each [_# v# (ipairs (seq# from#))]
-                                   (insert# to# v#))
-                                 to#)
+                      ;; set both ordered set and hash set
+                      (Set# ? (or (= Set# :cljlib/ordered-set) (= Set# :cljlib/hash-set)))
+                      (do (each [_# v# (ipairs (seq# from#))]
+                            (tset to# v# v#))
+                          to#)
+                      ;; sometimes it is handy to pass nil too
                       :nil (match (table-type# from#)
                              :nil nil
                              :empty to#
@@ -711,10 +712,13 @@ at runtime:
                              :else (error "expected table as second argument" 2))
                       :else (error "expected table as first argument" 2))]
            (if res#
-               (setmetatable res# {:cljlib/table-type (match to-type#
-                                                        :seq :seq
-                                                        :empty :seq
-                                                        :table :table)}))))))
+               (let [m# (or (getmetatable res#) {})]
+                 (set m#.cljlib/type (match to-type#
+                                       :seq :seq
+                                       :empty :seq
+                                       :table :table
+                                       t# t#))
+                 (setmetatable res# m#)))))))
 
 ;; empty
 
@@ -740,20 +744,20 @@ and return result of the same type:
 ```
 See [`into`](#into) for more info on how conversion is done."
   (match (table-type x)
-    :seq `(setmetatable {} {:cljlib/table-type :seq})
-    :table `(setmetatable {} {:cljlib/table-type :table})
-    _ `(setmetatable {} {:cljlib/table-type (,(table-type-fn) ,x)})))
+    :seq `(setmetatable {} {:cljlib/type :seq})
+    :table `(setmetatable {} {:cljlib/type :table})
+    _ `(let [x# ,x]
+         (match (,(table-type-fn) x#)
+           :cljlib/ordered-set (: x# :cljlib/empty)
+           :cljlib/hash-set (: x# :cljlib/empty)
+           t# (setmetatable {} {:cljlib/type t#})))))
 
 ;; multimethods
 
 (fn seq->table [seq]
   (let [tbl {}]
-    (var v nil)
-    (var (i k) (next seq))
-    (while i
-      (set (i v) (next seq i))
-      (tset tbl k v)
-      (set (i k) (next seq i)))
+    (for [i 1 (length seq) 2]
+      (tset tbl (. seq i) (. seq (+ i 1))))
     tbl))
 
 (fn defmulti [...]
@@ -766,35 +770,35 @@ See [`into`](#into) for more info on how conversion is done."
     (assert (= (% (length options) 2) 0) "wrong argument amount for defmulti")
     (let [options (seq->table options)]
       (if (in-scope? name)
-          nil
+          `nil
           `(local ,name
-                  (let [multimethods# {}]
-                    (setmetatable
-                     ,(with-meta {} {:fnl/docstring docstring})
-                     {:__call
-                      (fn [_# ...]
-                        ,docstring
-                        (let [dispatch-value# (,dispatch-fn ...)
-                              (res# view#) (pcall require :fennelview)
-                              tostr# (if res# view# tostring)]
-                          ((or (. multimethods# dispatch-value#)
-                               (. multimethods# (or (. ,options :default) :default))
-                               (error (.. "No method in multimethod '"
-                                          ,(tostring name)
-                                          "' for dispatch value: "
-                                          (tostr# dispatch-value#))
-                                      2)) ...)))
-                      :__name "multifn"
-                      :multimethods (setmetatable multimethods#
-                                                  {:__index
-                                                   (fn [tbl# key#]
-                                                     (let [eq# ,(eq-fn)]
-                                                       (var res# nil)
-                                                       (each [k# v# (pairs tbl#)]
-                                                         (when (eq# k# key#)
-                                                           (set res# v#)
-                                                           (lua :break)))
-                                                       res#))})})))))))
+                  (setmetatable
+                   ,(with-meta {} {:fnl/docstring docstring})
+                   {:__index
+                    (fn [tbl# key#]
+                      (let [eq# ,(eq-fn)]
+                        (var res# nil)
+                        (each [k# v# (pairs tbl#)]
+                          (when (eq# k# key#)
+                            (set res# v#)
+                            (lua :break)))
+                        res#))
+                    :__call
+                    (fn [t# ...]
+                      ,docstring
+                      (let [dispatch-value# (,dispatch-fn ...)
+                            (res# view#) (pcall require :fennelview)
+                            tostr# (if res# view# tostring)]
+                        ((or (. t# dispatch-value#)
+                             (. t# (or (. ,options :default) :default))
+                             (error (.. "No method in multimethod '"
+                                        ,(tostring name)
+                                        "' for dispatch value: "
+                                        (tostr# dispatch-value#))
+                                    2)) ...)))
+                    :__name (.. "multifn " ,(tostring name))
+                    :__fennelview tostring
+                    :cljlib/type :multifn}))))))
 
 (attach-meta defmulti {:fnl/arglist [:name :docstring? :dispatch-fn :attr-map?]
                        :fnl/docstring "Create multifunction with
@@ -810,12 +814,7 @@ By default, multifunction has no multimethods, see
 
 (fn defmethod [multifn dispatch-val ...]
   (when (= (select :# ...) 0) (error "wrong argument amount for defmethod"))
-  `(let [multifn# ,multifn]
-     (tset (. (getmetatable multifn#) :multimethods)
-           ,dispatch-val
-           (do (fn* f# ,...)
-               f#))
-     multifn#))
+  `(doto ,multifn (tset ,dispatch-val (do (fn* f# ,...) f#))))
 
 (attach-meta defmethod {:fnl/arglist [:multifn :dispatch-val :fnspec]
                         :fnl/docstring "Attach new method to multi-function dispatch value. accepts the `multi-fn`

@@ -1,4 +1,4 @@
-# Cljlib-macros.fnl (0.1.0)
+# Cljlib-macros.fnl (0.3.0)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**

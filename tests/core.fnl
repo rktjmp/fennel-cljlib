@@ -43,6 +43,7 @@
     (assert-is (eq [1 [2]] [1 [2]] [1 [2]]))
     (assert-is (eq [1 [2]] [1 [2]] [1 [2]]))
     (assert-not (eq [1 [2]] [1 [2]] [1 [2 [3]]]))
+    (assert-not (eq {:a {:b 2}} {:a {:b 2}} {:a {:b 3}}))
 
     (let [a {:a 1 :b 2}
           b {:a 1 :b 2}]
@@ -96,40 +97,58 @@
   (testing "zero?"
     (assert-is (zero? 0))
     (assert-is (zero? -0))
-    (assert-not (zero? 1)))
+    (assert-not (zero? 1))
+    (assert-not (pcall zero?))
+    (assert-not (pcall zero? 1 2)))
 
   (testing "int?"
     (assert-is (int? 1))
-    (assert-not (int? 1.1)))
+    (assert-not (int? 1.1))
+    (assert-not (pcall int?))
+    (assert-not (pcall int? 1 2)))
 
   (testing "pos?"
     (assert-is (pos? 1))
-    (assert-is (and (not (pos? 0)) (not (pos? -1)))))
+    (assert-is (and (not (pos? 0)) (not (pos? -1))))
+    (assert-not (pcall pos?))
+    (assert-not (pcall pos? 1 2)))
 
   (testing "neg?"
     (assert-is (neg? -1))
-    (assert-is (and (not (neg? 0)) (not (neg? 1)))))
+    (assert-is (and (not (neg? 0)) (not (neg? 1))))
+    (assert-not (pcall neg?))
+    (assert-not (pcall neg? 1 2)))
 
   (testing "pos-int?"
     (assert-is (pos-int? 42))
-    (assert-not (pos-int? 4.2)))
+    (assert-not (pos-int? 4.2))
+    (assert-not (pcall pos-int?))
+    (assert-not (pcall pos-int? 1 2)))
 
   (testing "neg-int?"
     (assert-is (neg-int? -42))
-    (assert-not (neg-int? -4.2)))
+    (assert-not (neg-int? -4.2))
+    (assert-not (pcall neg-int?))
+    (assert-not (pcall neg-int? 1 2)))
 
   (testing "string?"
-    (assert-is (string? :s)))
+    (assert-is (string? :s))
+    (assert-not (pcall string?))
+    (assert-not (pcall string? 1 2)))
 
   (testing "double?"
     (assert-is (double? 3.3))
-    (assert-not (double? 3.0)))
+    (assert-not (double? 3.0))
+    (assert-not (pcall double?))
+    (assert-not (pcall double? 1 2)))
 
   (testing "map?"
     (assert-is (map? {:a 1}))
     (assert-not (map? {}))
     (assert-is (map? (empty {})))
-    (assert-not (map? (empty []))))
+    (assert-not (map? (empty [])))
+    (assert-not (pcall map?))
+    (assert-not (pcall map? 1 2)))
 
   (testing "vector?"
     (assert-not (vector? []))
@@ -137,45 +156,74 @@
     (assert-not (vector? {}))
     (assert-not (vector? {:a 1}))
     (assert-is (vector? (empty [])))
-    (assert-not (vector? (empty {}))))
+    (assert-not (vector? (empty {})))
+    (assert-not (pcall vector?))
+    (assert-not (pcall vector? 1 2)))
+
+  (testing "multifn?"
+    (assert-not (multifn? []))
+    (assert-is (multifn? (do (defmulti f identity) f)))
+    (assert-not (pcall multifn?))
+    (assert-not (pcall multifn? 1 2)))
+
+  (testing "set?"
+    (assert-is (set? (ordered-set)))
+    (assert-is (set? (hash-set)))
+    (assert-eq (set? (hash-set)) :cljlib/hash-set)
+    (assert-eq (set? (ordered-set)) :cljlib/ordered-set)
+    (assert-not (pcall set?))
+    (assert-not (pcall set? 1 2)))
 
   (testing "nil?"
     (assert-is (nil?))
     (assert-is (nil? nil))
-    (assert-not (nil? 1)))
+    (assert-not (nil? 1))
+    (assert-not (pcall nil? 1 2)))
 
   (testing "odd?"
     (assert-is (odd? 3))
     (assert-is (odd? -3))
     (assert-not (odd? 2))
-    (assert-not (odd? -2)))
+    (assert-not (odd? -2))
+    (assert-not (pcall odd?))
+    (assert-not (pcall odd? 1 2)))
 
   (testing "even?"
     (assert-is (even? 2))
     (assert-is (even? -2))
     (assert-not (even? 23))
-    (assert-not (even? -23)))
+    (assert-not (even? -23))
+    (assert-not (pcall even?))
+    (assert-not (pcall even? 1 2)))
 
   (testing "true?"
     (assert-is (true? true))
     (assert-not (true? false))
     (assert-not (true? 10))
-    (assert-not (true? :true)))
+    (assert-not (true? :true))
+    (assert-not (pcall true?))
+    (assert-not (pcall true? 1 2)))
 
   (testing "false?"
     (assert-is (false? false))
     (assert-not (false? true))
     (assert-not (false? 10))
-    (assert-not (false? :true)))
+    (assert-not (false? :true))
+    (assert-not (pcall false?))
+    (assert-not (pcall false? 1 2)))
 
   (testing "boolean?"
     (assert-is (boolean? true))
     (assert-is (boolean? false))
     (assert-not (boolean? :false))
-    (assert-not (boolean? (fn [] true)))))
+    (assert-not (boolean? (fn [] true)))
+    (assert-not (pcall boolean?))
+    (assert-not (pcall boolean? 1 2))))
 
 (deftest sequence-functions
   (testing "seq"
+    (assert-not (pcall seq))
+    (assert-not (pcall seq [] []))
     (assert-eq (seq []) nil)
     (assert-eq (seq {}) nil)
     (assert-eq (seq [1]) [1])
@@ -183,7 +231,20 @@
     (assert-eq (seq {:a 1}) [["a" 1]])
     (assert-eq (seq "abc") ["a" "b" "c"])
     (assert-eq (seq "абв") ["а" "б" "в"])
-    (assert-eq (seq {12345 123}) [[12345 123]]))
+    (assert-eq (seq {12345 123}) [[12345 123]])
+    (assert-eq (seq (ordered-set 1 2 3)) [1 2 3])
+    (assert-eq (length (seq (ordered-set 1 2 3))) 3)
+    (assert-eq (seq (hash-set 1)) [1])
+    (assert-eq (length (seq (hash-set 1 2 3))) 3))
+
+  (testing "kvseq"
+    (assert-not (pcall kvseq))
+    (assert-not (pcall kvseq [] []))
+    (assert-eq (kvseq {123 456}) [[123 456]])
+    (assert-eq (kvseq {:a 1}) [[:a 1]])
+    (assert-eq (kvseq [0 0 0 10]) [[1 0] [2 0] [3 0] [4 10]])
+    (assert-eq (kvseq (ordered-set :a :b :c)) [[1 :a] [2 :b] [3 :c]])
+    (assert-eq (kvseq (hash-set :a)) [[1 :a]]))
 
   (testing "mapv"
     (assert-not (pcall mapv))
@@ -271,42 +332,62 @@
     (assert-not (pcall concat [1] 2)))
 
   (testing "reverse"
+    (assert-not (pcall reverse))
+    (assert-not (pcall reverse [] []))
     (assert-eq (reverse []) nil)
     (assert-eq (reverse [1 2 3]) [3 2 1])
     (assert-eq (reverse {:a 1}) [[:a 1]]))
 
   (testing "conj"
     (assert-eq (conj) [])
-    (assert-eq (conj [1] nil) [1])
+    (assert-eq (conj [1]) [1])
     (assert-eq (conj [] 1 2 3) [1 2 3])
     (assert-eq (conj [0] 1 2 3) [0 1 2 3])
     (assert-eq (conj {:a 1} [:b 2]) {:a 1 :b 2})
     (assert-eq (conj {:a 1}) {:a 1})
     (assert-eq (conj [1] 2 3 4 5 6 7) [1 2 3 4 5 6 7]))
 
+  (testing "disj"
+    (assert-not (pcall disj))
+    (assert-not (pcall disj [1]))
+    (assert-not (pcall disj [1] 1))
+    (assert-eq (disj (ordered-set)) (ordered-set))
+    (assert-eq (disj (ordered-set 1 3 2 5) 3) (ordered-set 1 2 5))
+    (assert-eq (disj (ordered-set 1 3 2 5) 3 1 5) (ordered-set 2)))
+
   (testing "cons"
+    (assert-not (pcall cons))
+    (assert-not (pcall cons [] [] []))
     (assert-eq (cons nil [1]) [1])
     (assert-eq (cons 1 []) [1])
     (assert-eq (cons 1 [0]) [1 0]))
 
   (testing "first"
+    (assert-not (pcall first))
+    (assert-not (pcall first [] []))
     (assert-eq (first [1 2 3]) 1)
     (assert-eq (first {:a 1}) [:a 1])
     (assert-eq (first []) nil))
 
   (testing "last"
+    (assert-not (pcall last))
+    (assert-not (pcall last [] []))
     (assert-eq (last [1 2 3]) 3)
     (assert-eq (last []) nil)
     (assert-eq (last nil) nil)
     (assert-eq (last {:a 1}) [:a 1]))
 
   (testing "rest"
+    (assert-not (pcall rest))
+    (assert-not (pcall rest [] []))
     (assert-eq (rest [1 2 3]) [2 3])
     (assert-eq (rest {:a 1}) [])
     (assert-eq (rest []) [])
     (assert-eq (rest nil) []))
 
   (testing "butlast"
+    (assert-not (pcall butlast))
+    (assert-not (pcall butlast [] []))
     (assert-eq (butlast [1 2 3]) [1 2])
     (assert-eq (butlast {:a 1}) nil)
     (assert-eq (butlast []) nil)
@@ -320,6 +401,8 @@
     (assert-not (pcall reduce-kv)))
 
   (testing "reduced"
+    (assert-not (pcall reduced))
+    (assert-not (pcall reduced 1 2 3))
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1]) 1)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2]) 3)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) [1 2 3 4]) 10)
@@ -344,6 +427,8 @@
 
 (deftest function-manipulation
   (testing "constantly"
+    (assert-not (pcall constantly))
+    (assert-not (pcall constantly nil nil))
     (let [always-nil (constantly nil)]
       (assert-eq (always-nil) nil)
       (assert-eq (always-nil 1) nil)
@@ -354,6 +439,8 @@
       (assert-is (always-true false))))
 
   (testing "complement"
+    (assert-not (pcall complement))
+    (assert-not (pcall complement #nil #nil))
     (assert-is ((complement #(do false))))
     (assert-is ((complement nil?) 10))
     (assert-is ((complement every?) double? [1 2 3 4]))
@@ -377,6 +464,7 @@
 
   (testing "comp"
     (assert-eq ((comp) 10) 10)
+    (assert-eq ((comp #10)) 10)
     (fn square [x] (* x x))
     (assert-eq (comp square) square)
     (assert-eq ((comp square inc) 6) 49)
@@ -392,11 +480,15 @@
 
   (testing "identity"
     (fn f [] nil)
+    (local a {})
+    (assert-not (pcall identity))
+    (assert-not (pcall identity 1 2))
     (assert-eq (identity 1) 1)
     (assert-eq (identity {:a 1 :b 2}) {:a 1 :b 2})
     (assert-eq (identity [1 2 3]) [1 2 3])
     (assert-eq (identity "abc") "abc")
-    (assert-eq (identity f) f)))
+    (assert-eq (identity f) f)
+    (assert-eq (identity a) a)))
 
 (deftest sequence-predicates
   (testing "some"
@@ -479,8 +571,9 @@
     (defmethod f :a [_] :a)
     (defmethod f :b [_] :b)
     (defmethod f :c [x] (* x x))
-    (assert-eq (methods f) (. (getmetatable f) :multimethods))
+    (assert-eq (methods f) f)
     (assert-not (pcall methods))
+    (assert-not (pcall methods []))
     (assert-not (pcall methods f f)))
 
   (testing "get-method"
@@ -492,6 +585,8 @@
     (assert-eq ((get-method f :b) 20) :b)
     (assert-eq ((get-method f :c) 4) 16)
     (assert-not (pcall get-method))
+    (assert-not (pcall get-method []))
+    (assert-not (pcall get-method [] :a))
     (assert-not (pcall get-method f))
     (assert-not (pcall get-method f :a :b)))
 
@@ -504,6 +599,8 @@
     (defmethod f :default [_] :default)
     (assert-eq (get-method f :a) (get-method f :default))
     (assert-not (pcall remove-method))
+    (assert-not (pcall remove-method []))
+    (assert-not (pcall remove-method [] :a))
     (assert-not (pcall remove-method f))
     (assert-not (pcall remove-method f :a :b)))
 
@@ -515,6 +612,7 @@
     (remove-all-methods f)
     (assert-eq (methods f) {})
     (assert-not (pcall remove-all-methods))
+    (assert-not (pcall remove-all-methods []))
     (assert-not (pcall remove-all-methods f f))))
 
 (deftest math-functions
@@ -600,7 +698,7 @@
     (assert-eq (vector) [])
     (assert-eq (vector 1) [1])
     (assert-eq (vector 1 2 3) [1 2 3])
-    (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/table-type :seq})))
+    (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/type :seq})))
 
 (deftest hash-map
   (testing "hash-map"
@@ -608,7 +706,7 @@
     (assert-eq (hash-map) {})
     (assert-eq (hash-map :a 1) {:a 1})
     (assert-eq (hash-map :a 1 :b 2 :c 3) {:a 1 :b 2 :c 3})
-    (assert-eq (getmetatable (hash-map)) {:cljlib/table-type :table})))
+    (assert-eq (getmetatable (hash-map)) {:cljlib/type :table})))
 
 (deftest sets
   (testing "hash-set"
@@ -616,21 +714,86 @@
           h2 (hash-set [1] [2] [3] [:a])]
       (assert-is (eq h1 h2)))
 
-    (let [h1 (hash-set [1] [1] [2] [3] [:a])
-          h2 (hash-set [1] [1] [3] [:a])]
-      (assert-not (eq h1 h2)))
+    (let [h3 (hash-set [1] [1] [2] [3] [:a])
+          h4 (hash-set [1] [1] [3] [:a])]
+      (assert-not (eq h3 h4)))
 
     (assert-eq (. (hash-set [1]) [1]) [1])
-    (assert-eq (. (hash-set [1]) [2]) nil))
+    (assert-eq (. (hash-set [1]) [2]) nil)
+    (assert-eq ((hash-set [1]) [1]) [1])
+    (assert-eq ((hash-set [1]) [2]) nil))
 
   (testing "ordered-set"
-    (let [h1 (ordered-set [1] [1] [2] [3] [:a])
-          h2 (ordered-set [1] [2] [3] [:a])]
-      (assert-is (eq h1 h2)))
+    (let [o1 (ordered-set [1] [1] [2] [3] [:a])
+          o2 (ordered-set [1] [2] [3] [:a])]
+      (assert-eq o1 o2))
 
-    (let [h1 (ordered-set [1] [1] [2] [3] [:a])
-          h2 (ordered-set [2] [1] [1] [3] [:a])]
-      (assert-not (eq h1 h2)))
+    (let [o3 (ordered-set [1] [1] [2] [3] [:a])
+          o4 (ordered-set [2] [1] [1] [3] [:a])]
+      (assert-eq o3 o4))
 
     (assert-eq (. (ordered-set [1]) [1]) [1])
-    (assert-eq (. (ordered-set [1]) [2]) nil)))
+    (assert-eq ((ordered-set [1]) [1]) [1])
+    (assert-eq (. (ordered-set [1]) [2]) nil)
+    (assert-eq ((ordered-set [1]) [2]) nil))
+
+  (testing "set equality"
+    (let [o1 (ordered-set [1] [[-1 0] 1] [2] [3] [:a] :a 2)
+          h1 (hash-set    [1] [[-1 0] 1] [2] [3] [:a] :a 2)]
+      (assert-eq o1 h1))
+
+    (let [o2 (ordered-set [1] [[-1 0] 1] [2] [3] [:a] :a 2)
+          h2 (hash-set    [1] [[-1 1] 1] [2] [3] [:a] :a 2)]
+      (assert-ne o2 h2))
+
+    (let [o3 (ordered-set [1] [[-1 0] 1] [2] [3] [:a] :a 2)
+          h3 (hash-set    [1] [[-1 0] 1] [2] [3] [:a] :a 2)]
+      (assert-eq (disj o3 [2]) (disj h3 [2]))
+      (assert-ne (disj o3 :a) h3)
+      (assert-eq (disj h3 :a) o3))
+
+    (let [o4 (ordered-set [1] [[-1 5] 1] [3] [:a] :a 2)
+          h4 (hash-set    [1] [[-1 5] 1] [2] [3] [:a] :a 2)]
+      (assert-eq (conj o4 [2]) (conj (disj h4 [2]) [2]))))
+
+  (testing "empty sets"
+    (assert-eq (empty (ordered-set)) (ordered-set))
+    (assert-eq (empty (ordered-set 1 2 3)) (ordered-set))
+    (assert-eq (. (getmetatable (empty (ordered-set))) :cljlib/type ) :cljlib/ordered-set)
+
+    (assert-eq (empty (hash-set)) (hash-set))
+    (assert-eq (empty (hash-set 1 2 3)) (hash-set))
+    (assert-eq (. (getmetatable (empty (hash-set))) :cljlib/type ) :cljlib/hash-set))
+
+  (testing "into sets"
+    (assert-eq (into (ordered-set) [1 2 3]) (ordered-set 1 2 3))
+    (assert-eq (into (ordered-set) {:a 1 :b 2}) (ordered-set [:a 1] [:b 2]))
+    (assert-eq (into (ordered-set) "vaiv") (ordered-set "v" "a" "i" "v"))
+    (assert-eq (into (hash-set) [1 2 3]) (hash-set 1 2 3))
+    (assert-eq (into (hash-set) {:a 1 :b 2}) (hash-set [:a 1] [:b 2]))
+    (assert-eq (into (hash-set) "vaiv") (hash-set "v" "a" "i" "v"))))
+
+(deftest memoization
+  (testing "memoize"
+    (macros {:time #`(let [clock# os.clock
+                           start# (clock#)
+                           res# ,$
+                           end# (clock#)]
+                       (values res# (* 1000 (- end# start#))))})
+
+    (fn slow [x] (for [i 0 1000000] nil) x)
+
+    (assert-not (pcall memoize))
+    (assert-not (pcall memoize slow 2))
+
+    (local fast (memoize slow))
+
+    (let [(res1 time1) (time (fast 42))
+          (res2 time2) (time (fast 42))]
+      (assert-is (and res1 res2 42))
+      (assert-is (< time2 time1)))
+
+    (let [(res1 time1) (time (fast [10]))
+          (res2 time2) (time (fast [10]))]
+      (assert-is (and (eq res1 res2 [10])))
+      (assert-is (< time2 time1)))))
