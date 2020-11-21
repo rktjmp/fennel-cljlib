@@ -703,7 +703,7 @@ at runtime:
                res# (match to-type#
                       ;; Sequence or empty table
                       (seq1# ? (or (= seq1# :seq) (= seq1# :empty)))
-                      (do (each [_# v# (ipairs (seq# from#))]
+                      (do (each [_# v# (ipairs (seq# (or from# [])))]
                             (insert# to# v#))
                           to#)
                       ;; associative table
@@ -719,7 +719,7 @@ at runtime:
                                :else (error "expected table as second argument" 2))
                       ;; set both ordered set and hash set
                       (Set# ? (or (= Set# :cljlib/ordered-set) (= Set# :cljlib/hash-set)))
-                      (do (each [_# v# (ipairs (seq# from#))]
+                      (do (each [_# v# (ipairs (seq# (or from# [])))]
                             (tset to# v# v#))
                           to#)
                       ;; sometimes it is handy to pass nil too
