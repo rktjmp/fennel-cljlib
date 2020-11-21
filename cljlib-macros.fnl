@@ -1,7 +1,14 @@
 (local fennel (require :fennel))
-(local meta-enabled (pcall _SCOPE.specials.doc (list (sym :doc) (sym :doc)) _SCOPE _CHUNK))
 
-;; helper functions
+
+;;;;;;;;;; compile time check that `--metadata` feature was enabled ;;;;;;;;;;;;
+
+(local meta-enabled (pcall _SCOPE.specials.doc
+                           (list (sym :doc) (sym :doc))
+                           _SCOPE _CHUNK))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Helper functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn first [tbl]
   (. tbl 1))
@@ -50,7 +57,12 @@
   (each [k v (pairs meta)]
     (fennel.metadata:set value k v)))
 
-;; Runtime function builders
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; Runtime function builers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; This code should be shared with `cljlib.fnl` however it seems
+;; impossible to actually do that right now, mainly because there's no
+;; way of doing relative loading of macro modules.
 
 (fn eq-fn []
   ;; Returns recursive equality function.
@@ -129,7 +141,8 @@
            (= t# :string) :string
            :else))))
 
-;; Metadata
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn when-meta [...]
   "Wrapper that compiles away if metadata support was not enabled.  What
@@ -197,7 +210,8 @@ returns the value without additional metadata.
                (fennel#.metadata:set value# k# v#)))
          value#)))
 
-;; fn*
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fn* ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn gen-arglist-doc [args]
   ;; Construct vector of arguments represented as strings from AST.
@@ -506,7 +520,16 @@ from `ns.strings`, so the latter must be fully qualified
 
 (attach-meta fn* {:fnl/arglist ["name docstring? [arglist*] body*"
                                 "name docstring ([arglist*] body)*"]})
-;; let variants
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; let variants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Fennel indeed has more advanced macro `match` which can be used in
+;; place of any of the following macros, however it is sometimes more
+;; convenient to convey intentions by explicitly saying `when-some`
+;; implying that we're interested in non-nil value and only single branch
+;; of execution.  The `match` macro on the other hand does not convey
+;; such intention
 
 (fn if-let [...]
   (let [[bindings then else] (match (select :# ...)
@@ -576,7 +599,7 @@ yields `else-branch`."})
                         :fnl/docstring "If test is non-`nil`,
 evaluates `body` in implicit `do`."})
 
-;;;;;;;;;;;;;;;;;; into ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; into ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn table-type [tbl]
   (if (sequence? tbl) :seq
@@ -720,7 +743,8 @@ at runtime:
                                        t# t#))
                  (setmetatable res# m#)))))))
 
-;; empty
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; empty ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn empty [x]
   "Return empty table of the same kind as input table `x`, with
@@ -752,7 +776,8 @@ See [`into`](#into) for more info on how conversion is done."
            :cljlib/hash-set (: x# :cljlib/empty)
            t# (setmetatable {} {:cljlib/type t#})))))
 
-;; multimethods
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn seq->table [seq]
   (let [tbl {}]
@@ -890,7 +915,8 @@ And if we call it on some table, we'll get a valid Lua table:
 
 Which we can then reformat as we want and use in Lua if we want."})
 
-;; def and defonce
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; def and defonce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn def [...]
   (let [[attr-map name expr] (match (select :# ...)
@@ -943,7 +969,6 @@ tables and functions considered bad practice, due to how Lua
 works. More info can be found in [`with-meta`](#with-meta)
 description."})
 
-
 (fn defonce [...]
   (let [[attr-map name expr] (match (select :# ...)
                                2 [{} ...]
@@ -962,6 +987,7 @@ calls will not override existing bindings:
 (defonce a 20)
 (print a) ;; => prints 10
 ```"})
+
 
 {: fn*
  : if-let
