@@ -906,7 +906,7 @@ use."
             res))))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Hash map extras ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Hash table extras ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.assoc
   "Associate key `k` with value `v` in `tbl`."
@@ -954,6 +954,36 @@ found in the table."
        (set [res t] [v v])
        (set res not-found)))
    res))
+
+(fn* core.keys
+  "Returns a sequence of the table's keys, in the same order as [`seq`](#seq)."
+  [tbl]
+  (let [res []]
+    (each [k _ (pairs tbl)]
+      (insert res k))
+    res))
+
+(fn* core.vals
+  "Returns a sequence of the table's values, in the same order as [`seq`](#seq)."
+  [tbl]
+  (let [res []]
+    (each [_ v (pairs tbl)]
+      (insert res v))
+    res))
+
+(fn* core.find
+  "Returns the map entry for `key`, or `nil` if key not present."
+  [tbl key]
+  (when-some [v (. tbl key)]
+    [key v]))
+
+(fn* core.dissoc
+  "Remove `key` from table `tbl`."
+  ([tbl] tbl)
+  ([tbl key]
+   (doto tbl (tset key nil)))
+  ([tbl key & keys]
+   (apply dissoc (dissoc tbl key) keys)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

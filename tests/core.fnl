@@ -423,7 +423,25 @@
     (assert-not (pcall assoc))
     (assert-not (pcall assoc {}))
     (assert-eq (assoc {} :a 1) {:a 1})
-    (assert-eq (assoc {} :a 1 :b 2 :c 3 :d 4) {:a 1 :b 2 :c 3 :d 4})))
+    (assert-eq (assoc {} :a 1 :b 2 :c 3 :d 4) {:a 1 :b 2 :c 3 :d 4}))
+
+  (testing "dissoc"
+    (assert-not (pcall dissoc))
+    (assert-eq (dissoc {}) {})
+    (assert-eq (dissoc {:a 1 :b 2} :b) {:a 1})
+    (assert-eq (dissoc {:a 1 :b 2 :c 3} :a :c) {:b 2}))
+
+  (testing "find, keys and vals"
+    (assert-not (pcall keys))
+    (assert-not (pcall keys {} {} {}))
+    (assert-not (pcall vals))
+    (assert-not (pcall vals {} {} {}))
+    (assert-not (pcall find))
+    (assert-not (pcall find {} {} {}))
+    (assert-eq (keys {:a 1 :b 2 :c 3}) (hash-set :a :b :c))
+    (assert-eq (vals {:a 1 :b 2 :c 3}) (hash-set 1 2 3))
+    (assert-eq (find {:a 1 :b 2 :c 3} :c) [:c 3])
+    (assert-eq (find {:a 1 :b 2 :c 3} :d) nil)))
 
 (deftest function-manipulation
   (testing "constantly"
