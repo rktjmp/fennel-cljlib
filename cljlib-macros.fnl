@@ -518,8 +518,7 @@ from `ns.strings`, so the latter must be fully qualified
             `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc})))
         (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc}))))
 
-(attach-meta fn* {:fnl/arglist ["name docstring? [arglist*] body*"
-                                "name docstring ([arglist*] body)*"]})
+(attach-meta fn* {:fnl/arglist ["name docstring? ([arglist*] body)*"]})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; let variants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1006,6 +1005,11 @@ calls will not override existing bindings:
  :_VERSION #"0.3.0"
  :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
  :_COPYRIGHT #"Copyright (C) 2020 Andrey Orst"
+ :_DOC_ORDER #[:fn*
+               :def :defonce :defmulti :defmethod
+               :into :empty
+               :when-meta :with-meta :meta
+               :if-let :when-let :if-some :when-some]
  :_DESCRIPTION #"Macros for Cljlib that implement various facilities from Clojure."}
 
 ;; LocalWords:  arglist fn runtime arities arity multi destructuring

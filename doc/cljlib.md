@@ -50,6 +50,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`constantly`](#constantly)
 - [`dec`](#dec)
 - [`disj`](#disj)
+- [`dissoc`](#dissoc)
 - [`div`](#div)
 - [`double?`](#double?)
 - [`empty?`](#empty?)
@@ -58,6 +59,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`every?`](#every?)
 - [`false?`](#false?)
 - [`filter`](#filter)
+- [`find`](#find)
 - [`first`](#first)
 - [`ge`](#ge)
 - [`get`](#get)
@@ -69,6 +71,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`identity`](#identity)
 - [`inc`](#inc)
 - [`int?`](#int?)
+- [`keys`](#keys)
 - [`kvseq`](#kvseq)
 - [`last`](#last)
 - [`le`](#le)
@@ -102,6 +105,7 @@ functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
 - [`string?`](#string?)
 - [`sub`](#sub)
 - [`true?`](#true?)
+- [`vals`](#vals)
 - [`vector`](#vector)
 - [`vector?`](#vector?)
 - [`zero?`](#zero?)
@@ -300,6 +304,18 @@ Function signature:
 
 Remove key `k` from set `s`.
 
+## `dissoc`
+Function signature:
+
+```
+(dissoc 
+  ([tbl]) 
+  ([tbl key]) 
+  ([tbl key & keys]))
+```
+
+Remove `key` from table `tbl`.
+
 ## `div`
 Function signature:
 
@@ -380,6 +396,15 @@ Function signature:
 
 Returns a sequential table of the items in `col` for which `pred`
   returns logical true.
+
+## `find`
+Function signature:
+
+```
+(find [tbl key])
+```
+
+Returns the map entry for `key`, or `nil` if key not present.
 
 ## `first`
 Function signature:
@@ -510,6 +535,15 @@ Function signature:
 Test if `x` is a number without floating point data.
 
 Number is rounded with `math.floor` and compared with original number.
+
+## `keys`
+Function signature:
+
+```
+(keys [tbl])
+```
+
+Returns a sequence of the table's keys, in the same order as [`seq`](#seq).
 
 ## `kvseq`
 Function signature:
@@ -1105,6 +1139,15 @@ Function signature:
 
 Test if `x` is `true`
 
+## `vals`
+Function signature:
+
+```
+(vals [tbl])
+```
+
+Returns a sequence of the table's values, in the same order as [`seq`](#seq).
+
 ## `vector`
 Function signature:
 
@@ -1182,5 +1225,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.4
+<!-- Generated with Fenneldoc 0.0.5
      https://gitlab.com/andreyorst/fenneldoc -->

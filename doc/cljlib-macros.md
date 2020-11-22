@@ -3,206 +3,26 @@ Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
 
-- [`def`](#def)
-- [`defmethod`](#defmethod)
-- [`defmulti`](#defmulti)
-- [`defonce`](#defonce)
-- [`empty`](#empty)
 - [`fn*`](#fn*)
-- [`if-let`](#if-let)
-- [`if-some`](#if-some)
+- [`def`](#def)
+- [`defonce`](#defonce)
+- [`defmulti`](#defmulti)
+- [`defmethod`](#defmethod)
 - [`into`](#into)
-- [`meta`](#meta)
-- [`when-let`](#when-let)
+- [`empty`](#empty)
 - [`when-meta`](#when-meta)
-- [`when-some`](#when-some)
 - [`with-meta`](#with-meta)
-
-## `def`
-Function signature:
-
-```
-(def attr-map? name expr)
-```
-
-Wrapper around `local` which can
-declare variables inside namespace, and as local at the same time
-similarly to [`fn*`](#fn*):
-
-``` fennel
-(def ns {})
-(def a 10) ;; binds `a` to `10`
-
-(def ns.b 20) ;; binds `ns.b` and `b` to `20`
-```
-
-`a` is a `local`, and both `ns.b` and `b` refer to the same value.
-
-Additionally metadata can be attached to values, by providing
-attribute map or keyword as first parameter.  Only one keyword is
-supported, which is `:mutable`, which allows mutating variable with
-`set` later on:
-
-``` fennel
-;; Bad, will override existing documentation for 299792458 (if any)
-(def {:doc "speed of light in m/s"} c 299792458)
-(set c 0) ;; => error, can't mutate `c`
-
-(def :mutable address "Lua St.") ;; same as (def {:mutable true} address "Lua St.")
-(set address "Lisp St.") ;; can mutate `address`
-```
-
-However, attaching documentation metadata to anything other than
-tables and functions considered bad practice, due to how Lua
-works. More info can be found in [`with-meta`](#with-meta)
-description.
-
-## `defmethod`
-Function signature:
-
-```
-(defmethod multifn dispatch-val fnspec)
-```
-
-Attach new method to multi-function dispatch value. accepts the `multi-fn`
-as its first argument, the dispatch value as second, and function tail
-starting from argument list, followed by function body as in
-[`fn*`](#fn).
-
-### Examples
-Here are some examples how multimethods can be used.
-
-#### Factorial example
-Key idea here is that multimethods can call itself with different
-values, and will dispatch correctly.  Here, `fac` recursively calls
-itself with less and less number until it reaches `0` and dispatches
-to another multimethod:
-
-``` fennel
-(defmulti fac (fn [x] x))
-
-(defmethod fac 0 [_] 1)
-(defmethod fac :default [x] (* x (fac (- x 1))))
-
-(fac 4) ;; => 24
-```
-
-`:default` is a special method which gets called when no other methods
-were found for given dispatch value.
-
-#### Multi-arity dispatching
-Multi-arity function tails are also supported:
-
-``` fennel
-(defmulti foo (fn* ([x] [x]) ([x y] [x y])))
-
-(defmethod foo [10] [_] (print "I've knew I'll get 10"))
-(defmethod foo [10 20] [_ _] (print "I've knew I'll get both 10 and 20"))
-(defmethod foo :default ([x] (print (.. "Umm, got" x)))
-                        ([x y] (print (.. "Umm, got both " x " and " y))))
-```
-
-Calling `(foo 10)` will print `"I've knew I'll get 10"`, and calling
-`(foo 10 20)` will print `"I've knew I'll get both 10 and 20"`.
-However, calling `foo` with any other numbers will default either to
-`"Umm, got x"` message, when called with single value, and `"Umm, got
-both x and y"` when calling with two values.
-
-#### Dispatching on object's type
-We can dispatch based on types the same way we dispatch on values.
-For example, here's a naive conversion from Fennel's notation for
-tables to Lua's one:
-
-``` fennel
-(defmulti to-lua-str (fn [x] (type x)))
-
-(defmethod to-lua-str :number [x] (tostring x))
-(defmethod to-lua-str :table [x] (let [res []]
-                                   (each [k v (pairs x)]
-                                     (table.insert res (.. "[" (to-lua-str k) "] = " (to-lua-str v))))
-                                   (.. "{" (table.concat res ", ") "}")))
-(defmethod to-lua-str :string [x] (.. "\"" x "\""))
-(defmethod to-lua-str :default [x] (tostring x))
-```
-
-And if we call it on some table, we'll get a valid Lua table:
-
-``` fennel
-(print (to-lua-str {:a {:b 10}}))
-;; prints {["a"] = {["b"] = 10}}
-
-(print (to-lua-str [:a :b :c [:d {:e :f}]]))
-;; prints {[1] = "a", [2] = "b", [3] = "c", [4] = {[1] = "d", [2] = {["e"] = "f"}}}
-```
-
-Which we can then reformat as we want and use in Lua if we want.
-
-## `defmulti`
-Function signature:
-
-```
-(defmulti name docstring? dispatch-fn attr-map?)
-```
-
-Create multifunction with
-runtime dispatching based on results from `dispatch-fn`.  Returns an
-empty table with `__call` metamethod, that calls `dispatch-fn` on its
-arguments.  Amount of arguments passed, should be the same as accepted
-by `dispatch-fn`.  Looks for multimethod based on result from
-`dispatch-fn`.
-
-By default, multifunction has no multimethods, see
-[`multimethod`](#multimethod) on how to add one.
-
-## `defonce`
-Function signature:
-
-```
-(defonce attr-map? name expr)
-```
-
-Works the same as [`def`](#def), but ensures that later `defonce`
-calls will not override existing bindings:
-
-``` fennel
-(defonce a 10)
-(defonce a 20)
-(print a) ;; => prints 10
-```
-
-## `empty`
-Function signature:
-
-```
-(empty x)
-```
-
-Return empty table of the same kind as input table `x`, with
-additional metadata indicating its type.
-
-### Example
-Creating a generic `map` function, that will work on any table type,
-and return result of the same type:
-
-``` fennel
-(fn map [f tbl]
-  (let [res []]
-    (each [_ v (ipairs (into [] tbl))]
-      (table.insert res (f v)))
-    (into (empty tbl) res)))
-
-(map (fn [[k v]] [(string.upper k) v]) {:a 1 :b 2 :c 3})
-;; => {:A 1 :B 2 :C 3}
-(map #(* $ $) [1 2 3 4])
-;; [1 4 9 16]
-```
-See [`into`](#into) for more info on how conversion is done.
+- [`meta`](#meta)
+- [`if-let`](#if-let)
+- [`when-let`](#when-let)
+- [`if-some`](#if-some)
+- [`when-some`](#when-some)
 
 ## `fn*`
 Function signature:
 
 ```
-(fn* name docstring? [arglist*] body* name docstring ([arglist*] body)*)
+(fn* name docstring? ([arglist*] body)*)
 ```
 
 Create (anonymous) function of fixed arity.
@@ -329,27 +149,157 @@ from `ns.strings`, so the latter must be fully qualified
 ;; {}
 ```
 
-## `if-let`
+## `def`
 Function signature:
 
 ```
-(if-let [binding test] then-branch else-branch)
+(def attr-map? name expr)
 ```
 
-If test is logical true,
-evaluates `then-branch` with binding-form bound to the value of test,
-if not, yields `else-branch`.
+Wrapper around `local` which can
+declare variables inside namespace, and as local at the same time
+similarly to [`fn*`](#fn*):
 
-## `if-some`
+``` fennel
+(def ns {})
+(def a 10) ;; binds `a` to `10`
+
+(def ns.b 20) ;; binds `ns.b` and `b` to `20`
+```
+
+`a` is a `local`, and both `ns.b` and `b` refer to the same value.
+
+Additionally metadata can be attached to values, by providing
+attribute map or keyword as first parameter.  Only one keyword is
+supported, which is `:mutable`, which allows mutating variable with
+`set` later on:
+
+``` fennel
+;; Bad, will override existing documentation for 299792458 (if any)
+(def {:doc "speed of light in m/s"} c 299792458)
+(set c 0) ;; => error, can't mutate `c`
+
+(def :mutable address "Lua St.") ;; same as (def {:mutable true} address "Lua St.")
+(set address "Lisp St.") ;; can mutate `address`
+```
+
+However, attaching documentation metadata to anything other than
+tables and functions considered bad practice, due to how Lua
+works. More info can be found in [`with-meta`](#with-meta)
+description.
+
+## `defonce`
 Function signature:
 
 ```
-(if-some [binding test] then-branch else-branch)
+(defonce attr-map? name expr)
 ```
 
-If test is non-`nil`, evaluates
-`then-branch` with binding-form bound to the value of test, if not,
-yields `else-branch`.
+Works the same as [`def`](#def), but ensures that later `defonce`
+calls will not override existing bindings:
+
+``` fennel
+(defonce a 10)
+(defonce a 20)
+(print a) ;; => prints 10
+```
+
+## `defmulti`
+Function signature:
+
+```
+(defmulti name docstring? dispatch-fn attr-map?)
+```
+
+Create multifunction with
+runtime dispatching based on results from `dispatch-fn`.  Returns an
+empty table with `__call` metamethod, that calls `dispatch-fn` on its
+arguments.  Amount of arguments passed, should be the same as accepted
+by `dispatch-fn`.  Looks for multimethod based on result from
+`dispatch-fn`.
+
+By default, multifunction has no multimethods, see
+[`multimethod`](#multimethod) on how to add one.
+
+## `defmethod`
+Function signature:
+
+```
+(defmethod multifn dispatch-val fnspec)
+```
+
+Attach new method to multi-function dispatch value. accepts the `multi-fn`
+as its first argument, the dispatch value as second, and function tail
+starting from argument list, followed by function body as in
+[`fn*`](#fn).
+
+### Examples
+Here are some examples how multimethods can be used.
+
+#### Factorial example
+Key idea here is that multimethods can call itself with different
+values, and will dispatch correctly.  Here, `fac` recursively calls
+itself with less and less number until it reaches `0` and dispatches
+to another multimethod:
+
+``` fennel
+(defmulti fac (fn [x] x))
+
+(defmethod fac 0 [_] 1)
+(defmethod fac :default [x] (* x (fac (- x 1))))
+
+(fac 4) ;; => 24
+```
+
+`:default` is a special method which gets called when no other methods
+were found for given dispatch value.
+
+#### Multi-arity dispatching
+Multi-arity function tails are also supported:
+
+``` fennel
+(defmulti foo (fn* ([x] [x]) ([x y] [x y])))
+
+(defmethod foo [10] [_] (print "I've knew I'll get 10"))
+(defmethod foo [10 20] [_ _] (print "I've knew I'll get both 10 and 20"))
+(defmethod foo :default ([x] (print (.. "Umm, got" x)))
+                        ([x y] (print (.. "Umm, got both " x " and " y))))
+```
+
+Calling `(foo 10)` will print `"I've knew I'll get 10"`, and calling
+`(foo 10 20)` will print `"I've knew I'll get both 10 and 20"`.
+However, calling `foo` with any other numbers will default either to
+`"Umm, got x"` message, when called with single value, and `"Umm, got
+both x and y"` when calling with two values.
+
+#### Dispatching on object's type
+We can dispatch based on types the same way we dispatch on values.
+For example, here's a naive conversion from Fennel's notation for
+tables to Lua's one:
+
+``` fennel
+(defmulti to-lua-str (fn [x] (type x)))
+
+(defmethod to-lua-str :number [x] (tostring x))
+(defmethod to-lua-str :table [x] (let [res []]
+                                   (each [k v (pairs x)]
+                                     (table.insert res (.. "[" (to-lua-str k) "] = " (to-lua-str v))))
+                                   (.. "{" (table.concat res ", ") "}")))
+(defmethod to-lua-str :string [x] (.. "\"" x "\""))
+(defmethod to-lua-str :default [x] (tostring x))
+```
+
+And if we call it on some table, we'll get a valid Lua table:
+
+``` fennel
+(print (to-lua-str {:a {:b 10}}))
+;; prints {["a"] = {["b"] = 10}}
+
+(print (to-lua-str [:a :b :c [:d {:e :f}]]))
+;; prints {[1] = "a", [2] = "b", [3] = "c", [4] = {[1] = "d", [2] = {["e"] = "f"}}}
+```
+
+Which we can then reformat as we want and use in Lua if we want.
 
 ## `into`
 Function signature:
@@ -407,6 +357,66 @@ at runtime:
 (into (hash-map) [[:a 1 :b 2]]) ;; => {:a 1 :b 2}
 ```
 
+## `empty`
+Function signature:
+
+```
+(empty x)
+```
+
+Return empty table of the same kind as input table `x`, with
+additional metadata indicating its type.
+
+### Example
+Creating a generic `map` function, that will work on any table type,
+and return result of the same type:
+
+``` fennel
+(fn map [f tbl]
+  (let [res []]
+    (each [_ v (ipairs (into [] tbl))]
+      (table.insert res (f v)))
+    (into (empty tbl) res)))
+
+(map (fn [[k v]] [(string.upper k) v]) {:a 1 :b 2 :c 3})
+;; => {:A 1 :B 2 :C 3}
+(map #(* $ $) [1 2 3 4])
+;; [1 4 9 16]
+```
+See [`into`](#into) for more info on how conversion is done.
+
+## `when-meta`
+Function signature:
+
+```
+(when-meta [& body])
+```
+
+Wrapper that compiles away if metadata support was not enabled.  What
+this effectively means, is that everything that is wrapped with this
+macro will disappear from the resulting Lua code if metadata is not
+enabled when compiling with `fennel --compile` without `--metadata`
+switch.
+
+## `with-meta`
+Function signature:
+
+```
+(with-meta value meta)
+```
+
+Attach metadata to a value.  When metadata feature is not enabled,
+returns the value without additional metadata.
+
+``` fennel
+>> (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
+                         {:fnl/arglist ["x" "y" "z" "..."]
+                          :fnl/docstring "sum first three values"}))
+>> (doc foo)
+(foo x y z ...)
+  sum first three values
+```
+
 ## `meta`
 Function signature:
 
@@ -445,6 +455,17 @@ respecting `--metadata` switch.  So if you're using Fennel < 0.7.1
 this stuff will only work if you use `require-macros` instead of
 `import-macros`.
 
+## `if-let`
+Function signature:
+
+```
+(if-let [binding test] then-branch else-branch)
+```
+
+If test is logical true,
+evaluates `then-branch` with binding-form bound to the value of test,
+if not, yields `else-branch`.
+
 ## `when-let`
 Function signature:
 
@@ -455,18 +476,16 @@ Function signature:
 If test is logical true,
 evaluates `body` in implicit `do`.
 
-## `when-meta`
+## `if-some`
 Function signature:
 
 ```
-(when-meta [& body])
+(if-some [binding test] then-branch else-branch)
 ```
 
-Wrapper that compiles away if metadata support was not enabled.  What
-this effectively means, is that everything that is wrapped with this
-macro will disappear from the resulting Lua code if metadata is not
-enabled when compiling with `fennel --compile` without `--metadata`
-switch.
+If test is non-`nil`, evaluates
+`then-branch` with binding-form bound to the value of test, if not,
+yields `else-branch`.
 
 ## `when-some`
 Function signature:
@@ -478,25 +497,6 @@ Function signature:
 If test is non-`nil`,
 evaluates `body` in implicit `do`.
 
-## `with-meta`
-Function signature:
-
-```
-(with-meta value meta)
-```
-
-Attach metadata to a value.  When metadata feature is not enabled,
-returns the value without additional metadata.
-
-``` fennel
->> (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
-                         {:fnl/arglist ["x" "y" "z" "..."]
-                          :fnl/docstring "sum first three values"}))
->> (doc foo)
-(foo x y z ...)
-  sum first three values
-```
-
 
 ---
 
@@ -505,5 +505,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.4
+<!-- Generated with Fenneldoc 0.0.5
      https://gitlab.com/andreyorst/fenneldoc -->
