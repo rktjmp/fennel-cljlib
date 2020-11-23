@@ -1055,8 +1055,8 @@ that would apply to that value, or `nil` if none apply and no default."
       (insert items ((require :fennelview) v)))
     (.. "#{" (table.concat items " ") "}")))
 
-(fn set-newindex [Set]
-  "`__newindex` metamethod for set data structure."
+(fn ordered-set-newindex [Set]
+  "`__newindex` metamethod for ordered-set."
   (fn [t k v]
     (if (= nil v)
         (let [k (. Set k)]
@@ -1065,6 +1065,17 @@ that would apply to that value, or `nil` if none apply and no default."
                 (> index k) (tset Set key (- index 1)))))
         (if (not (. Set v))
             (tset Set v (+ 1 (length t)))))))
+
+(fn hash-set-newindex [Set]
+  "`__newindex` metamethod for hash-set."
+  (fn [t k v]
+    (if (= nil v)
+        (each [key _ (pairs Set)]
+          (when (eq key k)
+            (tset Set key nil)
+            (lua :break)))
+        (if (not (. Set v))
+            (tset Set v true)))))
 
 (fn set-length [Set]
   "`__len` metamethod for set data structure."
@@ -1106,14 +1117,6 @@ that would apply to that value, or `nil` if none apply and no default."
       (if k (do (set i (+ i 1))
                 (values i k))))
     (values iter Set nil)))
-
-(fn init-set [Set ...]
-  "Initializes `Set` with values specified with vararg."
-  (var i 1)
-  (each [_ val (ipairs [...])]
-    (when (not (. Set val))
-      (tset Set val i)
-      (set i (+ 1 i)))))
 
 ;; Sets are bootstrapped upon previous functions.
 
@@ -1208,7 +1211,11 @@ true
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})
         set-ipairs (ordered-set-ipairs Set)]
-    (apply init-set Set xs)
+    (var i 1)
+    (each [_ val (ipairs xs)]
+      (when (not (. Set val))
+        (tset Set val i)
+        (set i (+ 1 i))))
     (setmetatable {}
                   {:cljlib/type :cljlib/ordered-set
                    :cljlib/next #(next Set $2)
@@ -1218,7 +1225,7 @@ true
                    :__index #(match $2
                                :cljlib/empty #(ordered-set)
                                _ (if (. Set $2) $2))
-                   :__newindex (set-newindex Set)
+                   :__newindex (ordered-set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
                    :__name "ordered set"
@@ -1242,7 +1249,9 @@ syntax. Use `hash-set` function instead."
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})
         set-ipairs (hash-set-ipairs Set)]
-    (apply init-set Set xs)
+    (each [_ val (ipairs xs)]
+      (when (not (. Set val))
+        (tset Set val true)))
     (setmetatable {}
                   {:cljlib/type :cljlib/hash-set
                    :cljlib/next #(next Set $2)
@@ -1252,7 +1261,7 @@ syntax. Use `hash-set` function instead."
                    :__index #(match $2
                                :cljlib/empty #(hash-set)
                                _ (if (. Set $2) $2))
-                   :__newindex (set-newindex Set)
+                   :__newindex (hash-set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
                    :__name "hashed set"
