@@ -154,6 +154,9 @@ Applying `print` to different arguments:
 (fn* core.inc "Increase number by one" [x] (+ x 1))
 (fn* core.dec "Decrease number by one" [x] (- x 1))
 
+(local utility-doc-order
+       [:apply :add :sub :mul :div :le :lt :ge :gt :inc :dec])
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;; Tests and predicates ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -352,6 +355,11 @@ Number is rounded with `math.floor` and compared with original number."
   [x]
   (if (not (empty? x))
       x))
+
+(local predicate-doc-order
+       [:map? :vector? :multifn? :set? :nil? :zero? :pos?
+        :neg? :even? :odd? :string? :boolean? :true? :false?
+        :int? :pos-int? :neg-int? :double? :empty? :not-empty])
 
 
 ;;;;;;;;;;;;;;;;;;;;;; Sequence manipuletion functions ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -806,6 +814,10 @@ Basic `zipmap` implementation:
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
 
+(local sequence-doc--order [:vector :seq :kvseq :first :rest :last :butlast
+                            :conj :disj :cons :concat :reduce :reduced :reduce-kv
+                            :mapv :filter :every? :some :not-any? :range :reverse])
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Equality ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -905,6 +917,9 @@ use."
             (tset memo args res)
             res))))))
 
+(local function-manipulation-doc-order
+       [:identity :comp :complement :constantly :memoize])
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Hash table extras ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -985,6 +1000,9 @@ found in the table."
   ([tbl key & keys]
    (apply dissoc (dissoc tbl key) keys)))
 
+(local hash-table-doc-order
+       [:assoc :hash-map :get :get-in :keys :vals :find :dissoc])
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1023,6 +1041,9 @@ that would apply to that value, or `nil` if none apply and no default."
       (or (. multifn dispatch-val)
           (. multifn :default))
       (error (.. (tostring multifn) " is not a multifn") 2)))
+
+(local multimethods-doc-order
+       [:remove-method :remove-all-methods :methods :get-method])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Sets ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1229,16 +1250,27 @@ syntax. Use `hash-set` function instead."
                    :__call #(if (. Set $2) $2)
                    :__len (set-length Set)
                    :__index #(match $2
-                                 :cljlib/empty #(hash-set)
-                                 _ (if (. Set $2) $2))
+                               :cljlib/empty #(hash-set)
+                               _ (if (. Set $2) $2))
                    :__newindex (set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
                    :__name "hashed set"
                    :__fennelview viewset})))
 
+(local set-doc-order
+       [:ordered-set :hash-set])
 
-core
+
+(doto core
+  (tset :_DOC_ORDER (concat utility-doc-order
+                            [:eq]
+                            predicate-doc-order
+                            sequence-doc--order
+                            function-manipulation-doc-order
+                            hash-table-doc-order
+                            multimethods-doc-order
+                            set-doc-order)))
 
 ;; LocalWords:  cljlib Clojure's clj lua PUC mapv concat Clojure fn zs
 ;; LocalWords:  defmulti multi arity eq metadata prepending variadic

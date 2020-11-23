@@ -35,6 +35,31 @@ the tables uses tables as keys."
 
 (fn test.assert-eq
   [expr1 expr2 msg]
+  "Like `assert`, except compares results of two expressions on equality.
+Generates formatted message if `msg` is not set to other message.
+
+# Example
+Compare two expressions:
+
+``` fennel
+>> (assert-eq 1 (+1 1))
+runtime error: equality assertion failed
+  Left: 1
+  Right: 3
+```
+
+Deep compare values:
+
+``` fennel
+>> (assert-eq [1 {[2 3] [4 5 6]}] [1 {[2 3] [4 5]}])
+runtime error: equality assertion failed
+  Left: [1 {
+    [2 3] [4 5 6]
+  }]
+  Right: [1 {
+    [2 3] [4 5]
+  }]
+```"
   `(let [left# ,expr1
          right# ,expr2
          (res# view#) (pcall require :fennelview)
@@ -47,6 +72,7 @@ the tables uses tables as keys."
 
 (fn test.assert-ne
   [expr1 expr2 msg]
+  "Assert for unequality.  Same as [`assert-eq`](#assert-eq)."
   `(let [left# ,expr1
          right# ,expr2
          (res# view#) (pcall require :fennelview)
@@ -59,16 +85,24 @@ the tables uses tables as keys."
 
 (fn test.assert-is
   [expr msg]
+  "Assert for truth. Same as inbuilt `assert`, except generates more
+  verbose message if `msg` is not set.
+
+``` fennel
+>> (assert-is (= 1 2 3))
+runtime error: assertion failed for (= 1 2 3)
+```"
   `(assert ,expr (.. "assertion failed for "
                      (or ,msg ,(tostring expr)))))
 (fn test.assert-not
   [expr msg]
+  "Assert for not truth. Works the same as [`assert-is`](#assert-is)."
   `(assert (not ,expr) (.. "assertion failed for "
                            (or ,msg ,(tostring expr)))))
 
 (fn test.deftest
   [name ...]
-  "Simple way of grouping tests"
+  "Simple way of grouping tests."
   `(do ,...))
 
 (fn test.testing
@@ -77,4 +111,7 @@ the tables uses tables as keys."
   `(do (io.stderr:write (.. "testing: " ,description "\n"))
        ,...))
 
-test
+(doto test
+  (tset :_DOC_ORDER #[:deftest :testing
+                      :assert-eq :assert-ne
+                      :assert-is :assert-not]))
