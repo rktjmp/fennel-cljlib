@@ -1264,7 +1264,7 @@ syntax. Use `hash-set` function instead."
                    :__newindex (hash-set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
-                   :__name "hashed set"
+                   :__name "hash set"
                    :__fennelview viewset})))
 
 (local set-doc-order
