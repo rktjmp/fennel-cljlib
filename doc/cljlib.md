@@ -695,7 +695,7 @@ Function signature:
 (cons [x tbl])
 ```
 
-Insert `x` to `tbl` at the front. Modifies `tbl`.
+Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`.
 
 ## `concat`
 Function signature:

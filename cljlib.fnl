@@ -543,7 +543,7 @@ See [`hash-map`](#hash-map) for creating empty associative tables."
         (consj (doto tbl (insert 1 x)) (unpack xs)))))
 
 (fn* core.cons
-  "Insert `x` to `tbl` at the front. Modifies `tbl`."
+  "Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`."
   [x tbl]
   (if-some [x x]
     (doto (or (seq tbl) (empty []))
