@@ -376,7 +376,14 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 (assert (eq v [1 2 3 4]))
 ```"
   [& args]
-  (setmetatable args {:cljlib/type :seq}))
+  (setmetatable args {:cljlib/type :seq
+                      :__fennelview (fn [t]
+                                      (let [res []
+                                            view (require :fennelview)]
+                                        (each [_ v (ipairs t)]
+                                          (insert res (view v)))
+                                        (.. "[" (table.concat res " ") "]")))
+                      :__name "vector"}))
 
 (fn* core.seq
   "Create sequential table.
@@ -1098,12 +1105,9 @@ that would apply to that value, or `nil` if none apply and no default."
   "Returns stateless `ipairs` iterator for ordered sets."
   (fn []
     (fn set-next [t i]
-      (fn loop [t k]
-        (local (k v) (next t k))
-        (if v (if (= v (+ 1 i))
-                  (values v k)
-                  (loop t k))))
-      (loop t))
+      (each [k v (pairs t)]
+        (if (= v (+ 1 i))
+            (lua "return v, k"))))
     (values set-next Set 0)))
 
 (fn hash-set-ipairs [Set]

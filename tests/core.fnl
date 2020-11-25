@@ -716,7 +716,9 @@
     (assert-eq (vector) [])
     (assert-eq (vector 1) [1])
     (assert-eq (vector 1 2 3) [1 2 3])
-    (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/type :seq})))
+    (let [m (getmetatable (vector 1 2 3))]
+      (assert-eq (. m :__name) "vector")
+      (assert-eq (. m :cljlib/type) :seq))))
 
 (deftest hash-map
   (testing "hash-map"
