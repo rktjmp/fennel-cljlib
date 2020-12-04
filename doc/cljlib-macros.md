@@ -505,5 +505,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.5
+<!-- Generated with Fenneldoc 0.0.6
      https://gitlab.com/andreyorst/fenneldoc -->

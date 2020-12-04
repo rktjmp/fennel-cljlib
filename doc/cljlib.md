@@ -1130,18 +1130,18 @@ be in the set:
 
 ``` fennel
 >> (ordered-set)
-###{}
+#{}
 >> (ordered-set :a :c :b)
-###{"a" "c" "b"}
+#{"a" "c" "b"}
 ```
 
 Duplicate items are not added:
 
 ``` fennel
 >> (ordered-set)
-###{}
+#{}
 >> (ordered-set :a :c :a :a :a :a :c :b)
-###{"a" "c" "b"}
+#{"a" "c" "b"}
 ```
 
 #### Check if set contains desired value:
@@ -1165,7 +1165,7 @@ To add element to the set use [`conj`](#conj) or `tset`
 >> (local oset (ordered-set :a :b :c))
 >> (conj oset :d :e)
 >> oset
-###{"a" "b" "c" "d" "e"}
+#{"a" "b" "c" "d" "e"}
 ```
 
 ##### Remove items from the set:
@@ -1175,10 +1175,10 @@ To add element to the set use [`disj`](#disj) or `tset`
 >> (local oset (ordered-set :a :b :c))
 >> (disj oset :b)
 >> oset
-###{"a" "c"}
+#{"a" "c"}
 >> (tset oset :a nil)
 >> oset
-###{"c"}
+#{"c"}
 ```
 
 #### Equality semantics
@@ -1225,5 +1225,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.5
+<!-- Generated with Fenneldoc 0.0.6
      https://gitlab.com/andreyorst/fenneldoc -->
