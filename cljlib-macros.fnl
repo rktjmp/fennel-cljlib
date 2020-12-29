@@ -988,7 +988,144 @@ calls will not override existing bindings:
 ```"})
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; try ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fn catch? [[fun]]
+  (= (tostring fun) :catch))
+
+(fn finally? [[fun]]
+  (= (tostring fun) :finally))
+
+(fn add-finally [finally form]
+  "Stores `form` as body of `finally`, which will be injected into
+`match` branches at places appropriate for it to run.
+
+Checks if there already was `finally` clause met, which can be only
+one."
+  (assert-compile (= (length finally) 0)
+                  "Only one finally clause can exist in try expression"
+                  [])
+  (table.insert finally (list 'do (unpack form 2))))
+
+(fn add-catch [finally catches form]
+  "Appends `catch` body to a sequence of catch bodies that will later
+be used in `make-catch-clauses` to produce AST.
+
+Checks if there already was `finally` clause met."
+  (assert-compile (= (length finally) 0)
+                  "finally clause must be last in try expression"
+                  [])
+  (table.insert catches (list 'do (unpack form 2))))
+
+(fn make-catch-clauses [catches finally]
+  "Generates AST of error branches for `match` macro."
+  (let [clauses []]
+    (var add-catchall? true)
+    (each [_ [_ binding-or-val & body] (ipairs catches)]
+      (when (sym? binding-or-val)
+        (set add-catchall? false))
+      (table.insert clauses `(false ,binding-or-val))
+      (table.insert clauses `(let [res# (do ,(unpack body))]
+                               ,(. finally 1)
+                               res#)))
+    (when add-catchall?
+      ;; implicit catchall which retrows error further is added only
+      ;; if there were no catch clause that used symbol as catch value
+      (table.insert clauses `(false _#))
+      (table.insert clauses `(do ,(. finally 1) (error _#))))
+    (unpack clauses)))
+
+(fn add-to-try [finally catches try form]
+  "Append form to the try body.  There must be no `catch` of `finally`
+clauses when we push body epression."
+  (assert-compile (and (= (length finally) 0)
+                       (= (length catches) 0))
+                  "Only catch or finally clause can follow catch in try expression"
+                  [])
+  (table.insert try form))
+
+(fn try [...]
+  (let [try '(fn [])
+        catches []
+        finally []]
+    (each [_ form (ipairs [...])]
+      (if (list? form)
+          (if (catch? form) (add-catch finally catches form)
+              (finally? form) (add-finally finally form)
+              (add-to-try finally catches try form))
+          (add-to-try finally catches try form)))
+    `(match (pcall ,try)
+       (true res#) (do ,(. finally 1) res#)
+       ,(make-catch-clauses catches finally))))
+
+(attach-meta try {:fnl/arglist [:body* :catch-clause* :finally-clause?]
+                  :fnl/docstring "General purpose try/catch/finally macro.
+
+(try expression* catch-clause* finally-clause?)
+
+Wraps its body in `pcall` and checks the return value with `match`
+macro.
+
+Catch-clause is written either as (catch symbol body*), thus acting as
+catch-all, or (catch value body*) for catching specific errors.  It is
+possible to have several `catch` clauses.  If no `catch` clauses
+specified, an implicit catch-all clause is created.
+
+Finally-clause is optional, and written as (finally body*).  If
+present, it must be the last clause in the `try` form, and the only
+`finally` clause.  Note that `finally` clause is for side effects
+only, and runs either after succesful run of `try` body, or after any
+`catch` clause body, before returning the result.  If no `catch`
+clause is provided `finally` runs in implicit catch-all clause, and
+trows error to upper scope using `error` function.
+
+To throw error from `try` to catch it with `catch` clause use `error`
+or `assert` functions.
+
+# Examples
+Catch all errors, ignore those and return fallback value:
+
+``` fennel
+(fn add [x y]
+  (try
+    (+ x y)
+    (catch _ 0)))
+
+(add nil 1) ;; => 0
+```
+
+Catch error and do cleanup:
+
+``` fennel
+>> (let [tbl []]
+     (try
+       (table.insert tbl \"a\")
+       (table.insert tbl \"b\" \"c\")
+       (catch _
+         (each [k _ (pairs tbl)]
+           (tset tbl k nil))))
+     tbl)
+{}
+```
+
+Always run some side effect action:
+
+``` fennel
+>> (local res (try 10 (finally (print \"side-effect!\")))
+side-effect!
+nil
+>> res
+10
+>> (local res (try (error 10) (catch 10 nil) (finally (print \"side-effect!\")))
+side-effect!
+nil
+>> res
+nil
+```
+"})
+
 {: fn*
+ : try
  : if-let
  : when-let
  : if-some
@@ -1006,6 +1143,7 @@ calls will not override existing bindings:
  :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
  :_COPYRIGHT #"Copyright (C) 2020 Andrey Orst"
  :_DOC_ORDER #[:fn*
+               :try
                :def :defonce :defmulti :defmethod
                :into :empty
                :when-meta :with-meta :meta

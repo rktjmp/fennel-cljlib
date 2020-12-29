@@ -4,6 +4,7 @@ Macros for Cljlib that implement various facilities from Clojure.
 **Table of contents**
 
 - [`fn*`](#fn*)
+- [`try`](#try)
 - [`def`](#def)
 - [`defonce`](#defonce)
 - [`defmulti`](#defmulti)
@@ -148,6 +149,77 @@ from `ns.strings`, so the latter must be fully qualified
 (join "a" "b" "c")
 ;; {}
 ```
+
+## `try`
+Function signature:
+
+```
+(try body* catch-clause* finally-clause?)
+```
+
+General purpose try/catch/finally macro.
+
+(try expression* catch-clause* finally-clause?)
+
+Wraps its body in `pcall` and checks the return value with `match`
+macro.
+
+Catch-clause is written either as (catch symbol body*), thus acting as
+catch-all, or (catch value body*) for catching specific errors.  It is
+possible to have several `catch` clauses.  If no `catch` clauses
+specified, an implicit catch-all clause is created.
+
+Finally-clause is optional, and written as (finally body*).  If
+present, it must be the last clause in the `try` form, and the only
+`finally` clause.  Note that `finally` clause is for side effects
+only, and runs either after succesful run of `try` body, or after any
+`catch` clause body, before returning the result.  If no `catch`
+clause is provided `finally` runs in implicit catch-all clause, and
+trows error to upper scope using `error` function.
+
+To throw error from `try` to catch it with `catch` clause use `error`
+or `assert` functions.
+
+### Examples
+Catch all errors, ignore those and return fallback value:
+
+``` fennel
+(fn add [x y]
+  (try
+    (+ x y)
+    (catch _ 0)))
+
+(add nil 1) ;; => 0
+```
+
+Catch error and do cleanup:
+
+``` fennel
+>> (let [tbl []]
+     (try
+       (table.insert tbl "a")
+       (table.insert tbl "b" "c")
+       (catch _
+         (each [k _ (pairs tbl)]
+           (tset tbl k nil))))
+     tbl)
+{}
+```
+
+Always run some side effect action:
+
+``` fennel
+>> (local res (try 10 (finally (print "side-effect!")))
+side-effect!
+nil
+>> rese0
+>> (local res (try (error 10) (catch 10 nil) (finally (print "side-effect!")))
+side-effect!
+nil
+>> res
+nil
+```
+
 
 ## `def`
 Function signature:
