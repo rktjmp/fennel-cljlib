@@ -1005,7 +1005,7 @@ one."
   (assert-compile (= (length finally) 0)
                   "Only one finally clause can exist in try expression"
                   [])
-  (table.insert finally (list 'do (unpack form 2))))
+  (table.insert finally (list 'do ((or table.unpack _G.unpack) form 2))))
 
 (fn add-catch [finally catches form]
   "Appends `catch` body to a sequence of catch bodies that will later
@@ -1015,7 +1015,7 @@ Checks if there already was `finally` clause met."
   (assert-compile (= (length finally) 0)
                   "finally clause must be last in try expression"
                   [])
-  (table.insert catches (list 'do (unpack form 2))))
+  (table.insert catches (list 'do ((or table.unpack _G.unpack) form 2))))
 
 (fn make-catch-clauses [catches finally]
   "Generates AST of error branches for `match` macro."
@@ -1025,7 +1025,7 @@ Checks if there already was `finally` clause met."
       (when (sym? binding-or-val)
         (set add-catchall? false))
       (table.insert clauses `(false ,binding-or-val))
-      (table.insert clauses `(let [res# (do ,(unpack body))]
+      (table.insert clauses `(let [res# (do ,((or table.unpack _G.unpack) body))]
                                ,(. finally 1)
                                res#)))
     (when add-catchall?
@@ -1033,7 +1033,7 @@ Checks if there already was `finally` clause met."
       ;; if there were no catch clause that used symbol as catch value
       (table.insert clauses `(false _#))
       (table.insert clauses `(do ,(. finally 1) (error _#))))
-    (unpack clauses)))
+    ((or table.unpack _G.unpack) clauses)))
 
 (fn add-to-try [finally catches try form]
   "Append form to the try body.  There must be no `catch` of `finally`
@@ -1123,6 +1123,7 @@ nil
 nil
 ```
 "})
+
 
 {: fn*
  : try

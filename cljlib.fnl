@@ -38,7 +38,7 @@ to the function.  See [Clojure's doc section on multi-arity
 functions](https://clojure.org/guides/learn/functions#_multi_arity_functions)."})
 
 (local insert table.insert)
-(local unpack (or table.unpack _G.unpack))
+(local _unpack (or table.unpack _G.unpack))
 (require-macros :cljlib-macros)
 
 
@@ -60,17 +60,17 @@ Applying `print` to different arguments:
 (apply print 1 2 3 4 5 6 [7 8 9])
 ;; => 1 2 3 4 5 6 7 8 9
 ```"
-  ([f args] (f (unpack args)))
-  ([f a args] (f a (unpack args)))
-  ([f a b args] (f a b (unpack args)))
-  ([f a b c args] (f a b c (unpack args)))
+  ([f args] (f (_unpack args)))
+  ([f a args] (f a (_unpack args)))
+  ([f a b args] (f a b (_unpack args)))
+  ([f a b c args] (f a b c (_unpack args)))
   ([f a b c d & args]
    (let [flat-args (empty [])]
      (for [i 1 (- (length args) 1)]
        (insert flat-args (. args i)))
      (each [_ a (ipairs (. args (length args)))]
        (insert flat-args a))
-     (f a b c d (unpack flat-args)))))
+     (f a b c d (_unpack flat-args)))))
 
 (fn* core.add
   "Sum arbitrary amount of numbers."
@@ -114,7 +114,7 @@ Applying `print` to different arguments:
   ([x y & more]
    (if (<= x y)
        (if (next more 1)
-           (le y (. more 1) (unpack more 2))
+           (le y (. more 1) (_unpack more 2))
            (<= y (. more 1)))
        false)))
 
@@ -125,7 +125,7 @@ Applying `print` to different arguments:
   ([x y & more]
    (if (< x y)
        (if (next more 1)
-           (lt y (. more 1) (unpack more 2))
+           (lt y (. more 1) (_unpack more 2))
            (< y (. more 1)))
        false)))
 
@@ -136,7 +136,7 @@ Applying `print` to different arguments:
   ([x y & more]
    (if (>= x y)
        (if (next more 1)
-           (ge y (. more 1) (unpack more 2))
+           (ge y (. more 1) (_unpack more 2))
            (>= y (. more 1)))
        false)))
 
@@ -147,7 +147,7 @@ Applying `print` to different arguments:
   ([x y & more]
    (if (> x y)
        (if (next more 1)
-           (gt y (. more 1) (unpack more 2))
+           (gt y (. more 1) (_unpack more 2))
            (> y (. more 1)))
        false)))
 
@@ -450,7 +450,7 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
   `seq` on its argument."
   [col]
   (if-some [col (seq col)]
-    (vector (unpack col 2))
+    (vector (_unpack col 2))
     (empty [])))
 
 (fn* core.last
@@ -540,7 +540,7 @@ See [`hash-map`](#hash-map) for creating empty associative tables."
   "Like conj but joins at the front. Modifies `tbl`."
   (let [[tbl x & xs] [...]]
     (if (nil? x) tbl
-        (consj (doto tbl (insert 1 x)) (unpack xs)))))
+        (consj (doto tbl (insert 1 x)) (_unpack xs)))))
 
 (fn* core.cons
   "Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`."
@@ -760,7 +760,7 @@ Basic `zipmap` implementation:
                 (if (->> cols
                          (mapv #(not= (next $) nil))
                          (reduce #(and $1 $2)))
-                    (cons (mapv #(. (or (seq $) (empty [])) 1) cols) (step (mapv #(do [(unpack $ 2)]) cols)))
+                    (cons (mapv #(. (or (seq $) (empty [])) 1) cols) (step (mapv #(do [(_unpack $ 2)]) cols)))
                     (empty [])))
          res (empty [])]
      (each [_ v (ipairs (step (consj cols col3 col2 col1)))]
@@ -774,7 +774,7 @@ Basic `zipmap` implementation:
   [pred col]
   (if-let [col (seq col)]
     (let [f (. col 1)
-          r [(unpack col 2)]]
+          r [(_unpack col 2)]]
       (if (pred f)
           (cons f (filter pred r))
           (filter pred r)))
@@ -784,14 +784,14 @@ Basic `zipmap` implementation:
   "Test if every item in `tbl` satisfies the `pred`."
   [pred tbl]
   (if (empty? tbl) true
-      (pred (. tbl 1)) (every? pred [(unpack tbl 2)])
+      (pred (. tbl 1)) (every? pred [(_unpack tbl 2)])
       false))
 
 (fn* core.some
   "Test if any item in `tbl` satisfies the `pred`."
   [pred tbl]
   (when-let [tbl (seq tbl)]
-    (or (pred (. tbl 1)) (some pred [(unpack tbl 2)]))))
+    (or (pred (. tbl 1)) (some pred [(_unpack tbl 2)]))))
 
 (fn* core.not-any?
   "Test if no item in `tbl` satisfy the `pred`."
@@ -877,7 +877,7 @@ functions also reuse this indexing method, such as sets."
      ([x] (f (g x)))
      ([x y] (f (g x y)))
      ([x y z] (f (g x y z)))
-     ([x y z & args] (f (g x y z (unpack args))))))
+     ([x y z & args] (f (g x y z (_unpack args))))))
   ([f g & fs]
    (reduce comp (consj fs g f))))
 
