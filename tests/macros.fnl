@@ -203,3 +203,35 @@
     (let [a [:a 1 :b 2]]
       (assert-eq (empty a) [])
       (assert-eq (getmetatable (empty a)) {:cljlib/type :seq}))))
+
+(deftest try
+  (testing "try"
+    (assert-eq (try (+ 1 2 3)) 6)
+    (assert-eq (try (+ 1 2 3) (catch _ 0) (finally 10)) 6)
+    (assert-eq (try (+ 1 2 3 nil) (catch _ 0) (finally 10)) 0)
+    (assert-eq (try (+ 1 2 3 nil) (catch _) (finally 10)) nil))
+  (testing "catch-all"
+    (assert-eq (try
+                  (error 10)
+                  (catch _ :pass))
+                :pass)
+    (assert-eq (try
+                  (error 10)
+                  (catch err err))
+               10))
+  (testing "finally"
+    (let [tbl []]
+      (try
+        (try
+          (finally (table.insert tbl 1)))
+        (try
+          (error 10)
+          (catch _ (table.insert tbl 2))
+          (finally (table.insert tbl 3)))
+        (try
+          (error 20)
+          (finally (table.insert tbl 4)))
+        (catch _ (table.insert tbl 5))
+        (catch 20 (table.insert tbl 6))
+        (finally (table.insert tbl 7)))
+      (assert-eq tbl [1 2 3 4 5 7]))))

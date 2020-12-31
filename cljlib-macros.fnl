@@ -1055,23 +1055,20 @@ clauses when we push body epression."
               (add-to-try finally catches try form))
           (add-to-try finally catches try form)))
     `(match (pcall ,try)
-       (true res#) (do ,(. finally 1) res#)
+       (true _#) (do ,(. finally 1) _#)
        ,(make-catch-clauses catches finally))))
 
 (attach-meta try {:fnl/arglist [:body* :catch-clause* :finally-clause?]
                   :fnl/docstring "General purpose try/catch/finally macro.
-
-(try expression* catch-clause* finally-clause?)
-
 Wraps its body in `pcall` and checks the return value with `match`
 macro.
 
-Catch-clause is written either as (catch symbol body*), thus acting as
+Catch clause is written either as (catch symbol body*), thus acting as
 catch-all, or (catch value body*) for catching specific errors.  It is
 possible to have several `catch` clauses.  If no `catch` clauses
 specified, an implicit catch-all clause is created.
 
-Finally-clause is optional, and written as (finally body*).  If
+Finally clause is optional, and written as (finally body*).  If
 present, it must be the last clause in the `try` form, and the only
 `finally` clause.  Note that `finally` clause is for side effects
 only, and runs either after succesful run of `try` body, or after any
