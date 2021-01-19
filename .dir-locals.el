@@ -1,7 +1,28 @@
 ;;; Directory Local Variables
 ;;; For more information see (info "(emacs) Directory Variables")
 
-((fennel-mode . ((eval . (put 'when-meta 'fennel-indent-function 'defun))
+((fennel-mode . ((eval . (font-lock-add-keywords
+                          'fennel-mode
+                          `((,(rx word-start
+                                  (group (or "fn*"
+                                             "try"
+                                             "if-let"
+                                             "if-some"
+                                             "when-let"
+                                             "when-some"
+                                             "empty"
+                                             "into"
+                                             "when-meta"
+                                             "with-meta"
+                                             "meta"
+                                             "meta"
+                                             "def"
+                                             "defmulti"
+                                             "defmethod"
+                                             "defonce"))
+                                  word-end)
+                             1 'font-lock-keyword-face))))
+                 (eval . (put 'when-meta 'fennel-indent-function 'defun))
                  (eval . (put 'defmethod 'fennel-indent-function 'defun))
                  (eval . (put 'defmulti 'bfennel-indent-function 'defun))
                  (eval . (put 'deftest 'fennel-indent-function 'defun))
