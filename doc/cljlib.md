@@ -1,10 +1,10 @@
-# Cljlib.fnl (0.3.0)
+# Cljlib (0.4.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
 This library contains a set of functions providing functions that
 behave similarly to Clojure's equivalents.  Library itself has nothing
-Fennel specific so it should work, e.g:
+Fennel specific so it should work on Lua, e.g:
 
 ``` lua
 Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
@@ -34,6 +34,17 @@ or three-or-more arguments.  Each `([...])` represents different body
 of a function which is chosen by checking amount of arguments passed
 to the function.  See [Clojure's doc section on multi-arity
 functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
+
+## Compatibility
+This library is mainly developed with Lua 5.4, and tested against
+Lua 5.2, 5.3, 5.4, and LuaJIT 2.1.0-beta3.  Note, that in lua 5.2 and
+LuaJIT equality semantics are a bit different from Lua 5.3 and Lua 5.4.
+Main difference is that when comparing two tables, they must have
+exactly the same `__eq` metamethods, so comparing hash sets with hash
+sets will work, but comparing sets with other tables works only in
+Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
+inbuilt UTF-8 library, therefore `seq` function will not work for
+non-ASCII strings.
 
 **Table of contents**
 
@@ -142,12 +153,7 @@ Applying `print` to different arguments:
 Function signature:
 
 ```
-(add 
-  ([a]) 
-  ([a b]) 
-  ([a b c]) 
-  ([a b c d]) 
-  ([a b c d & rest]))
+(add ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Sum arbitrary amount of numbers.
@@ -156,12 +162,7 @@ Sum arbitrary amount of numbers.
 Function signature:
 
 ```
-(sub 
-  ([a]) 
-  ([a b]) 
-  ([a b c]) 
-  ([a b c d]) 
-  ([a b c d & rest]))
+(sub ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Subtract arbitrary amount of numbers.
@@ -170,12 +171,7 @@ Subtract arbitrary amount of numbers.
 Function signature:
 
 ```
-(mul 
-  ([a]) 
-  ([a b]) 
-  ([a b c]) 
-  ([a b c d]) 
-  ([a b c d & rest]))
+(mul ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Multiply arbitrary amount of numbers.
@@ -184,12 +180,7 @@ Multiply arbitrary amount of numbers.
 Function signature:
 
 ```
-(div 
-  ([a]) 
-  ([a b]) 
-  ([a b c]) 
-  ([a b c d]) 
-  ([a b c d & rest]))
+(div ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Divide arbitrary amount of numbers.
@@ -198,10 +189,7 @@ Divide arbitrary amount of numbers.
 Function signature:
 
 ```
-(le 
-  ([x]) 
-  ([x y]) 
-  ([x y & more]))
+(le ([x]) ([x y]) ([x y & more]))
 ```
 
 Returns true if nums are in monotonically non-decreasing order
@@ -210,10 +198,7 @@ Returns true if nums are in monotonically non-decreasing order
 Function signature:
 
 ```
-(lt 
-  ([x]) 
-  ([x y]) 
-  ([x y & more]))
+(lt ([x]) ([x y]) ([x y & more]))
 ```
 
 Returns true if nums are in monotonically decreasing order
@@ -222,10 +207,7 @@ Returns true if nums are in monotonically decreasing order
 Function signature:
 
 ```
-(ge 
-  ([x]) 
-  ([x y]) 
-  ([x y & more]))
+(ge ([x]) ([x y]) ([x y & more]))
 ```
 
 Returns true if nums are in monotonically non-increasing order
@@ -234,10 +216,7 @@ Returns true if nums are in monotonically non-increasing order
 Function signature:
 
 ```
-(gt 
-  ([x]) 
-  ([x y]) 
-  ([x y & more]))
+(gt ([x]) ([x y]) ([x y & more]))
 ```
 
 Returns true if nums are in monotonically increasing order
@@ -246,7 +225,7 @@ Returns true if nums are in monotonically increasing order
 Function signature:
 
 ```
-(inc [x])
+(inc ([x]))
 ```
 
 Increase number by one
@@ -255,7 +234,7 @@ Increase number by one
 Function signature:
 
 ```
-(dec [x])
+(dec ([x]))
 ```
 
 Decrease number by one
@@ -264,10 +243,7 @@ Decrease number by one
 Function signature:
 
 ```
-(eq 
-  ([x]) 
-  ([x y]) 
-  ([x y & xs]))
+(eq ([x]) ([x y]) ([x y & xs]))
 ```
 
 Deep compare values.
@@ -276,7 +252,7 @@ Deep compare values.
 Function signature:
 
 ```
-(map? [tbl])
+(map? ([tbl]))
 ```
 
 Check whether `tbl` is an associative table.
@@ -318,7 +294,7 @@ Empty tables created with [`hash-map`](#hash-map) will pass the test:
 Function signature:
 
 ```
-(vector? [tbl])
+(vector? ([tbl]))
 ```
 
 Check whether `tbl` is an sequential table.
@@ -360,7 +336,7 @@ Empty tables created with [`vector`](#vector) will pass the test:
 Function signature:
 
 ```
-(multifn? [mf])
+(multifn? ([mf]))
 ```
 
 Test if `mf` is an instance of `multifn`.
@@ -372,7 +348,7 @@ from `cljlib-macros.fnl`.
 Function signature:
 
 ```
-(set? [s])
+(set? ([s]))
 ```
 
 
@@ -381,8 +357,7 @@ Function signature:
 Function signature:
 
 ```
-(nil? 
-  ([x]))
+(nil? ([]) ([x]))
 ```
 
 Test if value is nil.
@@ -391,7 +366,7 @@ Test if value is nil.
 Function signature:
 
 ```
-(zero? [x])
+(zero? ([x]))
 ```
 
 Test if value is equal to zero.
@@ -400,7 +375,7 @@ Test if value is equal to zero.
 Function signature:
 
 ```
-(pos? [x])
+(pos? ([x]))
 ```
 
 Test if `x` is greater than zero.
@@ -409,7 +384,7 @@ Test if `x` is greater than zero.
 Function signature:
 
 ```
-(neg? [x])
+(neg? ([x]))
 ```
 
 Test if `x` is less than zero.
@@ -418,7 +393,7 @@ Test if `x` is less than zero.
 Function signature:
 
 ```
-(even? [x])
+(even? ([x]))
 ```
 
 Test if value is even.
@@ -427,7 +402,7 @@ Test if value is even.
 Function signature:
 
 ```
-(odd? [x])
+(odd? ([x]))
 ```
 
 Test if value is odd.
@@ -436,7 +411,7 @@ Test if value is odd.
 Function signature:
 
 ```
-(string? [x])
+(string? ([x]))
 ```
 
 Test if `x` is a string.
@@ -445,7 +420,7 @@ Test if `x` is a string.
 Function signature:
 
 ```
-(boolean? [x])
+(boolean? ([x]))
 ```
 
 Test if `x` is a Boolean
@@ -454,7 +429,7 @@ Test if `x` is a Boolean
 Function signature:
 
 ```
-(true? [x])
+(true? ([x]))
 ```
 
 Test if `x` is `true`
@@ -463,7 +438,7 @@ Test if `x` is `true`
 Function signature:
 
 ```
-(false? [x])
+(false? ([x]))
 ```
 
 Test if `x` is `false`
@@ -472,7 +447,7 @@ Test if `x` is `false`
 Function signature:
 
 ```
-(int? [x])
+(int? ([x]))
 ```
 
 Test if `x` is a number without floating point data.
@@ -483,7 +458,7 @@ Number is rounded with `math.floor` and compared with original number.
 Function signature:
 
 ```
-(pos-int? [x])
+(pos-int? ([x]))
 ```
 
 Test if `x` is a positive integer.
@@ -492,16 +467,16 @@ Test if `x` is a positive integer.
 Function signature:
 
 ```
-(neg-int? [x])
+(neg-int? ([x]))
 ```
 
-Test if `x` is a negetive integer.
+Test if `x` is a negative integer.
 
 ## `double?`
 Function signature:
 
 ```
-(double? [x])
+(double? ([x]))
 ```
 
 Test if `x` is a number with floating point data.
@@ -510,7 +485,7 @@ Test if `x` is a number with floating point data.
 Function signature:
 
 ```
-(empty? [x])
+(empty? ([x]))
 ```
 
 Check if collection is empty.
@@ -519,7 +494,7 @@ Check if collection is empty.
 Function signature:
 
 ```
-(not-empty [x])
+(not-empty ([x]))
 ```
 
 If `x` is empty, returns `nil`, otherwise `x`.
@@ -528,7 +503,7 @@ If `x` is empty, returns `nil`, otherwise `x`.
 Function signature:
 
 ```
-(vector [& args])
+(vector ([& args]))
 ```
 
 Constructs sequential table out of it's arguments.
@@ -546,7 +521,7 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 Function signature:
 
 ```
-(seq [col])
+(seq ([col]))
 ```
 
 Create sequential table.
@@ -554,7 +529,8 @@ Create sequential table.
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `col` is an
 associative table, returns sequential table of vectors with key and
-value.  If `col` is sequential table, returns its shallow copy.
+value.  If `col` is sequential table, returns its shallow copy.  If
+`col` is string, return sequential table of its codepoints.
 
 ### Examples
 Sequential tables remain as is:
@@ -585,16 +561,16 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
 Function signature:
 
 ```
-(kvseq [tbl])
+(kvseq ([col]))
 ```
 
-Transforms any table kind to key-value sequence.
+Transforms any table to key-value sequence.
 
 ## `first`
 Function signature:
 
 ```
-(first [col])
+(first ([col]))
 ```
 
 Return first element of a table. Calls `seq` on its argument.
@@ -603,7 +579,7 @@ Return first element of a table. Calls `seq` on its argument.
 Function signature:
 
 ```
-(rest [col])
+(rest ([col]))
 ```
 
 Returns table of all elements of a table but the first one. Calls
@@ -613,7 +589,7 @@ Returns table of all elements of a table but the first one. Calls
 Function signature:
 
 ```
-(last [col])
+(last ([col]))
 ```
 
 Returns the last element of a table. Calls `seq` on its argument.
@@ -622,7 +598,7 @@ Returns the last element of a table. Calls `seq` on its argument.
 Function signature:
 
 ```
-(butlast [col])
+(butlast ([col]))
 ```
 
 Returns everything but the last element of a table as a new
@@ -632,10 +608,7 @@ Returns everything but the last element of a table as a new
 Function signature:
 
 ```
-(conj 
-  ([tbl]) 
-  ([tbl x]) 
-  ([tbl x & xs]))
+(conj ([]) ([tbl]) ([tbl x]) ([tbl x & xs]))
 ```
 
 Insert `x` as a last element of a table `tbl`.
@@ -680,10 +653,7 @@ See [`hash-map`](#hash-map) for creating empty associative tables.
 Function signature:
 
 ```
-(disj 
-  ([s]) 
-  ([s k]) 
-  ([s k & ks]))
+(disj ([s]) ([s k]) ([s k & ks]))
 ```
 
 Remove key `k` from set `s`.
@@ -692,7 +662,7 @@ Remove key `k` from set `s`.
 Function signature:
 
 ```
-(cons [x tbl])
+(cons ([x tbl]))
 ```
 
 Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`.
@@ -701,10 +671,7 @@ Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`.
 Function signature:
 
 ```
-(concat 
-  ([x]) 
-  ([x y]) 
-  ([x y & xs]))
+(concat ([]) ([x]) ([x y]) ([x y & xs]))
 ```
 
 Concatenate tables.
@@ -713,9 +680,7 @@ Concatenate tables.
 Function signature:
 
 ```
-(reduce 
-  ([f col]) 
-  ([f val col]))
+(reduce ([f col]) ([f val col]))
 ```
 
 Reduce collection `col` using function `f` and optional initial value `val`.
@@ -747,7 +712,7 @@ Reduce sequence of numbers with [`add`](#add)
 Function signature:
 
 ```
-(reduced [x])
+(reduced ([x]))
 ```
 
 Wraps `x` in such a way so [`reduce`](#reduce) will terminate early
@@ -779,7 +744,7 @@ valid number, but we've terminated right before we've reached it.
 Function signature:
 
 ```
-(reduce-kv [f val tbl])
+(reduce-kv ([f val tbl]))
 ```
 
 Reduces an associative table using function `f` and initial value `val`.
@@ -869,7 +834,7 @@ Basic `zipmap` implementation:
 Function signature:
 
 ```
-(filter [pred col])
+(filter ([pred col]))
 ```
 
 Returns a sequential table of the items in `col` for which `pred`
@@ -879,7 +844,7 @@ Returns a sequential table of the items in `col` for which `pred`
 Function signature:
 
 ```
-(every? [pred tbl])
+(every? ([pred tbl]))
 ```
 
 Test if every item in `tbl` satisfies the `pred`.
@@ -888,7 +853,7 @@ Test if every item in `tbl` satisfies the `pred`.
 Function signature:
 
 ```
-(some [pred tbl])
+(some ([pred tbl]))
 ```
 
 Test if any item in `tbl` satisfies the `pred`.
@@ -897,7 +862,7 @@ Test if any item in `tbl` satisfies the `pred`.
 Function signature:
 
 ```
-(not-any? [pred tbl])
+(not-any? ([pred tbl]))
 ```
 
 Test if no item in `tbl` satisfy the `pred`.
@@ -906,10 +871,7 @@ Test if no item in `tbl` satisfy the `pred`.
 Function signature:
 
 ```
-(range 
-  ([upper]) 
-  ([lower upper]) 
-  ([lower upper step]))
+(range ([upper]) ([lower upper]) ([lower upper step]))
 ```
 
 return range of of numbers from `lower` to `upper` with optional `step`.
@@ -918,7 +880,7 @@ return range of of numbers from `lower` to `upper` with optional `step`.
 Function signature:
 
 ```
-(reverse [tbl])
+(reverse ([tbl]))
 ```
 
 Returns table with same items as in `tbl` but in reverse order.
@@ -927,7 +889,7 @@ Returns table with same items as in `tbl` but in reverse order.
 Function signature:
 
 ```
-(identity [x])
+(identity ([x]))
 ```
 
 Returns its argument.
@@ -936,10 +898,7 @@ Returns its argument.
 Function signature:
 
 ```
-(comp 
-  ([f]) 
-  ([f g]) 
-  ([f g & fs]))
+(comp ([]) ([f]) ([f g]) ([f g & fs]))
 ```
 
 Compose functions.
@@ -948,7 +907,7 @@ Compose functions.
 Function signature:
 
 ```
-(complement [f])
+(complement ([f]))
 ```
 
 Takes a function `f` and returns the function that takes the same
@@ -959,7 +918,7 @@ oppisite truth value.
 Function signature:
 
 ```
-(constantly [x])
+(constantly ([x]))
 ```
 
 Returns a function that takes any number of arguments and returns `x`.
@@ -968,7 +927,7 @@ Returns a function that takes any number of arguments and returns `x`.
 Function signature:
 
 ```
-(memoize [f])
+(memoize ([f]))
 ```
 
 Returns a memoized version of a referentially transparent function.
@@ -981,9 +940,7 @@ use.
 Function signature:
 
 ```
-(assoc 
-  ([tbl k v]) 
-  ([tbl k v & kvs]))
+(assoc ([tbl k v]) ([tbl k v & kvs]))
 ```
 
 Associate key `k` with value `v` in `tbl`.
@@ -992,8 +949,7 @@ Associate key `k` with value `v` in `tbl`.
 Function signature:
 
 ```
-(hash-map 
-  ([& kvs]))
+(hash-map ([]) ([& kvs]))
 ```
 
 Create associative table from keys and values
@@ -1002,9 +958,7 @@ Create associative table from keys and values
 Function signature:
 
 ```
-(get 
-  ([tbl key]) 
-  ([tbl key not-found]))
+(get ([tbl key]) ([tbl key not-found]))
 ```
 
 Get value from the table by accessing it with a `key`.
@@ -1015,9 +969,7 @@ found in the table.
 Function signature:
 
 ```
-(get-in 
-  ([tbl keys]) 
-  ([tbl keys not-found]))
+(get-in ([tbl keys]) ([tbl keys not-found]))
 ```
 
 Get value from nested set of tables by providing key sequence.
@@ -1028,7 +980,7 @@ found in the table.
 Function signature:
 
 ```
-(keys [tbl])
+(keys ([tbl]))
 ```
 
 Returns a sequence of the table's keys, in the same order as [`seq`](#seq).
@@ -1037,7 +989,7 @@ Returns a sequence of the table's keys, in the same order as [`seq`](#seq).
 Function signature:
 
 ```
-(vals [tbl])
+(vals ([tbl]))
 ```
 
 Returns a sequence of the table's values, in the same order as [`seq`](#seq).
@@ -1046,7 +998,7 @@ Returns a sequence of the table's values, in the same order as [`seq`](#seq).
 Function signature:
 
 ```
-(find [tbl key])
+(find ([tbl key]))
 ```
 
 Returns the map entry for `key`, or `nil` if key not present.
@@ -1055,10 +1007,7 @@ Returns the map entry for `key`, or `nil` if key not present.
 Function signature:
 
 ```
-(dissoc 
-  ([tbl]) 
-  ([tbl key]) 
-  ([tbl key & keys]))
+(dissoc ([tbl]) ([tbl key]) ([tbl key & keys]))
 ```
 
 Remove `key` from table `tbl`.
@@ -1067,7 +1016,7 @@ Remove `key` from table `tbl`.
 Function signature:
 
 ```
-(remove-method [multifn dispatch-val])
+(remove-method ([multifn dispatch-val]))
 ```
 
 Remove method from `multifn` for given `dispatch-val`.
@@ -1076,7 +1025,7 @@ Remove method from `multifn` for given `dispatch-val`.
 Function signature:
 
 ```
-(remove-all-methods [multifn])
+(remove-all-methods ([multifn]))
 ```
 
 Removes all of the methods of multimethod
@@ -1085,7 +1034,7 @@ Removes all of the methods of multimethod
 Function signature:
 
 ```
-(methods [multifn])
+(methods ([multifn]))
 ```
 
 Given a multimethod, returns a map of dispatch values -> dispatch fns
@@ -1094,7 +1043,7 @@ Given a multimethod, returns a map of dispatch values -> dispatch fns
 Function signature:
 
 ```
-(get-method [multifn dispatch-val])
+(get-method ([multifn dispatch-val]))
 ```
 
 Given a multimethod and a dispatch value, returns the dispatch `fn`
@@ -1104,7 +1053,7 @@ that would apply to that value, or `nil` if none apply and no default.
 Function signature:
 
 ```
-(ordered-set [& xs])
+(ordered-set ([& xs]))
 ```
 
 Create ordered set.
@@ -1118,7 +1067,7 @@ at the end of the set. Ordered set supports removal of items via
 `tset` and [`disj`](#disj). To add element to the ordered set use
 `tset` or [`conj`](#conj). Both operations modify the set.
 
-**Note**: Hash set prints as `#{a b c}`, but this construct is not
+**Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
 syntax. Use `hash-set` function instead.
 
@@ -1130,18 +1079,16 @@ be in the set:
 
 ``` fennel
 >> (ordered-set)
-#{}
+@set{}
 >> (ordered-set :a :c :b)
-#{"a" "c" "b"}
+@set{:a :c :b}
 ```
 
 Duplicate items are not added:
 
 ``` fennel
->> (ordered-set)
-#{}
 >> (ordered-set :a :c :a :a :a :a :c :b)
-#{"a" "c" "b"}
+@set{:a :c :b}
 ```
 
 #### Check if set contains desired value:
@@ -1151,9 +1098,9 @@ desired key will either return the key, or `nil`:
 ``` fennel
 >> (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
 >> (oset [:a :b :c])
-[:a :b :c]
+["a" "b" "c"]
 >> (. oset :e)
-:e
+"e"
 >> (oset [:a :b :f])
 nil
 ```
@@ -1164,8 +1111,7 @@ To add element to the set use [`conj`](#conj) or `tset`
 ``` fennel
 >> (local oset (ordered-set :a :b :c))
 >> (conj oset :d :e)
->> oset
-#{"a" "b" "c" "d" "e"}
+@set{:a :b :c :d :e}
 ```
 
 ##### Remove items from the set:
@@ -1174,11 +1120,10 @@ To add element to the set use [`disj`](#disj) or `tset`
 ``` fennel
 >> (local oset (ordered-set :a :b :c))
 >> (disj oset :b)
->> oset
-#{"a" "c"}
+@set{:a :c}
 >> (tset oset :a nil)
 >> oset
-#{"c"}
+@set{:c}
 ```
 
 #### Equality semantics
@@ -1199,7 +1144,7 @@ true
 Function signature:
 
 ```
-(hash-set [& xs])
+(hash-set ([& xs]))
 ```
 
 Create hash set.
@@ -1213,7 +1158,7 @@ using [`conj`](#con) or `tset` functions, and items can be removed
 with [`disj`](#disj) or `tset` functions. Rest semantics are the same
 as for [`ordered-set`](#ordered-set)
 
-**Note**: Hash set prints as `#{a b c}`, but this construct is not
+**Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
 syntax. Use `hash-set` function instead.
 
@@ -1225,5 +1170,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.6
+<!-- Generated with Fenneldoc 0.0.7
      https://gitlab.com/andreyorst/fenneldoc -->

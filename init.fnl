@@ -1,12 +1,13 @@
-(local core {:_VERSION "0.3.0"
+(local core {:_VERSION "0.4.0"
              :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
              :_COPYRIGHT "Copyright (C) 2020 Andrey Orst"
+             :_MODULE_NAME "cljlib"
              :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
 This library contains a set of functions providing functions that
 behave similarly to Clojure's equivalents.  Library itself has nothing
-Fennel specific so it should work, e.g:
+Fennel specific so it should work on Lua, e.g:
 
 ``` lua
 Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
@@ -35,11 +36,24 @@ zs]))`, it is a multi-arity function, which accepts either one, two,
 or three-or-more arguments.  Each `([...])` represents different body
 of a function which is chosen by checking amount of arguments passed
 to the function.  See [Clojure's doc section on multi-arity
-functions](https://clojure.org/guides/learn/functions#_multi_arity_functions)."})
+functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
+
+## Compatibility
+This library is mainly developed with Lua 5.4, and tested against
+Lua 5.2, 5.3, 5.4, and LuaJIT 2.1.0-beta3.  Note, that in lua 5.2 and
+LuaJIT equality semantics are a bit different from Lua 5.3 and Lua 5.4.
+Main difference is that when comparing two tables, they must have
+exactly the same `__eq` metamethods, so comparing hash sets with hash
+sets will work, but comparing sets with other tables works only in
+Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
+inbuilt UTF-8 library, therefore `seq` function will not work for
+non-ASCII strings."})
 
 (local insert table.insert)
 (local _unpack (or table.unpack _G.unpack))
-(require-macros :cljlib-macros)
+(import-macros {: fn* : into : empty : with-meta
+                : when-let : if-let : when-some : if-some}
+               (.. (if (and ... (not= ... :init)) (.. ... ".") "") :macros))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -331,7 +345,7 @@ Number is rounded with `math.floor` and compared with original number."
        (pos? x)))
 
 (fn* core.neg-int?
-  "Test if `x` is a negetive integer."
+  "Test if `x` is a negative integer."
   [x]
   (and (int? x)
        (neg? x)))
@@ -362,7 +376,7 @@ Number is rounded with `math.floor` and compared with original number."
         :int? :pos-int? :neg-int? :double? :empty? :not-empty])
 
 
-;;;;;;;;;;;;;;;;;;;;;; Sequence manipuletion functions ;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;; Sequence manipulation functions ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.vector
   "Constructs sequential table out of it's arguments.
@@ -384,7 +398,8 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 Transforms original table to sequential table of key value pairs
 stored as sequential tables in linear time.  If `col` is an
 associative table, returns sequential table of vectors with key and
-value.  If `col` is sequential table, returns its shallow copy.
+value.  If `col` is sequential table, returns its shallow copy.  If
+`col` is string, return sequential table of its codepoints.
 
 # Examples
 Sequential tables remain as is:
@@ -424,20 +439,41 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
                      (insert res v)
                      (insert assoc-res [k v]))
                    (if assoc? assoc-res res))))
-      :string (let [char utf8.char]
-                (each [_ b (utf8.codes col)]
-                  (insert res (char b)))
-                res)
+      :string (if _G.utf8
+                  (let [char _G.utf8.char]
+                    (each [_ b (_G.utf8.codes col)]
+                      (insert res (char b)))
+                    res)
+                  (do (io.stderr:write
+                       "WARNING: utf8 module unavailable, seq function will not work for non-unicode strings\n")
+                      (each [b (col:gmatch ".")]
+                        (insert res b))
+                      res))
       :nil nil
-      _ (error (.. "expected table, string or nil") 2))))
+      _ (error (.. "expected table, string or nil, got " (type col)) 2))))
 
 (fn* core.kvseq
-  "Transforms any table kind to key-value sequence."
-  [tbl]
+  "Transforms any table to key-value sequence."
+  [col]
   (let [res (empty [])]
-    (each [k v (pairs tbl)]
-      (insert res [k v]))
-    res))
+    (match (type col)
+      :table (let [m (or (getmetatable col) {})]
+               (when-some [_ ((or m.cljlib/next next) col)]
+                 (each [k v (pairs col)]
+                   (insert res [k v]))
+                 res))
+      :string (if _G.utf8
+                  (let [char _G.utf8.char]
+                    (each [i b (_G.utf8.codes col)]
+                      (insert res [i (char b)]))
+                    res)
+                  (do (io.stderr:write
+                       "WARNING: utf8 module unavailable, seq function will not work for non-unicode strings\n")
+                      (for [i 1 (length col)]
+                        (insert res [i (col:sub i i)]))
+                      res))
+      :nil nil
+      _ (error (.. "expected table, string or nil, got " (type col)) 2))))
 
 (fn* core.first
   "Return first element of a table. Calls `seq` on its argument."
@@ -518,8 +554,6 @@ See [`hash-map`](#hash-map) for creating empty associative tables."
      (let [tbl (or tbl (empty []))]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
-           (set? tbl)
-           (tset tbl x x)
            (insert tbl x))))
    tbl)
   ([tbl x & xs]
@@ -895,7 +929,7 @@ oppisite truth value."
 (fn* core.constantly
   "Returns a function that takes any number of arguments and returns `x`."
   [x]
-  (fn [...] x))
+  (fn [] x))
 
 (fn* core.memoize
   "Returns a memoized version of a referentially transparent function.
@@ -1048,12 +1082,21 @@ that would apply to that value, or `nil` if none apply and no default."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Sets ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fn viewset [Set]
-  "Workaround for a bug https://todo.sr.ht/~technomancy/fennel/26"
-  (let [items []]
-    (each [_ v (pairs Set)]
-      (insert items ((require :fennelview) v)))
-    (.. "#{" (table.concat items " ") "}")))
+(fn viewset [Set view inspector indent]
+  (if (. inspector.seen Set)
+      (.. "@set" (. inspector.seen Set) "{...}")
+      (let [prefix (.. "@set"
+                       (if (inspector.visible-cycle? Set)
+                           (. inspector.seen Set) "")
+                       "{")
+            set-indent (length prefix)
+            indent-str (string.rep " " set-indent)
+            lines (icollect [i v (pairs Set)]
+                    (.. (if (= i 1) "" indent-str)
+                        (view v inspector (+ indent set-indent) true)))]
+        (tset lines 1 (.. prefix (or (. lines 1) "")))
+        (tset lines (length lines) (.. (. lines (length lines)) "}"))
+        (values lines (> (length lines) inspector.sequential-length)))))
 
 (fn ordered-set-newindex [Set]
   "`__newindex` metamethod for ordered-set."
@@ -1118,6 +1161,12 @@ that would apply to that value, or `nil` if none apply and no default."
                 (values i k))))
     (values iter Set nil)))
 
+(fn into-set [Set tbl]
+  "Transform `tbl` into `Set`"
+  (each [_ v (pairs (or (seq tbl) []))]
+    (conj Set v))
+  Set)
+
 ;; Sets are bootstrapped upon previous functions.
 
 (fn* core.ordered-set
@@ -1132,7 +1181,7 @@ at the end of the set. Ordered set supports removal of items via
 `tset` and [`disj`](#disj). To add element to the ordered set use
 `tset` or [`conj`](#conj). Both operations modify the set.
 
-**Note**: Hash set prints as `#{a b c}`, but this construct is not
+**Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
 syntax. Use `hash-set` function instead.
 
@@ -1144,18 +1193,16 @@ be in the set:
 
 ``` fennel
 >> (ordered-set)
-#{}
+@set{}
 >> (ordered-set :a :c :b)
-#{\"a\" \"c\" \"b\"}
+@set{:a :c :b}
 ```
 
 Duplicate items are not added:
 
 ``` fennel
->> (ordered-set)
-#{}
 >> (ordered-set :a :c :a :a :a :a :c :b)
-#{\"a\" \"c\" \"b\"}
+@set{:a :c :b}
 ```
 
 ## Check if set contains desired value:
@@ -1165,9 +1212,9 @@ desired key will either return the key, or `nil`:
 ``` fennel
 >> (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
 >> (oset [:a :b :c])
-[:a :b :c]
+[\"a\" \"b\" \"c\"]
 >> (. oset :e)
-:e
+\"e\"
 >> (oset [:a :b :f])
 nil
 ```
@@ -1178,8 +1225,7 @@ To add element to the set use [`conj`](#conj) or `tset`
 ``` fennel
 >> (local oset (ordered-set :a :b :c))
 >> (conj oset :d :e)
->> oset
-#{\"a\" \"b\" \"c\" \"d\" \"e\"}
+@set{:a :b :c :d :e}
 ```
 
 ### Remove items from the set:
@@ -1188,11 +1234,10 @@ To add element to the set use [`disj`](#disj) or `tset`
 ``` fennel
 >> (local oset (ordered-set :a :b :c))
 >> (disj oset :b)
->> oset
-#{\"a\" \"c\"}
+@set{:a :c}
 >> (tset oset :a nil)
 >> oset
-#{\"c\"}
+@set{:c}
 ```
 
 ## Equality semantics
@@ -1219,12 +1264,12 @@ true
     (setmetatable {}
                   {:cljlib/type :cljlib/ordered-set
                    :cljlib/next #(next Set $2)
+                   :cljlib/into into-set
+                   :cljlib/empty #(ordered-set)
                    :__eq set-eq
-                   :__call #(if (. Set $2) $2)
+                   :__call #(if (. Set $2) $2 nil)
                    :__len (set-length Set)
-                   :__index #(match $2
-                               :cljlib/empty #(ordered-set)
-                               _ (if (. Set $2) $2))
+                   :__index #(if (. Set $2) $2 nil)
                    :__newindex (ordered-set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
@@ -1243,7 +1288,7 @@ using [`conj`](#con) or `tset` functions, and items can be removed
 with [`disj`](#disj) or `tset` functions. Rest semantics are the same
 as for [`ordered-set`](#ordered-set)
 
-**Note**: Hash set prints as `#{a b c}`, but this construct is not
+**Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
 syntax. Use `hash-set` function instead."
   [& xs]
@@ -1255,12 +1300,12 @@ syntax. Use `hash-set` function instead."
     (setmetatable {}
                   {:cljlib/type :cljlib/hash-set
                    :cljlib/next #(next Set $2)
+                   :cljlib/into into-set
+                   :cljlib/empty #(hash-set)
                    :__eq set-eq
-                   :__call #(if (. Set $2) $2)
+                   :__call #(if (. Set $2) $2 nil)
                    :__len (set-length Set)
-                   :__index #(match $2
-                               :cljlib/empty #(hash-set)
-                               _ (if (. Set $2) $2))
+                   :__index #(if (. Set $2) $2 nil)
                    :__newindex (hash-set-newindex Set)
                    :__ipairs set-ipairs
                    :__pairs set-ipairs
@@ -1281,6 +1326,8 @@ syntax. Use `hash-set` function instead."
                             multimethods-doc-order
                             set-doc-order)))
 
+
 ;; LocalWords:  cljlib Clojure's clj lua PUC mapv concat Clojure fn zs
 ;; LocalWords:  defmulti multi arity eq metadata prepending variadic
-;; LocalWords:  args tbl LocalWords memoized referentially
+;; LocalWords:  args tbl LocalWords memoized referentially Andrey
+;; LocalWords:  Orst codepoints

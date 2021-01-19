@@ -1,13 +1,3 @@
-(local fennel (require :fennel))
-
-
-;;;;;;;;;; compile time check that `--metadata` feature was enabled ;;;;;;;;;;;;
-
-(local meta-enabled (pcall _SCOPE.specials.doc
-                           (list (sym :doc) (sym :doc))
-                           _SCOPE _CHUNK))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Helper functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn first [tbl]
@@ -53,6 +43,8 @@
                            (table? (first bindings)))
                        "expected symbol, sequence or table as binding." bindings)))
 
+(local fennel (require :fennel))
+
 (fn attach-meta [value meta]
   (each [k v (pairs meta)]
     (fennel.metadata:set value k v)))
@@ -60,9 +52,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; Runtime function builers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; This code should be shared with `cljlib.fnl` however it seems
-;; impossible to actually do that right now, mainly because there's no
-;; way of doing relative loading of macro modules.
+;; TODO: This code should be shared with `init.fnl`
 
 (fn eq-fn []
   ;; Returns recursive equality function.
@@ -119,10 +109,16 @@
                    (insert# assoc-res# [k# v#]))
                  (if assoc?# assoc-res# res#)))
            (= type# :string)
-           (let [char# utf8.char]
-             (each [_# b# (utf8.codes col#)]
-               (insert# res# (char# b#)))
-             res#)
+           (if _G.utf8
+               (let [char# _G.utf8.char]
+                 (each [_# b# (_G.utf8.codes col#)]
+                   (insert# res# (char# b#)))
+                 res#)
+               (do
+                 (io.stderr:write "WARNING: utf8 module unavailable, seq function will not work for non-unicode strings\n")
+                 (each [b# (col#:gmatch ".")]
+                   (insert# res# b#))
+                 res#))
            (= type# :nil) nil
            (error "expected table, string or nil" 2)))))
 
@@ -143,6 +139,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; compile time check that `--metadata` feature was enabled
+(local meta-enabled (pcall _SCOPE.specials.doc
+                           (list (sym :doc) (sym :doc))
+                           _SCOPE _CHUNK))
 
 (fn when-meta [...]
   "Wrapper that compiles away if metadata support was not enabled.  What
@@ -213,33 +214,57 @@ returns the value without additional metadata.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fn* ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(fn keyword? [data]
+  (and (= (type data) :string)
+       (data:find "^[-%w?\\^_!$%&*+./@:|<=>]+$")))
+
+(fn deep-tostring [data key?]
+  (let [tbl []]
+    (if (sequence? data)
+        (do (each [_ v (ipairs data)]
+              (table.insert tbl (deep-tostring v)))
+            (.. "[" (table.concat tbl " ") "]"))
+        (table? data)
+        (do (each [k v (pairs data)]
+              (table.insert tbl (.. (deep-tostring k true) " " (deep-tostring v))))
+            (.. "{" (table.concat tbl " ") "}"))
+        (and key? (keyword? data)) (.. ":" data)
+        (string? data)
+        (string.format "%q" data)
+        (tostring data))))
+
 (fn gen-arglist-doc [args]
-  ;; Construct vector of arguments represented as strings from AST.
   (if (list? (. args 1))
-      (let [arglist []
-            opener (if (> (length args) 1) "\n  (" "(")]
-        (each [i v (ipairs args)]
+      (let [arglist []]
+        (each [_ v (ipairs args)]
           (let [arglist-doc (gen-arglist-doc v)]
             (when (next arglist-doc)
-              (table.insert
-               arglist
-               (.. opener (table.concat arglist-doc " ") ")")))))
+              (table.insert arglist (table.concat arglist-doc " ")))))
+        (when (and (> (length (table.concat arglist " ")) 60)
+                   (> (length arglist) 1))
+          (each [i s (ipairs arglist)]
+            (tset arglist i (.. "\n  " s))))
         arglist)
 
       (sequence? (. args 1))
       (let [arglist []
             args (. args 1)
             len (length args)]
-        (each [i v (ipairs args)]
-          (table.insert arglist
-                        (match i
-                          (1 ? (= len 1)) (.. "[" (tostring v) "]")
-                          1   (.. "[" (tostring v))
-                          len (.. (tostring v) "]")
-                          _   (tostring v))))
+        (if (= len 0)
+            (table.insert arglist "([])")
+            (each [i v (ipairs args)]
+              (table.insert arglist
+                            (match i
+                              (1 ? (= len 1)) (.. "([" (deep-tostring v) "])")
+                              1   (.. "([" (deep-tostring v))
+                              len (.. (deep-tostring v) "])")
+                              _   (deep-tostring v)))))
         arglist)))
 
 (fn multisym->sym [s]
+  ;; Strips away the multisym part from symbol, and return just the
+  ;; symbol itself.  Also returns the second value of whether the
+  ;; transformation occured or not.
   (if (multi-sym? s)
       (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
       (values s false)))
@@ -293,7 +318,7 @@ returns the value without additional metadata.
       (set prev cur))
     prev))
 
-(fn arity-dispatcher [len fixed body& name]
+(fn arity-dispatcher [len fixed amp-body name]
   ;; Forms an `if` expression with all fixed arities first, then `&` arity,
   ;; if present, and default error message as last arity.
   ;;
@@ -304,8 +329,8 @@ returns the value without additional metadata.
   ;; are put in this `if` as: `(= len fixed-len)`, where `fixed-len` is the
   ;; length of current arity arglist, computed with `gen-arity`.
   ;;
-  ;; `body&` stores size of fixed part of arglist, that is, everything up
-  ;; until `&`, and the body itself.  When `body&` provided, the `(>= len
+  ;; `amp-body` stores size of fixed part of arglist, that is, everything up
+  ;; until `&`, and the body itself.  When `amp-body` provided, the `(>= len
   ;; more-len)` is added to the resulting `if` expression.
   ;;
   ;; Lastly the catchall branch is added to `if` expression, which ensures
@@ -320,8 +345,8 @@ returns the value without additional metadata.
       (table.insert lengths fixed-len)
       (table.insert bodies (list '= len fixed-len))
       (table.insert bodies body))
-    (when body&
-      (let [[more-len body arity] body&]
+    (when amp-body
+      (let [[more-len body arity] amp-body]
         (assert-compile (not (and max (<= more-len max))) "fn*: arity with `&' must have more arguments than maximum arity without `&'.
 
 * Try adding more arguments before `&'" arity)
@@ -330,7 +355,7 @@ returns the value without additional metadata.
         (table.insert bodies body)))
     (if (not (and (grows-by-one-or-equal? lengths)
                   (contains? lengths 0)
-                  body&))
+                  amp-body))
         (table.insert bodies (list 'error
                              (.. "wrong argument amount"
                                  (if name (.. " for "  name) "")) 2)))
@@ -352,26 +377,26 @@ returns the value without additional metadata.
   ;; Produces arglist and all body forms for multi-arity function.
   ;; For more info check `gen-arity' documentation.
   (let [bodies {}   ;; bodies of fixed arity
-        bodies& []] ;; bodies where arglist contains `&'
+        amp-bodies []] ;; bodies where arglist contains `&'
     (each [_ arity (ipairs args)]
       (let [(n body amp) (gen-arity arity)]
         (if amp
-            (table.insert bodies& [amp body arity])
+            (table.insert amp-bodies [amp body arity])
             (tset bodies n body))))
-    (assert-compile (<= (length bodies&) 1)
+    (assert-compile (<= (length amp-bodies) 1)
                     "fn* must have only one arity with `&':"
-                    (. bodies& (length bodies&)))
+                    (. amp-bodies (length amp-bodies)))
     `(let [len# (select :# ...)]
        ,(arity-dispatcher
          'len#
          bodies
-         (if (not= (next bodies&) nil)
-             (. bodies& 1))
+         (if (not= (next amp-bodies) nil)
+             (. amp-bodies 1))
          fname))))
 
 (fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
-Supports multiple arities by defining bodies as lists:
+Supports multiple arities by defining bodies as lists.
 
 # Examples
 Named function of fixed arity 2:
@@ -511,10 +536,9 @@ from `ns.strings`, so the latter must be fully qualified
     (if (sym? name-wo-namespace)
         (if namespaced?
             `(local ,name-wo-namespace
-                    (do
-                      (fn ,name-wo-namespace [...] ,docstring ,body)
-                      (set ,name ,name-wo-namespace)
-                      ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc})))
+                    (do (fn ,name-wo-namespace [...] ,docstring ,body)
+                        (set ,name ,name-wo-namespace) ;; set function into module table, e.g. (set foo.bar bar)
+                        ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc})))
             `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc})))
         (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc}))))
 
@@ -665,9 +689,8 @@ at runtime:
            (setmetatable to# {:cljlib/type :seq}))
         (= to-type :seq)
         `(let [to# (or ,to [])
-               seq# ,(seq-fn)
                insert# table.insert]
-           (each [_# v# (ipairs (seq# (or ,from [])))]
+           (each [_# v# (ipairs (,(seq-fn) (or ,from [])))]
              (insert# to# v#))
            (setmetatable to# {:cljlib/type :seq}))
         (and (= to-type :table) (= from-type :seq))
@@ -683,13 +706,17 @@ at runtime:
            (setmetatable to# {:cljlib/type :table}))
         (= to-type :table)
         `(let [to# (or ,to [])
+               seq# ,(seq-fn)
                from# (or ,from [])]
            (match (,(table-type-fn) from#)
-             :seq (each [_# [k# v#] (ipairs from#)]
+             :seq (each [_# [k# v#] (ipairs (seq# from#))]
                     (tset to# k# v#))
              :table (each [k# v# (pairs from#)]
                       (tset to# k# v#))
-             :else (error "expected table as second argument" 2))
+             :else (error "expected table as second argument" 2)
+             _# (do (each [_# [k# v#] (pairs (or (seq# from#) []))]
+                      (tset to# k# v#))
+                    to#))
            (setmetatable to# {:cljlib/type :table}))
         ;; runtime branch
         `(let [to# ,to
@@ -715,12 +742,10 @@ at runtime:
                                             (tset to# k# v#))
                                           to#)
                                :empty to#
-                               :else (error "expected table as second argument" 2))
-                      ;; set both ordered set and hash set
-                      (Set# ? (or (= Set# :cljlib/ordered-set) (= Set# :cljlib/hash-set)))
-                      (do (each [_# v# (ipairs (seq# (or from# [])))]
-                            (tset to# v# v#))
-                          to#)
+                               :else (error "expected table as second argument" 2)
+                               _# (do (each [_# [k# v#] (pairs (or (seq# from#) []))]
+                                        (tset to# k# v#))
+                                      to#))
                       ;; sometimes it is handy to pass nil too
                       :nil (match (table-type# from#)
                              :nil nil
@@ -732,7 +757,11 @@ at runtime:
                                           (tset to# k# v#))
                                         to#)
                              :else (error "expected table as second argument" 2))
-                      :else (error "expected table as first argument" 2))]
+                      :else (error "expected table as second argument" 2)
+                      _# (let [m# (or (getmetatable to#) {})]
+                           (match m#.cljlib/into
+                             f# (f# to# from#)
+                             nil (error "expected table as SECOND argument" 2))))]
            (if res#
                (let [m# (or (getmetatable res#) {})]
                  (set m#.cljlib/type (match to-type#
@@ -769,11 +798,15 @@ See [`into`](#into) for more info on how conversion is done."
   (match (table-type x)
     :seq `(setmetatable {} {:cljlib/type :seq})
     :table `(setmetatable {} {:cljlib/type :table})
-    _ `(let [x# ,x]
-         (match (,(table-type-fn) x#)
-           :cljlib/ordered-set (: x# :cljlib/empty)
-           :cljlib/hash-set (: x# :cljlib/empty)
-           t# (setmetatable {} {:cljlib/type t#})))))
+    _ `(let [x# ,x
+             m# (getmetatable x#)]
+         (match (and m# m#.cljlib/empty)
+           f# (f# x#)
+           _# (match (,(table-type-fn) x#)
+                :string (setmetatable {} {:cljlib/type :seq})
+                :nil nil
+                :else (error (.. "can't create sequence from " (type x#)))
+                t# (setmetatable {} {:cljlib/type t#}))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -812,7 +845,7 @@ See [`into`](#into) for more info on how conversion is done."
                       ,docstring
                       (let [dispatch-value# (,dispatch-fn ...)
                             (res# view#) (pcall require :fennelview)
-                            tostr# (if res# view# tostring)]
+                            tostr# (if res# #(view# $ {:one-line true}) tostring)]
                         ((or (. t# dispatch-value#)
                              (. t# (or (. ,options :default) :default))
                              (error (.. "No method in multimethod '"
@@ -991,9 +1024,11 @@ calls will not override existing bindings:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; try ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn catch? [[fun]]
+  "Test if expression is a catch clause."
   (= (tostring fun) :catch))
 
 (fn finally? [[fun]]
+  "Test if expression is a finally clause."
   (= (tostring fun) :finally))
 
 (fn add-finally [finally form]

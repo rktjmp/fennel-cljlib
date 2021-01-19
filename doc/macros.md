@@ -1,4 +1,4 @@
-# Cljlib-macros.fnl (0.3.0)
+# Macros.fnl (0.3.0)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
@@ -18,6 +18,7 @@ Macros for Cljlib that implement various facilities from Clojure.
 - [`when-let`](#when-let)
 - [`if-some`](#if-some)
 - [`when-some`](#when-some)
+- [`deep-tostring`](#deep-tostring)
 
 ## `fn*`
 Function signature:
@@ -27,7 +28,7 @@ Function signature:
 ```
 
 Create (anonymous) function of fixed arity.
-Supports multiple arities by defining bodies as lists:
+Supports multiple arities by defining bodies as lists.
 
 ### Examples
 Named function of fixed arity 2:
@@ -158,18 +159,15 @@ Function signature:
 ```
 
 General purpose try/catch/finally macro.
-
-(try expression* catch-clause* finally-clause?)
-
 Wraps its body in `pcall` and checks the return value with `match`
 macro.
 
-Catch-clause is written either as (catch symbol body*), thus acting as
+Catch clause is written either as (catch symbol body*), thus acting as
 catch-all, or (catch value body*) for catching specific errors.  It is
 possible to have several `catch` clauses.  If no `catch` clauses
 specified, an implicit catch-all clause is created.
 
-Finally-clause is optional, and written as (finally body*).  If
+Finally clause is optional, and written as (finally body*).  If
 present, it must be the last clause in the `try` form, and the only
 `finally` clause.  Note that `finally` clause is for side effects
 only, and runs either after succesful run of `try` body, or after any
@@ -569,6 +567,15 @@ Function signature:
 If test is non-`nil`,
 evaluates `body` in implicit `do`.
 
+## `deep-tostring`
+Function signature:
+
+```
+(deep-tostring data key?)
+```
+
+**Undocumented**
+
 
 ---
 
@@ -577,5 +584,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.6
+<!-- Generated with Fenneldoc 0.0.7
      https://gitlab.com/andreyorst/fenneldoc -->

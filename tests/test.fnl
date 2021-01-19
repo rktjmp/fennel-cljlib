@@ -14,12 +14,12 @@ the tables uses tables as keys."
            ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
            ;; we have to do even deeper search
            (setmetatable right# {:__index (fn [tbl# key#]
-                                        (var res# nil)
-                                        (each [k# v# (pairs tbl#)]
-                                          (when (eq# k# key#)
-                                            (set res# v#)
-                                            (lua :break)))
-                                        res#)})
+                                            (var res# nil)
+                                            (each [k# v# (pairs tbl#)]
+                                              (when (eq# k# key#)
+                                                (set res# v#)
+                                                (lua :break)))
+                                            res#)})
            (var [res# count-a# count-b#] [true 0 0])
            (each [k# v# (pairs left#)]
              (set res# (eq# v# (. right# k#)))
@@ -62,26 +62,26 @@ runtime error: equality assertion failed
 ```"
   `(let [left# ,expr1
          right# ,expr2
-         (res# view#) (pcall require :fennelview)
          eq# ,(eq-fn)
-         tostr# (if res# view# tostring)]
+         fennel# (require :fennel)]
      (assert (eq# left# right#)
-             (or ,msg (.. "equality assertion failed
-  Left: " (tostr# left#) "
-  Right: " (tostr# right#) "\n")))))
+             (or ,msg (.. "assertion failed for expression:
+(= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) "
+  Left:  " (fennel#.view left# {:one-line? true}) "
+  Right: " (fennel#.view right# {:one-line? true}) "\n")))))
 
 (fn test.assert-ne
   [expr1 expr2 msg]
   "Assert for unequality.  Same as [`assert-eq`](#assert-eq)."
   `(let [left# ,expr1
          right# ,expr2
-         (res# view#) (pcall require :fennelview)
          eq# ,(eq-fn)
-         tostr# (if res# view# tostring)]
+         fennel# (require :fennel)]
      (assert (not (eq# left# right#))
-             (or ,msg (.. "unequality assertion failed
-  Left: " (tostr# left#) "
-  Right: " (tostr# right#) "\n")))))
+             (or ,msg (.. "assertion failed for expression:
+(not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) "
+  Left:  " (fennel#.view left# {:one-line? true}) "
+  Right: " (fennel#.view right# {:one-line? true}) "\n")))))
 
 (fn test.assert-is
   [expr msg]
@@ -92,13 +92,15 @@ runtime error: equality assertion failed
 >> (assert-is (= 1 2 3))
 runtime error: assertion failed for (= 1 2 3)
 ```"
-  `(assert ,expr (.. "assertion failed for "
-                     (or ,msg ,(tostring expr)))))
+  `(assert ,expr
+           (.. "assertion failed for "
+               (or ,msg ,(view expr {:one-line? true})))))
 (fn test.assert-not
   [expr msg]
   "Assert for not truth. Works the same as [`assert-is`](#assert-is)."
-  `(assert (not ,expr) (.. "assertion failed for "
-                           (or ,msg ,(tostring expr)))))
+  `(assert (not ,expr)
+           (.. "assertion failed for "
+               (or ,msg ,(view expr {:one-line? true})))))
 
 (fn test.deftest
   [name ...]
@@ -108,7 +110,7 @@ runtime error: assertion failed for (= 1 2 3)
 (fn test.testing
   [description ...]
   "Print test description and run it."
-  `(do (io.stderr:write (.. "testing: " ,description "\n"))
+  `(do (io.stdout:write (.. "testing: " ,description "\n"))
        ,...))
 
 (doto test

@@ -1,11 +1,12 @@
 LUA ?= lua
 FENNEL ?= fennel
-FNLSOURCES = cljlib.fnl
+FNLSOURCES = init.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 FNLTESTS = tests/fn.fnl tests/macros.fnl tests/core.fnl
 LUATESTS = $(FNLTESTS:.fnl=.lua)
+LUA_EXECUTABLES ?= lua luajit
 
-.PHONY: build clean distclean help test luacov luacov-console fenneldoc
+.PHONY: build clean distclean help test luacov luacov-console fenneldoc $(LUA_EXECUTABLES)
 
 build: $(LUASOURCES)
 
@@ -21,10 +22,14 @@ distclean: clean
 	rm -f luacov*
 
 test: $(FNLTESTS)
-	@true$(foreach test, $?, && $(FENNEL) --lua $(LUA) --metadata $(test))
+	@echo "Testing on" $$($(LUA) -v) >&2
+	@$(foreach test,$?,$(FENNEL) --lua $(LUA) --metadata $(test) || exit;)
+
+testall: $(LUA_EXECUTABLES)
+	@$(foreach lua,$?,LUA=$(lua) make test || exit;)
 
 luacov: build $(LUATESTS)
-	@true$(foreach test, $(LUATESTS), && $(LUA) -lluarocks.loader -lluacov $(test))
+	@$(foreach test,$(LUATESTS),$(LUA) -lluarocks.loader -lluacov $(test) || exit;)
 	luacov
 
 luacov-console: luacov
@@ -33,7 +38,7 @@ luacov-console: luacov
 	@$(foreach test, $(LUATESTS), mv $(test).tmp $(test);)
 
 fenneldoc:
-	fenneldoc cljlib.fnl cljlib-macros.fnl tests/test.fnl
+	fenneldoc init.fnl macros.fnl tests/test.fnl
 
 help:
 	@echo "make                -- run tests and create lua library" >&2

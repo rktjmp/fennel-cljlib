@@ -4,34 +4,42 @@ stages:
     - test
     - coverage
 
-Lua 5.3:
-    image: alpine:3.12.1
+Lua:
+    image: alpine:edge
     stage: test
     before_script:
-        - apk add lua5.3 luarocks5.3 make
-        - luarocks-5.3 install fennel
+        - apk add -q lua5.2 lua5.3 lua5.4 git make
+        - git clone https://git.sr.ht/~technomancy/fennel
+        - (cd fennel; LUA=lua5.3 make install)
     script:
-        - LUA=lua5.3 make test
+        - LUA_EXECUTABLES="lua5.2 lua5.3 lua5.4" make testall >/dev/null
 
-Lua 5.4:
-    image: ubuntu:20.10
+# Luajit actually is an impostor in Alpine, as the package actually
+# uses Moonjit implementation, which is different from what I'm
+# working with, so Fedora 33 image is used, which as of this moment
+# has latest Luajit available
+Luajit:
+    image: fedora:33
     stage: test
     before_script:
-        - ln -snf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
-        - echo Europe/Moscow > /etc/timezone
-        - apt-get update && apt-get install -y lua5.4 luarocks make >/dev/null
-        - luarocks install fennel
+        - dnf install -y -q lua luajit git make
+        - git clone https://git.sr.ht/~technomancy/fennel
+        - (cd fennel; make install)
     script:
-        - LUA=lua5.4 make test
+        - LUA=luajit make test
 
+# We install fennel via luarocks by making local rockspect because I
+# don't want to figure out how to install luacov without luarocks
 Coverage:
     image: alpine:3.12.1
     stage: coverage
     before_script:
-        - apk add lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 make
-        - luarocks-5.3 install fennel
+        - apk add -q lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 git make
+        - (cd $HOME; git clone https://git.sr.ht/~technomancy/fennel)
+        - export LUA=lua5.3
+        - (cd $HOME/fennel; luarocks-5.3 make rockspecs/fennel-scm-2.rockspec)
         - luarocks-5.3 install luacov
         - luarocks-5.3 install luacov-console
     script:
-        - LUA=lua5.3 make luacov-console
+        - make luacov-console >/dev/null
         - luacov-console --no-colored -s

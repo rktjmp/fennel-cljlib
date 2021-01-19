@@ -94,5 +94,5 @@ Function signature:
 Assert for not truth. Works the same as [`assert-is`](#assert-is).
 
 
-<!-- Generated with Fenneldoc 0.0.6
+<!-- Generated with Fenneldoc 0.0.7
      https://gitlab.com/andreyorst/fenneldoc -->

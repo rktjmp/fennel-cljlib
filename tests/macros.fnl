@@ -1,5 +1,5 @@
 (require-macros :tests.test)
-(require-macros :cljlib-macros)
+(require-macros :macros)
 
 (deftest into
   (testing "into"
@@ -55,9 +55,9 @@
     (let [a {}
           b []]
       (assert-eq (into a "vaiv") ["v" "a" "i" "v"])
-      (assert-eq (into b "ваыв") ["в" "а" "ы" "в"]))
+      (when _G.utf8 (assert-eq (into b "ваыв") ["в" "а" "ы" "в"])))
     (assert-eq (into [] "vaiv") ["v" "a" "i" "v"])
-    (assert-eq (into [] "ваыв") ["в" "а" "ы" "в"])))
+    (when _G.utf8 (assert-eq (into [] "ваыв") ["в" "а" "ы" "в"]))))
 
 (deftest let-variants
   (testing "when-let"
@@ -89,7 +89,7 @@
     (defmulti fac (fn [x] x))
     (defmethod fac 0 [_] 1)
     (defmethod fac :default [x] (* x (fac (- x 1))))
-    (assert-eq (fac 42) 7538058755741581312))
+    (assert-eq (fac 4) 24))
 
   (testing "defmulti keys"
     (defmulti send-data (fn [protocol data] protocol))
@@ -212,13 +212,13 @@
     (assert-eq (try (+ 1 2 3 nil) (catch _) (finally 10)) nil))
   (testing "catch-all"
     (assert-eq (try
-                  (error 10)
-                  (catch _ :pass))
-                :pass)
+                 (error "10")
+                 (catch _ :pass))
+               :pass)
     (assert-eq (try
-                  (error 10)
-                  (catch err err))
-               10))
+                 (error [10])
+                 (catch err err))
+               [10]))
   (testing "finally"
     (let [tbl []]
       (try
