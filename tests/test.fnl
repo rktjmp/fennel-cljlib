@@ -42,23 +42,19 @@ Generates formatted message if `msg` is not set to other message.
 Compare two expressions:
 
 ``` fennel
->> (assert-eq 1 (+1 1))
-runtime error: equality assertion failed
-  Left: 1
-  Right: 3
+;; (assert-eq 1 (+1 1))
+;; => runtime error: equality assertion failed
+;; =>   Left: 1
+;; =>   Right: 3
 ```
 
 Deep compare values:
 
 ``` fennel
->> (assert-eq [1 {[2 3] [4 5 6]}] [1 {[2 3] [4 5]}])
-runtime error: equality assertion failed
-  Left: [1 {
-    [2 3] [4 5 6]
-  }]
-  Right: [1 {
-    [2 3] [4 5]
-  }]
+;; (assert-eq [1 {[2 3] [4 5 6]}] [1 {[2 3] [4 5]}])
+;; => runtime error: equality assertion failed
+;; =>   Left: [1 {[2 3] [4 5 6]}]
+;; =>   Right: [1 {[2 3] [4 5]}]
 ```"
   `(let [left# ,expr1
          right# ,expr2
@@ -89,8 +85,8 @@ runtime error: equality assertion failed
   verbose message if `msg` is not set.
 
 ``` fennel
->> (assert-is (= 1 2 3))
-runtime error: assertion failed for (= 1 2 3)
+;; (assert-is (= 1 2 3))
+;; => runtime error: assertion failed for (= 1 2 3)
 ```"
   `(assert ,expr
            (.. "assertion failed for "

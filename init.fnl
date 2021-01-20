@@ -750,6 +750,7 @@ Map [`mul`](#mul) over two tables:
 Basic `zipmap` implementation:
 
 ``` fennel
+(import-macros {: into} :macros)
 (fn zipmap [keys vals]
   (into {} (mapv vector keys vals)))
 
@@ -1192,17 +1193,17 @@ Ordered sets are created by passing any amount of elements desired to
 be in the set:
 
 ``` fennel
->> (ordered-set)
-@set{}
->> (ordered-set :a :c :b)
-@set{:a :c :b}
+(ordered-set)
+;; => @set{}
+(ordered-set :a :c :b)
+;; => @set{:a :c :b}
 ```
 
 Duplicate items are not added:
 
 ``` fennel
->> (ordered-set :a :c :a :a :a :a :c :b)
-@set{:a :c :b}
+(ordered-set :a :c :a :a :a :a :c :b)
+;; => @set{:a :c :b}
 ```
 
 ## Check if set contains desired value:
@@ -1210,34 +1211,34 @@ Sets are functions of their keys, so simply calling a set with a
 desired key will either return the key, or `nil`:
 
 ``` fennel
->> (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
->> (oset [:a :b :c])
-[\"a\" \"b\" \"c\"]
->> (. oset :e)
-\"e\"
->> (oset [:a :b :f])
-nil
+(local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
+(oset [:a :b :c])
+;; => [\"a\" \"b\" \"c\"]
+(. oset :e)
+;; \"e\"
+(oset [:a :b :f])
+;; => nil
 ```
 
 ## Add items to existing set:
 To add element to the set use [`conj`](#conj) or `tset`
 
 ``` fennel
->> (local oset (ordered-set :a :b :c))
->> (conj oset :d :e)
-@set{:a :b :c :d :e}
+(local oset (ordered-set :a :b :c))
+(conj oset :d :e)
+;; => @set{:a :b :c :d :e}
 ```
 
 ### Remove items from the set:
 To add element to the set use [`disj`](#disj) or `tset`
 
 ``` fennel
->> (local oset (ordered-set :a :b :c))
->> (disj oset :b)
-@set{:a :c}
->> (tset oset :a nil)
->> oset
-@set{:c}
+(local oset (ordered-set :a :b :c))
+(disj oset :b)
+;; => @set{:a :c}
+(tset oset :a nil)
+oset
+;; => @set{:c}
 ```
 
 ## Equality semantics
@@ -1246,12 +1247,9 @@ and are compared for having the same keys without particular order and
 same size:
 
 ``` fennel
->> (= (ordered-set :a :b) (ordered-set :b :a))
-true
->> (= (ordered-set :a :b) (ordered-set :b :a :c))
-false
->> (= (ordered-set :a :b) (hash-set :a :b))
-true
+(assert (= (ordered-set :a :b) (ordered-set :b :a)))
+(assert (not= (ordered-set :a :b) (ordered-set :b :a :c)))
+(assert (= (ordered-set :a :b) (hash-set :a :b)))
 ```"
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})

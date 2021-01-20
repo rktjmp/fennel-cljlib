@@ -163,7 +163,7 @@ feature is not enabled returns `nil`.
 # Example
 
 ``` fennel
->> (meta (with-meta {} {:meta \"data\"}))
+(meta (with-meta {} {:meta \"data\"}))
 ;; => {:meta \"data\"}
 ```
 
@@ -196,12 +196,12 @@ this stuff will only work if you use `require-macros` instead of
 returns the value without additional metadata.
 
 ``` fennel
->> (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
-                         {:fnl/arglist [\"x\" \"y\" \"z\" \"...\"]
-                          :fnl/docstring \"sum first three values\"}))
->> (doc foo)
-(foo x y z ...)
-  sum first three values
+(local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
+                      {:fnl/arglist [\"x\" \"y\" \"z\" \"...\"]
+                       :fnl/docstring \"sum first three values\"}))
+;; (doc foo)
+;; => (foo x y z ...)
+;; =>   sum first three values
 ```"
   (if (not meta-enabled) value
       `(let [value# ,value
@@ -420,7 +420,7 @@ other one or more arguments:
   ([] nil)
   ([x & xs]
    (print x)
-   (f (unpack xs))))
+   (f ((or table.unpack _G.unpack) xs))))
 ```
 
 Note, that this function is recursive, and calls itself with less and
@@ -494,7 +494,7 @@ namespace tables:
 (fn* ns.strings.join
   ([s1 s2] (.. s1 s2))
   ([s1 s2 & strings]
-   (join (join s1 s2) (unpack strings)))) ;; call `join` resolves to ns.strings.join
+   (join (join s1 s2) ((or table.unpack _G.unpack) strings)))) ;; call `join` resolves to ns.strings.join
 
 (fn* ns.tables.join
   ([t1 t2]
@@ -503,21 +503,19 @@ namespace tables:
      (each [_ v (ipairs t2)] (table.insert res v))
      res))
   ([t1 t2 & tables]
-   (join (join t1 t2) (unpack tables)))) ;; call to `join` resolves to ns.tables.join
-```
+   (join (join t1 t2) ((or table.unpack _G.unpack) tables)))) ;; call to `join` resolves to ns.tables.join
 
-Note that this creates a collision and local `join` overrides `join`
-from `ns.strings`, so the latter must be fully qualified
-`ns.strings.join` when called outside of the function:
-
-``` fennel
 (ns.strings.join \"a\" \"b\" \"c\")
 ;; => abc
 (join [\"a\"] [\"b\"] [\"c\"] [\"d\" \"e\"])
 ;; => [\"a\" \"b\" \"c\" \"d\" \"e\"]
 (join \"a\" \"b\" \"c\")
 ;; {}
-```"
+```
+
+Note that this creates a collision and local `join` overrides `join`
+from `ns.strings`, so the latter must be fully qualified
+`ns.strings.join` when called outside of the function."
   (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
@@ -933,19 +931,16 @@ tables to Lua's one:
                                    (.. \"{\" (table.concat res \", \") \"}\")))
 (defmethod to-lua-str :string [x] (.. \"\\\"\" x \"\\\"\"))
 (defmethod to-lua-str :default [x] (tostring x))
-```
 
-And if we call it on some table, we'll get a valid Lua table:
-
-``` fennel
 (print (to-lua-str {:a {:b 10}}))
-;; prints {[\"a\"] = {[\"b\"] = 10}}
+;; => {[\"a\"] = {[\"b\"] = 10}}
 
 (print (to-lua-str [:a :b :c [:d {:e :f}]]))
-;; prints {[1] = \"a\", [2] = \"b\", [3] = \"c\", [4] = {[1] = \"d\", [2] = {[\"e\"] = \"f\"}}}
+;; => {[1] = \"a\", [2] = \"b\", [3] = \"c\", [4] = {[1] = \"d\", [2] = {[\"e\"] = \"f\"}}}
 ```
 
-Which we can then reformat as we want and use in Lua if we want."})
+And if we call it on some table, we'll get a valid Lua table, which we
+can then reformat as we want and use in Lua if we want."})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; def and defonce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -990,7 +985,6 @@ supported, which is `:mutable`, which allows mutating variable with
 ``` fennel
 ;; Bad, will override existing documentation for 299792458 (if any)
 (def {:doc \"speed of light in m/s\"} c 299792458)
-(set c 0) ;; => error, can't mutate `c`
 
 (def :mutable address \"Lua St.\") ;; same as (def {:mutable true} address \"Lua St.\")
 (set address \"Lisp St.\") ;; can mutate `address`
@@ -1129,30 +1123,30 @@ Catch all errors, ignore those and return fallback value:
 Catch error and do cleanup:
 
 ``` fennel
->> (let [tbl []]
-     (try
-       (table.insert tbl \"a\")
-       (table.insert tbl \"b\" \"c\")
-       (catch _
-         (each [k _ (pairs tbl)]
-           (tset tbl k nil))))
-     tbl)
-{}
+(let [tbl []]
+  (try
+    (table.insert tbl \"a\")
+    (table.insert tbl \"b\" \"c\")
+    (catch _
+      (each [k _ (pairs tbl)]
+        (tset tbl k nil))))
+  tbl)
+;; => {}
 ```
 
 Always run some side effect action:
 
 ``` fennel
->> (local res (try 10 (finally (print \"side-effect!\")))
-side-effect!
-nil
->> res
-10
->> (local res (try (error 10) (catch 10 nil) (finally (print \"side-effect!\")))
-side-effect!
-nil
->> res
-nil
+(local res (try 10 (finally (print \"side-effect!\"))))
+;; => side-effect!
+;; => nil
+res
+;; => 10
+(local res (try (error 10) (catch 10 nil) (finally (print \"side-effect!\"))))
+;; => side-effect!
+;; => nil
+res
+;; => nil
 ```
 "})
 
