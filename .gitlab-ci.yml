@@ -28,16 +28,14 @@ Luajit:
     script:
         - LUA=luajit make test
 
-# We install fennel via luarocks by making local rockspect because I
-# don't want to figure out how to install luacov without luarocks
+# We install fennel via luarocks because I don't want to figure out
+# how to install luacov without luarocks
 Coverage:
     image: alpine:3.12.1
     stage: coverage
     before_script:
-        - apk add -q lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 git make
-        - (cd $HOME; git clone https://git.sr.ht/~technomancy/fennel)
-        - export LUA=lua5.3
-        - (cd $HOME/fennel; luarocks-5.3 make rockspecs/fennel-scm-2.rockspec)
+        - apk add -q lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 make
+        - luarocks-5.3 install fennel
         - luarocks-5.3 install luacov
         - luarocks-5.3 install luacov-console
     script:
