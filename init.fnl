@@ -378,7 +378,7 @@ Number is rounded with `math.floor` and compared with original number."
 (fn* core.vector
   "Constructs sequential table out of it's arguments.
 
-Sets additional metadata for function [`vector?`](#vector?) to work.
+Sets additional metadata for function `vector?` to work.
 
 # Examples
 
@@ -512,7 +512,7 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
 If `tbl` is a sequential table or empty table, inserts `x` and
 optional `xs` as final element in the table.
 
-If `tbl` is an associative table, that satisfies [`map?`](#map?) test,
+If `tbl` is an associative table, that satisfies `map?` test,
 insert `[key value]` pair into the table.
 
 Mutates `tbl`.

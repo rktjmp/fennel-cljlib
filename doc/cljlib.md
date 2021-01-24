@@ -60,27 +60,27 @@ non-ASCII strings.
 - [`inc`](#inc)
 - [`dec`](#dec)
 - [`eq`](#eq)
-- [`map?`](#map?)
-- [`vector?`](#vector?)
-- [`multifn?`](#multifn?)
-- [`set?`](#set?)
-- [`nil?`](#nil?)
-- [`zero?`](#zero?)
-- [`pos?`](#pos?)
-- [`neg?`](#neg?)
-- [`even?`](#even?)
-- [`odd?`](#odd?)
-- [`string?`](#string?)
-- [`boolean?`](#boolean?)
-- [`true?`](#true?)
-- [`false?`](#false?)
-- [`int?`](#int?)
-- [`pos-int?`](#pos-int?)
-- [`neg-int?`](#neg-int?)
-- [`double?`](#double?)
-- [`empty?`](#empty?)
+- [`map?`](#map)
+- [`vector?`](#vector)
+- [`multifn?`](#multifn)
+- [`set?`](#set)
+- [`nil?`](#nil)
+- [`zero?`](#zero)
+- [`pos?`](#pos)
+- [`neg?`](#neg)
+- [`even?`](#even)
+- [`odd?`](#odd)
+- [`string?`](#string)
+- [`boolean?`](#boolean)
+- [`true?`](#true)
+- [`false?`](#false)
+- [`int?`](#int)
+- [`pos-int?`](#pos-int)
+- [`neg-int?`](#neg-int)
+- [`double?`](#double)
+- [`empty?`](#empty)
 - [`not-empty`](#not-empty)
-- [`vector`](#vector)
+- [`vector`](#vector-1)
 - [`seq`](#seq)
 - [`kvseq`](#kvseq)
 - [`first`](#first)
@@ -96,9 +96,9 @@ non-ASCII strings.
 - [`reduce-kv`](#reduce-kv)
 - [`mapv`](#mapv)
 - [`filter`](#filter)
-- [`every?`](#every?)
+- [`every?`](#every)
 - [`some`](#some)
-- [`not-any?`](#not-any?)
+- [`not-any?`](#not-any)
 - [`range`](#range)
 - [`reverse`](#reverse)
 - [`identity`](#identity)
@@ -505,7 +505,7 @@ Function signature:
 
 Constructs sequential table out of it's arguments.
 
-Sets additional metadata for function [`vector?`](#vector?) to work.
+Sets additional metadata for function `vector?` to work.
 
 ### Examples
 
@@ -613,7 +613,7 @@ Insert `x` as a last element of a table `tbl`.
 If `tbl` is a sequential table or empty table, inserts `x` and
 optional `xs` as final element in the table.
 
-If `tbl` is an associative table, that satisfies [`map?`](#map?) test,
+If `tbl` is an associative table, that satisfies `map?` test,
 insert `[key value]` pair into the table.
 
 Mutates `tbl`.

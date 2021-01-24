@@ -3,7 +3,7 @@ Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
 
-- [`fn*`](#fn*)
+- [`fn*`](#fn)
 - [`try`](#try)
 - [`def`](#def)
 - [`defonce`](#defonce)
