@@ -64,15 +64,12 @@ arguments to `args`, and `f` must support variadic amount of
 arguments.
 
 # Examples
-Applying `print` to different arguments:
+Applying [`add`](#add) to different amount of arguments:
 
 ``` fennel
-(apply print [1 2 3 4])
-;; prints 1 2 3 4
-(apply print 1 [2 3 4])
-;; => 1 2 3 4
-(apply print 1 2 3 4 5 6 [7 8 9])
-;; => 1 2 3 4 5 6 7 8 9
+(assert-eq (apply add [1 2 3 4]) 10)
+(assert-eq (apply add 1 [2 3 4]) 10)
+(assert-eq (apply add 1 2 3 4 5 6 [7 8 9]) 45)
 ```"
   ([f args] (f (_unpack args)))
   ([f a args] (f a (_unpack args)))
@@ -165,8 +162,8 @@ Applying `print` to different arguments:
            (> y (. more 1)))
        false)))
 
-(fn* core.inc "Increase number by one" [x] (+ x 1))
-(fn* core.dec "Decrease number by one" [x] (- x 1))
+(fn* core.inc "Increase number `x` by one" [x] (+ x 1))
+(fn* core.dec "Decrease number `x` by one" [x] (- x 1))
 
 (local utility-doc-order
        [:apply :add :sub :mul :div :le :lt :ge :gt :inc :dec])
@@ -195,24 +192,24 @@ metadata attached for this test to work.
 Non empty tables:
 
 ``` fennel
-(assert (map? {:a 1 :b 2}))
+(assert-is (map? {:a 1 :b 2}))
 
 (local some-table {:key :value})
-(assert (map? some-table))
+(assert-is (map? some-table))
 ```
 
 Empty tables:
 
 ``` fennel
 (local some-table {})
-(assert (not (map? some-table)))
+(assert-not (map? some-table))
 ```
 
 Empty tables created with [`hash-map`](#hash-map) will pass the test:
 
 ``` fennel
 (local some-table (hash-map))
-(assert (map? some-table))
+(assert-is (map? some-table))
 ```"
   [tbl]
   (if (= (type tbl) :table)
@@ -238,24 +235,24 @@ metadata attached for this test to work.
 Non empty vector:
 
 ``` fennel
-(assert (vector? [1 2 3 4]))
+(assert-is (vector? [1 2 3 4]))
 
 (local some-table [1 2 3])
-(assert (vector? some-table))
+(assert-is (vector? some-table))
 ```
 
 Empty tables:
 
 ``` fennel
 (local some-table [])
-(assert (not (vector? some-table)))
+(assert-not (vector? some-table))
 ```
 
 Empty tables created with [`vector`](#vector) will pass the test:
 
 ``` fennel
 (local some-table (vector))
-(assert (vector? some-table))
+(assert-is (vector? some-table))
 ```"
   [tbl]
   (if (= (type tbl) :table)
@@ -281,12 +278,12 @@ from `cljlib-macros.fnl`."
     _ false))
 
 (fn* core.nil?
-  "Test if value is nil."
+  "Test if `x` is nil."
   ([] true)
   ([x] (= x nil)))
 
 (fn* core.zero?
-  "Test if value is equal to zero."
+  "Test if `x` is equal to zero."
   [x]
   (= x 0))
 
@@ -301,12 +298,12 @@ from `cljlib-macros.fnl`."
   (< x 0))
 
 (fn* core.even?
-  "Test if value is even."
+  "Test if `x` is even."
   [x]
   (= (% x 2) 0))
 
 (fn* core.odd?
-  "Test if value is odd."
+  "Test if `x` is odd."
   [x]
   (not (even? x)))
 
@@ -387,7 +384,7 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 
 ``` fennel
 (local v (vector 1 2 3 4))
-(assert (eq v [1 2 3 4]))
+(assert-eq v [1 2 3 4])
 ```"
   [& args]
   (setmetatable args {:cljlib/type :seq}))
@@ -453,7 +450,7 @@ Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
       _ (error (.. "expected table, string or nil, got " (type col)) 2))))
 
 (fn* core.kvseq
-  "Transforms any table to key-value sequence."
+  "Transforms any table `col` to key-value sequence."
   [col]
   (let [res (empty [])]
     (match (type col)
@@ -977,7 +974,8 @@ use."
    (setmetatable tbl {:cljlib/type :table})))
 
 (fn* core.hash-map
-  "Create associative table from keys and values"
+  "Create associative table from `kvs` represented as sequence of keys
+and values"
   ([] (empty {}))
   ([& kvs] (apply assoc {} kvs)))
 
@@ -1022,13 +1020,13 @@ found in the table."
     res))
 
 (fn* core.find
-  "Returns the map entry for `key`, or `nil` if key not present."
+  "Returns the map entry for `key`, or `nil` if key not present in `tbl`."
   [tbl key]
   (when-some [v (. tbl key)]
     [key v]))
 
 (fn* core.dissoc
-  "Remove `key` from table `tbl`."
+  "Remove `key` from table `tbl`.  Optionally takes more `keys`."
   ([tbl] tbl)
   ([tbl key]
    (doto tbl (tset key nil)))
@@ -1042,40 +1040,41 @@ found in the table."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.remove-method
-  "Remove method from `multifn` for given `dispatch-val`."
-  [multifn dispatch-val]
-  (if (multifn? multifn)
-      (tset multifn dispatch-val nil)
-      (error (.. (tostring multifn) " is not a multifn") 2))
-  multifn)
+  "Remove method from `multimethod` for given `dispatch-value`."
+  [multimethod dispatch-value]
+  (if (multifn? multimethod)
+      (tset multimethod dispatch-value nil)
+      (error (.. (tostring multimethod) " is not a multifn") 2))
+  multimethod)
 
 (fn* core.remove-all-methods
-  "Removes all of the methods of multimethod"
-  [multifn]
-  (if (multifn? multifn)
-      (each [k _ (pairs multifn)]
-        (tset multifn k nil))
-      (error (.. (tostring multifn) " is not a multifn") 2))
-  multifn)
+  "Removes all of the methods of `multimethod`"
+  [multimethod]
+  (if (multifn? multimethod)
+      (each [k _ (pairs multimethod)]
+        (tset multimethod k nil))
+      (error (.. (tostring multimethod) " is not a multifn") 2))
+  multimethod)
 
 (fn* core.methods
-  "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-  [multifn]
-  (if (multifn? multifn)
+  "Given a `multimethod`, returns a map of dispatch values -> dispatch fns"
+  [multimethod]
+  (if (multifn? multimethod)
       (let [m {}]
-        (each [k v (pairs multifn)]
+        (each [k v (pairs multimethod)]
           (tset m k v))
         m)
-      (error (.. (tostring multifn) " is not a multifn") 2)))
+      (error (.. (tostring multimethod) " is not a multifn") 2)))
 
 (fn* core.get-method
-  "Given a multimethod and a dispatch value, returns the dispatch `fn`
-that would apply to that value, or `nil` if none apply and no default."
-  [multifn dispatch-val]
-  (if (multifn? multifn)
-      (or (. multifn dispatch-val)
-          (. multifn :default))
-      (error (.. (tostring multifn) " is not a multifn") 2)))
+  "Given a `multimethod` and a `dispatch-value`, returns the dispatch
+`fn` that would apply to that value, or `nil` if none apply and no
+default."
+  [multimethod dispatch-value]
+  (if (multifn? multimethod)
+      (or (. multimethod dispatch-value)
+          (. multimethod :default))
+      (error (.. (tostring multimethod) " is not a multifn") 2)))
 
 (local multimethods-doc-order
        [:remove-method :remove-all-methods :methods :get-method])
@@ -1247,9 +1246,9 @@ and are compared for having the same keys without particular order and
 same size:
 
 ``` fennel
-(assert (= (ordered-set :a :b) (ordered-set :b :a)))
-(assert (not= (ordered-set :a :b) (ordered-set :b :a :c)))
-(assert (= (ordered-set :a :b) (hash-set :a :b)))
+(assert-eq (ordered-set :a :b) (ordered-set :b :a))
+(assert-ne (ordered-set :a :b) (ordered-set :b :a :c))
+(assert-eq (ordered-set :a :b) (hash-set :a :b))
 ```"
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})

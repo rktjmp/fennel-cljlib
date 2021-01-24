@@ -36,5 +36,7 @@ Documentation is auto-generated with [Fenneldoc](https://gitlab.com/andreyorst/f
 
 Please make sure you've read [contribution guidelines](https://gitlab.com/andreyorst/fennel-cljlib/-/tree/master/CONTRIBUTING.md).
 
-<!--  LocalWords:  Lua submodule precompile cljlib
+<!--  LocalWords:  Lua submodule precompile cljlib docstring config
+<!--  LocalWords:  namespace destructure
+ -->
  -->

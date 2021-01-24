@@ -35,7 +35,7 @@ the tables uses tables as keys."
 
 (fn test.assert-eq
   [expr1 expr2 msg]
-  "Like `assert`, except compares results of two expressions on equality.
+  "Like `assert`, except compares results of `expr1` and `expr2` for equality.
 Generates formatted message if `msg` is not set to other message.
 
 # Example
@@ -62,26 +62,28 @@ Deep compare values:
          fennel# (require :fennel)]
      (assert (eq# left# right#)
              (or ,msg (.. "assertion failed for expression:
-(= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) "
+(= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
   Right: " (fennel#.view right# {:one-line? true}) "\n")))))
 
 (fn test.assert-ne
   [expr1 expr2 msg]
-  "Assert for unequality.  Same as [`assert-eq`](#assert-eq)."
+  "Assert for unequality.  Like `assert`, except compares results of
+`expr1` and `expr2` for equality.  Generates formatted message if
+`msg` is not set to other message.  Same as [`assert-eq`](#assert-eq)."
   `(let [left# ,expr1
          right# ,expr2
          eq# ,(eq-fn)
          fennel# (require :fennel)]
      (assert (not (eq# left# right#))
              (or ,msg (.. "assertion failed for expression:
-(not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) "
+(not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
   Right: " (fennel#.view right# {:one-line? true}) "\n")))))
 
 (fn test.assert-is
   [expr msg]
-  "Assert for truth. Same as inbuilt `assert`, except generates more
+  "Assert `expr` for truth. Same as inbuilt `assert`, except generates more
   verbose message if `msg` is not set.
 
 ``` fennel
@@ -89,23 +91,24 @@ Deep compare values:
 ;; => runtime error: assertion failed for (= 1 2 3)
 ```"
   `(assert ,expr
-           (.. "assertion failed for "
+           (.. "assertion failed: "
                (or ,msg ,(view expr {:one-line? true})))))
 (fn test.assert-not
   [expr msg]
-  "Assert for not truth. Works the same as [`assert-is`](#assert-is)."
+  "Assert `expr` for not truth. Generates more verbose message if
+  `msg` is not set. Works the same as [`assert-is`](#assert-is)."
   `(assert (not ,expr)
-           (.. "assertion failed for "
+           (.. "assertion failed: "
                (or ,msg ,(view expr {:one-line? true})))))
 
 (fn test.deftest
   [name ...]
-  "Simple way of grouping tests."
+  "Simple way of grouping tests with `name`."
   `(do ,...))
 
 (fn test.testing
   [description ...]
-  "Print test description and run it."
+  "Print test `description` and run it."
   `(do (io.stdout:write (.. "testing: " ,description "\n"))
        ,...))
 

@@ -1,0 +1,9 @@
+;; -*- mode: fennel; -*-
+;; Configuration file for Fenneldoc.
+;; https://gitlab.com/andreyorst/fenneldoc
+
+{:test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :tests.test)"
+                     :macros.fnl "(require-macros :macros)
+                                  (import-macros {: assert-eq} :tests.test)
+                                  (local {: eq : vector : hash-map} (require :init))"
+                     :tests/test.fnl "(require-macros :tests.test)"}}

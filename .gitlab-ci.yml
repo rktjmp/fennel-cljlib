@@ -8,9 +8,17 @@ Lua:
     image: alpine:edge
     stage: test
     before_script:
-        - apk add -q lua5.2 lua5.3 lua5.4 git make
-        - git clone https://git.sr.ht/~technomancy/fennel
+        - >
+            apk add -q
+            lua5.2 lua5.3 lua5.3-dev lua5.4 luarocks5.3
+            git make gcc musl-dev
+        - git clone --depth 1 https://git.sr.ht/~technomancy/fennel
         - (cd fennel; LUA=lua5.3 make install)
+        - luarocks-5.3 install luafilesystem
+        - >
+            git clone --depth 1 --branch v0.1.0 --recursive
+            https://gitlab.com/andreyorst/fenneldoc.git
+        - (cd fenneldoc; LUA=lua5.3 make install)
     script:
         - LUA_EXECUTABLES="lua5.2 lua5.3 lua5.4" make testall >/dev/null
 
@@ -28,13 +36,14 @@ Luajit:
     script:
         - LUA=luajit make test
 
+
 # We install fennel via luarocks because I don't want to figure out
 # how to install luacov without luarocks
 Coverage:
     image: alpine:3.12.1
     stage: coverage
     before_script:
-        - apk add -q lua5.3 lua5.3-dev gcc musl-dev luarocks5.3 make
+        - apk add -q lua5.3 lua5.3-dev luarocks5.3 make gcc musl-dev
         - luarocks-5.3 install fennel
         - luarocks-5.3 install luacov
         - luarocks-5.3 install luacov-console

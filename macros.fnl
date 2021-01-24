@@ -66,12 +66,12 @@
            ;; `(eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})`
            ;; we have to do even deeper search
            (setmetatable right# {:__index (fn [tbl# key#]
-                                        (var res# nil)
-                                        (each [k# v# (pairs tbl#)]
-                                          (when (eq# k# key#)
-                                            (set res# v#)
-                                            (lua :break)))
-                                        res#)})
+                                            (var res# nil)
+                                            (each [k# v# (pairs tbl#)]
+                                              (when (eq# k# key#)
+                                                (set res# v#)
+                                                (lua :break)))
+                                            res#)})
            (var [res# count-a# count-b#] [true 0 0])
            (each [k# v# (pairs left#)]
              (set res# (eq# v# (. right# k#)))
@@ -146,11 +146,11 @@
                            _SCOPE _CHUNK))
 
 (fn when-meta [...]
-  "Wrapper that compiles away if metadata support was not enabled.  What
-this effectively means, is that everything that is wrapped with this
-macro will disappear from the resulting Lua code if metadata is not
-enabled when compiling with `fennel --compile` without `--metadata`
-switch."
+  "Wrapper that compiles away if metadata support was not enabled.
+What this effectively means, is that everything that is wrapped with
+this macro and its `body` will disappear from the resulting Lua code
+if metadata is not enabled when compiling with `fennel --compile`
+without `--metadata` switch."
   (when meta-enabled
     `(do ,...)))
 
@@ -192,7 +192,7 @@ this stuff will only work if you use `require-macros` instead of
        (if res# (. fennel#.metadata ,value)))))
 
 (fn with-meta [value meta]
-  "Attach metadata to a value.  When metadata feature is not enabled,
+  "Attach `meta` to a `value`.  When metadata feature is not enabled,
 returns the value without additional metadata.
 
 ``` fennel
@@ -347,7 +347,8 @@ returns the value without additional metadata.
       (table.insert bodies body))
     (when amp-body
       (let [[more-len body arity] amp-body]
-        (assert-compile (not (and max (<= more-len max))) "fn*: arity with `&' must have more arguments than maximum arity without `&'.
+        (assert-compile (not (and max (<= more-len max)))
+                        "fn*: arity with `&' must have more arguments than maximum arity without `&'.
 
 * Try adding more arguments before `&'" arity)
         (table.insert lengths (- more-len 1))
@@ -357,8 +358,8 @@ returns the value without additional metadata.
                   (contains? lengths 0)
                   amp-body))
         (table.insert bodies (list 'error
-                             (.. "wrong argument amount"
-                                 (if name (.. " for "  name) "")) 2)))
+                                   (.. "wrong argument amount"
+                                       (if name (.. " for "  name) "")) 2)))
     bodies))
 
 (fn single-arity-body [args fname]
@@ -396,7 +397,10 @@ returns the value without additional metadata.
 
 (fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
-Supports multiple arities by defining bodies as lists.
+Accepts optional `name` and `docstring?` as first two arguments,
+followed by single or multiple arity bodies defined as lists. Each
+list starts with `arglist*` vector, which supports destructuring, and
+is followed by `body*` wrapped in implicit `do`.
 
 # Examples
 Named function of fixed arity 2:
@@ -505,12 +509,12 @@ namespace tables:
   ([t1 t2 & tables]
    (join (join t1 t2) ((or table.unpack _G.unpack) tables)))) ;; call to `join` resolves to ns.tables.join
 
-(ns.strings.join \"a\" \"b\" \"c\")
-;; => abc
-(join [\"a\"] [\"b\"] [\"c\"] [\"d\" \"e\"])
-;; => [\"a\" \"b\" \"c\" \"d\" \"e\"]
-(join \"a\" \"b\" \"c\")
-;; {}
+(assert-eq (ns.strings.join \"a\" \"b\" \"c\") \"abc\")
+
+(assert-eq (join [\"a\"] [\"b\"] [\"c\"] [\"d\" \"e\"])
+           [\"a\" \"b\" \"c\" \"d\" \"e\"])
+(assert-eq (join \"a\" \"b\" \"c\")
+           [])
 ```
 
 Note that this creates a collision and local `join` overrides `join`
@@ -534,13 +538,12 @@ from `ns.strings`, so the latter must be fully qualified
     (if (sym? name-wo-namespace)
         (if namespaced?
             `(local ,name-wo-namespace
-                    (do (fn ,name-wo-namespace [...] ,docstring ,body)
-                        (set ,name ,name-wo-namespace) ;; set function into module table, e.g. (set foo.bar bar)
+                    (do (set ,name (fn ,name-wo-namespace [...] ,docstring ,body)) ;; set function into module table, e.g. (set foo.bar bar)
                         ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc})))
             `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc})))
         (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc}))))
 
-(attach-meta fn* {:fnl/arglist ["name docstring? ([arglist*] body)*"]})
+(attach-meta fn* {:fnl/arglist ["name" "docstring?" "([arglist*] body)*"]})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; let variants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -553,6 +556,9 @@ from `ns.strings`, so the latter must be fully qualified
 ;; such intention
 
 (fn if-let [...]
+  "If `binding` is set by `test` to logical true, evaluates `then-branch`
+with binding-form bound to the value of test, if not, yields
+`else-branch`."
   (let [[bindings then else] (match (select :# ...)
                                2 [...]
                                3 [...]
@@ -565,13 +571,12 @@ from `ns.strings`, so the latter must be fully qualified
                ,then)
              ,else)))))
 
-(attach-meta if-let {:fnl/arglist ["[binding test]" "then-branch" "else-branch"]
-                     :fnl/docstring "If test is logical true,
-evaluates `then-branch` with binding-form bound to the value of test,
-if not, yields `else-branch`."})
+(attach-meta if-let {:fnl/arglist ["[binding test]" "then-branch" "else-branch"]})
 
 
 (fn when-let [...]
+  "If `binding` was bound by `test` to logical true, evaluates `body` in
+implicit `do`."
   (let [[bindings & body] (if (> (select :# ...) 0) [...]
                               (error "wrong argument amount for when-let" 2))]
     (check-two-binding-vec bindings)
@@ -581,12 +586,12 @@ if not, yields `else-branch`."})
              (let [,form tmp#]
                ,((or table.unpack _G.unpack) body)))))))
 
-(attach-meta when-let {:fnl/arglist ["[binding test]" "& body"]
-                       :fnl/docstring "If test is logical true,
-evaluates `body` in implicit `do`."})
+(attach-meta when-let {:fnl/arglist ["[binding test]" "&" "body"]})
 
 
 (fn if-some [...]
+  "If `test` is non-`nil`, evaluates `then-branch` with `binding`-form bound
+to the value of test, if not, yields `else-branch`."
   (let [[bindings then else] (match (select :# ...)
                                2 [...]
                                3 [...]
@@ -599,13 +604,12 @@ evaluates `body` in implicit `do`."})
              (let [,form tmp#]
                ,then))))))
 
-(attach-meta if-some {:fnl/arglist ["[binding test]" "then-branch" "else-branch"]
-                      :fnl/docstring "If test is non-`nil`, evaluates
-`then-branch` with binding-form bound to the value of test, if not,
-yields `else-branch`."})
+(attach-meta if-some {:fnl/arglist ["[binding test]" "then-branch" "else-branch"]})
 
 
 (fn when-some [...]
+  "If `test` sets `binding` to non-`nil`, evaluates `body` in implicit
+`do`."
   (let [[bindings & body] (if (> (select :# ...) 0) [...]
                               (error "wrong argument amount for when-some" 2))]
     (check-two-binding-vec bindings)
@@ -616,9 +620,7 @@ yields `else-branch`."})
              (let [,form tmp#]
                ,((or table.unpack _G.unpack) body)))))))
 
-(attach-meta when-some {:fnl/arglist ["[binding test]" "& body"]
-                        :fnl/docstring "If test is non-`nil`,
-evaluates `body` in implicit `do`."})
+(attach-meta when-some {:fnl/arglist ["[binding test]" "&" "body"]})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; into ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -628,7 +630,7 @@ evaluates `body` in implicit `do`."})
       :else))
 
 (fn into [to from]
-  "Transform one table into another.  Mutates first table.
+  "Transform table `from` into another table `to`.  Mutates first table.
 
 Transformation happens in runtime, but type deduction happens in
 compile time if possible.  This means, that if literal values passed
@@ -636,15 +638,15 @@ to `into` this will have different effects for associative tables and
 vectors:
 
 ``` fennel
-(into [1 2 3] [4 5 6]) ;; => [1 2 3 4 5 6]
-(into {:a 1 :c 2} {:a 0 :b 1}) ;; => {:a 0 :b 1 :c 2}
+(assert-eq (into [1 2 3] [4 5 6]) [1 2 3 4 5 6])
+(assert-eq (into {:a 1 :c 2} {:a 0 :b 1}) {:a 0 :b 1 :c 2})
 ```
 
 Conversion between different table types is also supported:
 
 ``` fennel
-(into [] {:a 1 :b 2 :c 3}) ;; => [[:a 1] [:b 2] [:c 3]]
-(into {} [[:a 1] [:b 2]]) ;; => {:a 1 :b 2}
+(assert-eq (into [] {:a 1}) [[:a 1]])
+(assert-eq (into {} [[:a 1] [:b 2]]) {:a 1 :b 2})
 ```
 
 Same rules apply to runtime detection of table type, except that this
@@ -652,7 +654,7 @@ will not work for empty tables:
 
 ``` fennel
 (local empty-table {})
-(into empty-table {:a 1 :b 2}) ;; => [[:a 1] [:b 2]]
+(assert-eq (into empty-table {:a 1}) [[:a 1]])
 ``` fennel
 
 If table is empty, `into` defaults to sequential table, because it
@@ -664,8 +666,8 @@ runtime, and this works as expected:
 ``` fennel
 (local t1 [1 2 3])
 (local t2 {:a 10 :c 3})
-(into t1 {:a 1 :b 2}) ;; => [1 2 3 [:a 1] [:b 2]]
-(into t2 {:a 1 :b 2}) ;; => {:a 1 :b 2 :c 3}
+(assert-eq (into t1 {:a 1}) [1 2 3 [:a 1]])
+(assert-eq (into t2 {:a 1}) {:a 1 :c 3})
 ```
 
 `cljlib.fnl` module provides two additional functions `vector` and
@@ -673,8 +675,8 @@ runtime, and this works as expected:
 at runtime:
 
 ``` fennel
-(into (vector) {:a 1 :b 2}) ;; => [[:a 1] [:b 2]]
-(into (hash-map) [[:a 1 :b 2]]) ;; => {:a 1 :b 2}
+(assert-eq (into (vector) {:a 1}) [[:a 1]])
+(assert-eq (into (hash-map) [[:a 1] [:b 2]]) {:a 1 :b 2})
 ```"
   (assert-compile (and to from) "into: expected two arguments")
   (let [to-type (table-type to)
@@ -787,10 +789,10 @@ and return result of the same type:
       (table.insert res (f v)))
     (into (empty tbl) res)))
 
-(map (fn [[k v]] [(string.upper k) v]) {:a 1 :b 2 :c 3})
-;; => {:A 1 :B 2 :C 3}
-(map #(* $ $) [1 2 3 4])
-;; [1 4 9 16]
+(assert-eq (map (fn [[k v]] [(string.upper k) v]) {:a 1 :b 2 :c 3})
+           {:A 1 :B 2 :C 3})
+(assert-eq (map #(* $ $) [1 2 3 4])
+           [1 4 9 16])
 ```
 See [`into`](#into) for more info on how conversion is done."
   (match (table-type x)
@@ -817,7 +819,7 @@ See [`into`](#into) for more info on how conversion is done."
 
 (fn defmulti [...]
   (let [[name & options] (if (> (select :# ...) 0) [...]
-                          (error "wrong argument amount for defmulti"))
+                             (error "wrong argument amount for defmulti"))
         docstring (if (string? (first options)) (first options))
         options (if docstring (rest options) options)
         dispatch-fn (first options)
@@ -855,27 +857,32 @@ See [`into`](#into) for more info on how conversion is done."
                     :__fennelview tostring
                     :cljlib/type :multifn}))))))
 
-(attach-meta defmulti {:fnl/arglist [:name :docstring? :dispatch-fn :attr-map?]
-                       :fnl/docstring "Create multifunction with
-runtime dispatching based on results from `dispatch-fn`.  Returns an
-empty table with `__call` metamethod, that calls `dispatch-fn` on its
-arguments.  Amount of arguments passed, should be the same as accepted
-by `dispatch-fn`.  Looks for multimethod based on result from
-`dispatch-fn`.
+(attach-meta defmulti {:fnl/arglist [:name :docstring? :dispatch-fn :options*]
+                       :fnl/docstring "Create multifunction `name` with runtime dispatching based on results
+from `dispatch-fn`.  Returns a proxy table with `__call` metamethod,
+that calls `dispatch-fn` on its arguments.  Amount of arguments
+passed, should be the same as accepted by `dispatch-fn`.  Looks for
+multimethod based on result from `dispatch-fn`.
+
+Accepts optional `docstring?`, and `options*` arguments, where
+`options*` is a sequence of key value pairs representing additional
+attributes.  Supported options:
+
+`:default` - the default dispatch value, defaults to `:default`.
 
 By default, multifunction has no multimethods, see
-[`multimethod`](#multimethod) on how to add one."})
+[`defmethod`](#defmethod) on how to add one."})
 
 
 (fn defmethod [multifn dispatch-val ...]
   (when (= (select :# ...) 0) (error "wrong argument amount for defmethod"))
   `(doto ,multifn (tset ,dispatch-val (do (fn* f# ,...) f#))))
 
-(attach-meta defmethod {:fnl/arglist [:multifn :dispatch-val :fnspec]
-                        :fnl/docstring "Attach new method to multi-function dispatch value. accepts the `multi-fn`
-as its first argument, the dispatch value as second, and function tail
-starting from argument list, followed by function body as in
-[`fn*`](#fn).
+(attach-meta defmethod {:fnl/arglist [:multi-fn :dispatch-value :fnspec]
+                        :fnl/docstring "Attach new method to multi-function dispatch value. accepts the
+`multi-fn` as its first argument, the `dispatch-value` as second, and
+`fnspec` - a function tail starting from argument list, followed by
+function body as in [`fn*`](#fn).
 
 # Examples
 Here are some examples how multimethods can be used.
@@ -892,7 +899,7 @@ to another multimethod:
 (defmethod fac 0 [_] 1)
 (defmethod fac :default [x] (* x (fac (- x 1))))
 
-(fac 4) ;; => 24
+(assert-eq (fac 4) 24)
 ```
 
 `:default` is a special method which gets called when no other methods
@@ -925,54 +932,51 @@ tables to Lua's one:
 (defmulti to-lua-str (fn [x] (type x)))
 
 (defmethod to-lua-str :number [x] (tostring x))
-(defmethod to-lua-str :table [x] (let [res []]
-                                   (each [k v (pairs x)]
-                                     (table.insert res (.. \"[\" (to-lua-str k) \"] = \" (to-lua-str v))))
-                                   (.. \"{\" (table.concat res \", \") \"}\")))
+(defmethod to-lua-str :table [x]
+  (let [res []]
+    (each [k v (pairs x)]
+      (table.insert res (.. \"[\" (to-lua-str k) \"] = \" (to-lua-str v))))
+    (.. \"{\" (table.concat res \", \") \"}\")))
 (defmethod to-lua-str :string [x] (.. \"\\\"\" x \"\\\"\"))
 (defmethod to-lua-str :default [x] (tostring x))
 
-(print (to-lua-str {:a {:b 10}}))
-;; => {[\"a\"] = {[\"b\"] = 10}}
+(assert-eq (to-lua-str {:a {:b 10}}) \"{[\\\"a\\\"] = {[\\\"b\\\"] = 10}}\")
 
-(print (to-lua-str [:a :b :c [:d {:e :f}]]))
-;; => {[1] = \"a\", [2] = \"b\", [3] = \"c\", [4] = {[1] = \"d\", [2] = {[\"e\"] = \"f\"}}}
+(assert-eq (to-lua-str [:a :b :c [:d {:e :f}]])
+           \"{[1] = \\\"a\\\", [2] = \\\"b\\\", [3] = \\\"c\\\", [4] = {[1] = \\\"d\\\", [2] = {[\\\"e\\\"] = \\\"f\\\"}}}\")
 ```
 
 And if we call it on some table, we'll get a valid Lua table, which we
-can then reformat as we want and use in Lua if we want."})
+can then reformat as we want and use in Lua.
+
+All of this can be done with functions, and single entry point
+function, that uses if statement and branches on the type, however one
+of the additional features of multimethods, is that separate libraries
+can extend such multimethod by adding additional claues to it without
+needing to patch the source of the function.  For example later on
+support for userdata or coroutines can be added to `to-lua-str`
+function as a separate multimethods for respective types."})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; def and defonce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn def [...]
-  (let [[attr-map name expr] (match (select :# ...)
-                               2 [{} ...]
-                               3 [...]
-                               _ (error "wrong argument amount for def" 2))
-        attr-map (if (table? attr-map) attr-map
-                     (string? attr-map) {attr-map true}
-                     (error "def: expected keyword or literal table as first argument" 2))
-        (s multi) (multisym->sym name)
-        docstring (or (. attr-map :doc)
-                      (. attr-map :fnl/docstring))
-        f (if (. attr-map :mutable) 'var 'local)]
-    (if multi
-        `(,f ,s (do (,f ,s ,expr)
-                    (set ,name ,s)
-                    ,(with-meta s {:fnl/docstring docstring})))
-        `(,f ,name ,(with-meta expr {:fnl/docstring docstring})))))
-
-(attach-meta def {:fnl/arglist [:attr-map? :name :expr]
-                  :fnl/docstring "Wrapper around `local` which can
-declare variables inside namespace, and as local at the same time
-similarly to [`fn*`](#fn*):
+  "Wrapper around `local` which can declare variables inside namespace,
+and as local `name` at the same time similarly to
+[`fn*`](#fn*). Accepts optional `attr-map?` which can contain a
+docstring, and whether variable should be mutable or not.  Sets
+variable to the result of `expr`.
 
 ``` fennel
 (def ns {})
 (def a 10) ;; binds `a` to `10`
 
+(assert-eq a 10)
+
 (def ns.b 20) ;; binds `ns.b` and `b` to `20`
+
+(assert-eq b 20)
+(assert-eq ns.b 20)
 ```
 
 `a` is a `local`, and both `ns.b` and `b` refer to the same value.
@@ -993,9 +997,36 @@ supported, which is `:mutable`, which allows mutating variable with
 However, attaching documentation metadata to anything other than
 tables and functions considered bad practice, due to how Lua
 works. More info can be found in [`with-meta`](#with-meta)
-description."})
+description."
+  (let [[attr-map name expr] (match (select :# ...)
+                               2 [{} ...]
+                               3 [...]
+                               _ (error "wrong argument amount for def" 2))
+        attr-map (if (table? attr-map) attr-map
+                     (string? attr-map) {attr-map true}
+                     (error "def: expected keyword or literal table as first argument" 2))
+        (s multi) (multisym->sym name)
+        docstring (or (. attr-map :doc)
+                      (. attr-map :fnl/docstring))
+        f (if (. attr-map :mutable) 'var 'local)]
+    (if multi
+        `(,f ,s (do (,f ,s ,expr)
+                    (set ,name ,s)
+                    ,(with-meta s {:fnl/docstring docstring})))
+        `(,f ,name ,(with-meta expr {:fnl/docstring docstring})))))
+
+(attach-meta def {:fnl/arglist [:attr-map? :name :expr]})
 
 (fn defonce [...]
+  "Works the same as [`def`](#def), but ensures that later `defonce`
+calls will not override existing bindings. Accepts same `attr-map?` as
+`def`, and sets `name` to the result of `expr`:
+
+``` fennel
+(defonce a 10)
+(defonce a 20)
+(assert-eq a 10)
+```"
   (let [[attr-map name expr] (match (select :# ...)
                                2 [{} ...]
                                3 [...]
@@ -1004,15 +1035,7 @@ description."})
         nil
         (def attr-map name expr))))
 
-(attach-meta defonce {:fnl/arglist [:attr-map? :name :expr]
-                      :fnl/docstring "Works the same as [`def`](#def), but ensures that later `defonce`
-calls will not override existing bindings:
-
-``` fennel
-(defonce a 10)
-(defonce a 20)
-(print a) ;; => prints 10
-```"})
+(attach-meta defonce {:fnl/arglist [:attr-map? :name :expr]})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; try ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1092,10 +1115,12 @@ clauses when we push body epression."
 Wraps its body in `pcall` and checks the return value with `match`
 macro.
 
-Catch clause is written either as (catch symbol body*), thus acting as
-catch-all, or (catch value body*) for catching specific errors.  It is
-possible to have several `catch` clauses.  If no `catch` clauses
-specified, an implicit catch-all clause is created.
+Catch clause is written either as `(catch symbol body*)`, thus acting
+as catch-all, or `(catch value body*)` for catching specific errors.
+It is possible to have several `catch` clauses.  If no `catch` clauses
+specified, an implicit catch-all clause is created.  `body*`, and
+inner expressions of `catch-clause*`, and `finally-clause?` are
+wrapped in implicit `do`.
 
 Finally clause is optional, and written as (finally body*).  If
 present, it must be the last clause in the `try` form, and the only
@@ -1117,36 +1142,36 @@ Catch all errors, ignore those and return fallback value:
     (+ x y)
     (catch _ 0)))
 
-(add nil 1) ;; => 0
+(assert-eq (add nil 1) 0)
 ```
 
 Catch error and do cleanup:
 
 ``` fennel
-(let [tbl []]
-  (try
-    (table.insert tbl \"a\")
-    (table.insert tbl \"b\" \"c\")
-    (catch _
-      (each [k _ (pairs tbl)]
-        (tset tbl k nil))))
-  tbl)
-;; => {}
+(local tbl [])
+
+(try
+  (table.insert tbl \"a\")
+  (table.insert tbl \"b\" \"c\")
+  (catch _
+    (each [k _ (pairs tbl)]
+      (tset tbl k nil))))
+
+(assert-eq (length tbl) 0)
+
 ```
 
 Always run some side effect action:
 
 ``` fennel
-(local res (try 10 (finally (print \"side-effect!\"))))
-;; => side-effect!
-;; => nil
-res
-;; => 10
-(local res (try (error 10) (catch 10 nil) (finally (print \"side-effect!\"))))
-;; => side-effect!
-;; => nil
-res
-;; => nil
+(local t [])
+(local res (try 10 (finally (table.insert t :finally))))
+(assert-eq (. t 1) :finally)
+(assert-eq res 10)
+
+(local res (try (error 10) (catch 10 nil) (finally (table.insert t :again))))
+(assert-eq (. t 2) :again)
+(assert-eq res nil)
 ```
 "})
 
@@ -1166,7 +1191,7 @@ res
  : defmethod
  : def
  : defonce
- :_VERSION #"0.3.0"
+ :_VERSION #"0.4.0"
  :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
  :_COPYRIGHT #"Copyright (C) 2020 Andrey Orst"
  :_DOC_ORDER #[:fn*

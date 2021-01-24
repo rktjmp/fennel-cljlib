@@ -138,15 +138,12 @@ arguments to `args`, and `f` must support variadic amount of
 arguments.
 
 ### Examples
-Applying `print` to different arguments:
+Applying [`add`](#add) to different amount of arguments:
 
 ``` fennel
-(apply print [1 2 3 4])
-;; prints 1 2 3 4
-(apply print 1 [2 3 4])
-;; => 1 2 3 4
-(apply print 1 2 3 4 5 6 [7 8 9])
-;; => 1 2 3 4 5 6 7 8 9
+(assert-eq (apply add [1 2 3 4]) 10)
+(assert-eq (apply add 1 [2 3 4]) 10)
+(assert-eq (apply add 1 2 3 4 5 6 [7 8 9]) 45)
 ```
 
 ## `add`
@@ -228,7 +225,7 @@ Function signature:
 (inc ([x]))
 ```
 
-Increase number by one
+Increase number `x` by one
 
 ## `dec`
 Function signature:
@@ -237,7 +234,7 @@ Function signature:
 (dec ([x]))
 ```
 
-Decrease number by one
+Decrease number `x` by one
 
 ## `eq`
 Function signature:
@@ -270,24 +267,24 @@ metadata attached for this test to work.
 Non empty tables:
 
 ``` fennel
-(assert (map? {:a 1 :b 2}))
+(assert-is (map? {:a 1 :b 2}))
 
 (local some-table {:key :value})
-(assert (map? some-table))
+(assert-is (map? some-table))
 ```
 
 Empty tables:
 
 ``` fennel
 (local some-table {})
-(assert (not (map? some-table)))
+(assert-not (map? some-table))
 ```
 
 Empty tables created with [`hash-map`](#hash-map) will pass the test:
 
 ``` fennel
 (local some-table (hash-map))
-(assert (map? some-table))
+(assert-is (map? some-table))
 ```
 
 ## `vector?`
@@ -312,24 +309,24 @@ metadata attached for this test to work.
 Non empty vector:
 
 ``` fennel
-(assert (vector? [1 2 3 4]))
+(assert-is (vector? [1 2 3 4]))
 
 (local some-table [1 2 3])
-(assert (vector? some-table))
+(assert-is (vector? some-table))
 ```
 
 Empty tables:
 
 ``` fennel
 (local some-table [])
-(assert (not (vector? some-table)))
+(assert-not (vector? some-table))
 ```
 
 Empty tables created with [`vector`](#vector) will pass the test:
 
 ``` fennel
 (local some-table (vector))
-(assert (vector? some-table))
+(assert-is (vector? some-table))
 ```
 
 ## `multifn?`
@@ -360,7 +357,7 @@ Function signature:
 (nil? ([]) ([x]))
 ```
 
-Test if value is nil.
+Test if `x` is nil.
 
 ## `zero?`
 Function signature:
@@ -369,7 +366,7 @@ Function signature:
 (zero? ([x]))
 ```
 
-Test if value is equal to zero.
+Test if `x` is equal to zero.
 
 ## `pos?`
 Function signature:
@@ -396,7 +393,7 @@ Function signature:
 (even? ([x]))
 ```
 
-Test if value is even.
+Test if `x` is even.
 
 ## `odd?`
 Function signature:
@@ -405,7 +402,7 @@ Function signature:
 (odd? ([x]))
 ```
 
-Test if value is odd.
+Test if `x` is odd.
 
 ## `string?`
 Function signature:
@@ -514,7 +511,7 @@ Sets additional metadata for function [`vector?`](#vector?) to work.
 
 ``` fennel
 (local v (vector 1 2 3 4))
-(assert (eq v [1 2 3 4]))
+(assert-eq v [1 2 3 4])
 ```
 
 ## `seq`
@@ -564,7 +561,7 @@ Function signature:
 (kvseq ([col]))
 ```
 
-Transforms any table to key-value sequence.
+Transforms any table `col` to key-value sequence.
 
 ## `first`
 Function signature:
@@ -953,7 +950,8 @@ Function signature:
 (hash-map ([]) ([& kvs]))
 ```
 
-Create associative table from keys and values
+Create associative table from `kvs` represented as sequence of keys
+and values
 
 ## `get`
 Function signature:
@@ -1002,7 +1000,7 @@ Function signature:
 (find ([tbl key]))
 ```
 
-Returns the map entry for `key`, or `nil` if key not present.
+Returns the map entry for `key`, or `nil` if key not present in `tbl`.
 
 ## `dissoc`
 Function signature:
@@ -1011,44 +1009,45 @@ Function signature:
 (dissoc ([tbl]) ([tbl key]) ([tbl key & keys]))
 ```
 
-Remove `key` from table `tbl`.
+Remove `key` from table `tbl`.  Optionally takes more `keys`.
 
 ## `remove-method`
 Function signature:
 
 ```
-(remove-method ([multifn dispatch-val]))
+(remove-method ([multimethod dispatch-value]))
 ```
 
-Remove method from `multifn` for given `dispatch-val`.
+Remove method from `multimethod` for given `dispatch-value`.
 
 ## `remove-all-methods`
 Function signature:
 
 ```
-(remove-all-methods ([multifn]))
+(remove-all-methods ([multimethod]))
 ```
 
-Removes all of the methods of multimethod
+Removes all of the methods of `multimethod`
 
 ## `methods`
 Function signature:
 
 ```
-(methods ([multifn]))
+(methods ([multimethod]))
 ```
 
-Given a multimethod, returns a map of dispatch values -> dispatch fns
+Given a `multimethod`, returns a map of dispatch values -> dispatch fns
 
 ## `get-method`
 Function signature:
 
 ```
-(get-method ([multifn dispatch-val]))
+(get-method ([multimethod dispatch-value]))
 ```
 
-Given a multimethod and a dispatch value, returns the dispatch `fn`
-that would apply to that value, or `nil` if none apply and no default.
+Given a `multimethod` and a `dispatch-value`, returns the dispatch
+`fn` that would apply to that value, or `nil` if none apply and no
+default.
 
 ## `ordered-set`
 Function signature:
@@ -1133,9 +1132,9 @@ and are compared for having the same keys without particular order and
 same size:
 
 ``` fennel
-(assert (= (ordered-set :a :b) (ordered-set :b :a)))
-(assert (not= (ordered-set :a :b) (ordered-set :b :a :c)))
-(assert (= (ordered-set :a :b) (hash-set :a :b)))
+(assert-eq (ordered-set :a :b) (ordered-set :b :a))
+(assert-ne (ordered-set :a :b) (ordered-set :b :a :c))
+(assert-eq (ordered-set :a :b) (hash-set :a :b))
 ```
 
 ## `hash-set`
@@ -1168,5 +1167,5 @@ Copyright (C) 2020 Andrey Orst
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.0.7
+<!-- Generated with Fenneldoc 0.1.0
      https://gitlab.com/andreyorst/fenneldoc -->

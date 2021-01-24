@@ -3,8 +3,10 @@ FENNEL ?= fennel
 FNLSOURCES = init.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 FNLTESTS = tests/fn.fnl tests/macros.fnl tests/core.fnl
+FNLDOCS = init.fnl macros.fnl tests/test.fnl
 LUATESTS = $(FNLTESTS:.fnl=.lua)
 LUA_EXECUTABLES ?= lua luajit
+FENNELDOC := $(shell command -v fenneldoc)
 
 .PHONY: build clean distclean help test luacov luacov-console fenneldoc $(LUA_EXECUTABLES)
 
@@ -23,6 +25,15 @@ distclean: clean
 
 test: $(FNLTESTS)
 	@echo "Testing on" $$($(LUA) -v) >&2
+ifdef FENNELDOC
+	@fenneldoc --mode check $(FNLDOCS) || exit
+else
+	@echo ""
+	@echo "fenneldoc is not installed" >&2
+	@echo "Please install fenneldoc to check documentation during testing" >&2
+	@echo "https://gitlab.com/andreyorst/fenneldoc" >&2
+	@echo ""
+endif
 	@$(foreach test,$?,$(FENNEL) --lua $(LUA) --metadata $(test) || exit;)
 
 testall: $(LUA_EXECUTABLES)
@@ -38,7 +49,7 @@ luacov-console: luacov
 	@$(foreach test, $(LUATESTS), mv $(test).tmp $(test);)
 
 fenneldoc:
-	fenneldoc init.fnl macros.fnl tests/test.fnl
+	fenneldoc $(FNLDOCS)
 
 help:
 	@echo "make                -- run tests and create lua library" >&2

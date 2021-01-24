@@ -31,5 +31,6 @@
                  (eval . (put 'if-some 'fennel-indent-function 1))
                  (eval . (put 'when-let 'fennel-indent-function 1))
                  (eval . (put 'if-let 'fennel-indent-function 1))
-                 (eval . (put 'fn+ 'fennel-indent-function 'defun))
-                 (eval . (put 'fn* 'fennel-indent-function 'defun)))))
+                 (eval . (put 'fn* 'fennel-indent-function 'defun))
+                 (eval . (put 'fn* 'fennel-doc-string-elt 2))
+                 (eval . (put 'defmulti 'fennel-doc-string-elt 2)))))
