@@ -11,16 +11,17 @@
 
 (fn multisym->sym [s]
   ;; Strip multisym part from symbol and return new symbol and
-  ;; indication that sym was transformed.  Non-multisym symbols returned as
-  ;; is.
+  ;; indication that sym was transformed.  Non-multisym symbols
+  ;; returned as is.
   ;;
   ;; ``` fennel
   ;; (multisym->sym a.b)   ;; => (a true)
   ;; (multisym->sym a.b.c) ;; => (c true)
   ;; (multisym->sym a)     ;; => (a false)
   ;; ```
-  (values (sym (string.match (tostring s) "[^.]+$"))
-          (multi-sym? s)))
+  (if (multi-sym? s)
+      (values (sym (string.gsub (tostring s) ".*%." "")) true)
+      (values s false)))
 
 (fn contains? [tbl x]
   ;; Checks if `x` is stored in `tbl` in linear time.
@@ -260,14 +261,6 @@ returns the value without additional metadata.
                               len (.. (deep-tostring v) "])")
                               _   (deep-tostring v)))))
         arglist)))
-
-(fn multisym->sym [s]
-  ;; Strips away the multisym part from symbol, and return just the
-  ;; symbol itself.  Also returns the second value of whether the
-  ;; transformation occured or not.
-  (if (multi-sym? s)
-      (values (sym (string.gsub (tostring s) ".*[.]" "")) true)
-      (values s false)))
 
 (fn has-amp? [args]
   ;; Check if arglist has `&` and return its position of `false`.  Performs
