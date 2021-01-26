@@ -19,7 +19,13 @@
                                              "def"
                                              "defmulti"
                                              "defmethod"
-                                             "defonce"))
+                                             "defonce"
+                                             "deftest"
+                                             "testing"
+                                             "assert-eq"
+                                             "assert-ne"
+                                             "assert-is"
+                                             "assert-not"))
                                   word-end)
                              1 'font-lock-keyword-face))))
                  (eval . (put 'when-meta 'fennel-indent-function 'defun))

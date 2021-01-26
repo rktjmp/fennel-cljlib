@@ -3,6 +3,9 @@
 (fn first [tbl]
   (. tbl 1))
 
+(fn last [tbl]
+  (. tbl (length tbl)))
+
 (fn rest [tbl]
   [((or table.unpack _G.unpack) tbl 2)])
 
@@ -19,9 +22,10 @@
   ;; (multisym->sym a.b.c) ;; => (c true)
   ;; (multisym->sym a)     ;; => (a false)
   ;; ```
-  (if (multi-sym? s)
-      (values (sym (string.gsub (tostring s) ".*%." "")) true)
-      (values s false)))
+  (let [parts (multi-sym? s)]
+    (if parts
+        (values (sym (last parts)) true)
+        (values s false))))
 
 (fn contains? [tbl x]
   ;; Checks if `x` is stored in `tbl` in linear time.
@@ -388,6 +392,12 @@ returns the value without additional metadata.
              (. amp-bodies 1))
          fname))))
 
+(fn demethodize [s]
+  (-> s
+      tostring
+      (string.gsub ":" ".")
+      sym))
+
 (fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
 Accepts optional `name` and `docstring?` as first two arguments,
@@ -517,12 +527,12 @@ from `ns.strings`, so the latter must be fully qualified
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
         fname (if (sym? name-wo-namespace) (tostring name-wo-namespace))
+        name (demethodize name)
         args (if (sym? name-wo-namespace)
                  (if (string? doc?) [...] [doc? ...])
                  [name-wo-namespace doc? ...])
         arglist-doc (gen-arglist-doc args)
         [x] args
-
         body (if (sequence? x) (single-arity-body args fname)
                  (list? x) (multi-arity-body args fname)
                  (assert-compile false "fn*: expected parameters table.
