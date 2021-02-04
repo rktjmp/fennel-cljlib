@@ -1096,7 +1096,7 @@ default."
                         (view v inspector (+ indent set-indent) true)))]
         (tset lines 1 (.. prefix (or (. lines 1) "")))
         (tset lines (length lines) (.. (. lines (length lines)) "}"))
-        (values lines (> (length lines) inspector.sequential-length)))))
+        lines)))
 
 (fn ordered-set-newindex [Set]
   "`__newindex` metamethod for ordered-set."
