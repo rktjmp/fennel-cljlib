@@ -25,6 +25,7 @@ distclean: clean
 
 test: $(FNLTESTS)
 	@echo "Testing on" $$($(LUA) -v) >&2
+	@$(foreach test,$?,$(FENNEL) --lua $(LUA) --metadata $(test) || exit;)
 ifdef FENNELDOC
 	@fenneldoc --mode check $(FNLDOCS) || exit
 else
@@ -34,7 +35,6 @@ else
 	@echo "https://gitlab.com/andreyorst/fenneldoc" >&2
 	@echo ""
 endif
-	@$(foreach test,$?,$(FENNEL) --lua $(LUA) --metadata $(test) || exit;)
 
 testall: $(LUA_EXECUTABLES)
 	@$(foreach lua,$?,LUA=$(lua) make test || exit;)
