@@ -60,7 +60,7 @@ Deep compare values:
          right# ,expr2
          eq# ,(eq-fn)
          fennel# (require :fennel)]
-     (assert (eq# left# right#)
+     (assert (pick-values 1 (pcall #(do eq# left# right#)))
              (or ,msg (.. "assertion failed for expression:
 (= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
@@ -75,7 +75,7 @@ Deep compare values:
          right# ,expr2
          eq# ,(eq-fn)
          fennel# (require :fennel)]
-     (assert (not (eq# left# right#))
+     (assert (pick-values 1 (pcall #(not (eq# left# right#))))
              (or ,msg (.. "assertion failed for expression:
 (not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
@@ -90,14 +90,15 @@ Deep compare values:
 ;; (assert-is (= 1 2 3))
 ;; => runtime error: assertion failed for (= 1 2 3)
 ```"
-  `(assert ,expr
+  `(assert (pick-values 1 (pcall #(do ,expr)))
            (.. "assertion failed: "
                (or ,msg ,(view expr {:one-line? true})))))
+
 (fn test.assert-not
   [expr msg]
   "Assert `expr` for not truth. Generates more verbose message if
   `msg` is not set. Works the same as [`assert-is`](#assert-is)."
-  `(assert (not ,expr)
+  `(assert (pick-values 1 (pcall #(not ,expr)))
            (.. "assertion failed: "
                (or ,msg ,(view expr {:one-line? true})))))
 

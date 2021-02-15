@@ -238,11 +238,11 @@ returns the value without additional metadata.
         (string.format "%q" data)
         (tostring data))))
 
-(fn gen-arglist-doc [args]
+(fn gen-arglist-doc [args method?]
   (if (list? (. args 1))
       (let [arglist []]
         (each [_ v (ipairs args)]
-          (let [arglist-doc (gen-arglist-doc v)]
+          (let [arglist-doc (gen-arglist-doc v method?)]
             (when (next arglist-doc)
               (table.insert arglist (table.concat arglist-doc " ")))))
         (when (and (> (length (table.concat arglist " ")) 60)
@@ -253,7 +253,9 @@ returns the value without additional metadata.
 
       (sequence? (. args 1))
       (let [arglist []
-            args (. args 1)
+            args (if method?
+                     [(sym :self) (table.unpack (. args 1))]
+                     (. args 1))
             len (length args)]
         (if (= len 0)
             (table.insert arglist "([])")
@@ -280,7 +282,7 @@ returns the value without additional metadata.
         (assert-compile false "only one `more' argument can be supplied after `&' in arglist." args)))
   res)
 
-(fn gen-arity [[args & body]]
+(fn gen-arity [[args & body] method?]
   ;; Forms three values, representing data needed to create dispatcher:
   ;;
   ;; - the length of arglist;
@@ -289,6 +291,7 @@ returns the value without additional metadata.
   (assert-compile (sequence? args) "fn*: expected parameters table.
 
 * Try adding function parameters as a list of identifiers in brackets." args)
+  (when method? (table.insert args 1 (sym :self)))
   (values (length args)
           (list 'let [args ['...]] (list 'do ((or table.unpack _G.unpack) body)))
           (has-amp? args)))
@@ -359,11 +362,11 @@ returns the value without additional metadata.
                                        (if name (.. " for "  name) "")) 2)))
     bodies))
 
-(fn single-arity-body [args fname]
+(fn single-arity-body [args fname method?]
   ;; Produces arglist and body for single-arity function.
   ;; For more info check `gen-arity' documentation.
   (let [[args & body] args
-        (arity body amp) (gen-arity [args ((or table.unpack _G.unpack) body)])]
+        (arity body amp) (gen-arity [args ((or table.unpack _G.unpack) body)] method?)]
     `(let [len# (select :# ...)]
        ,(arity-dispatcher
          'len#
@@ -371,13 +374,13 @@ returns the value without additional metadata.
          (if amp [amp body])
          fname))))
 
-(fn multi-arity-body [args fname]
+(fn multi-arity-body [args fname method?]
   ;; Produces arglist and all body forms for multi-arity function.
   ;; For more info check `gen-arity' documentation.
   (let [bodies {}   ;; bodies of fixed arity
         amp-bodies []] ;; bodies where arglist contains `&'
     (each [_ arity (ipairs args)]
-      (let [(n body amp) (gen-arity arity)]
+      (let [(n body amp) (gen-arity arity method?)]
         (if amp
             (table.insert amp-bodies [amp body arity])
             (tset bodies n body))))
@@ -391,6 +394,13 @@ returns the value without additional metadata.
          (if (not= (next amp-bodies) nil)
              (. amp-bodies 1))
          fname))))
+
+(fn method? [s]
+  (when (sym? s)
+    (let [(res n) (-> s
+                      tostring
+                      (string.find ":"))]
+      (and res (> n 1)))))
 
 (fn demethodize [s]
   (-> s
@@ -527,14 +537,15 @@ from `ns.strings`, so the latter must be fully qualified
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
         fname (if (sym? name-wo-namespace) (tostring name-wo-namespace))
+        method? (method? name)
         name (demethodize name)
         args (if (sym? name-wo-namespace)
                  (if (string? doc?) [...] [doc? ...])
                  [name-wo-namespace doc? ...])
-        arglist-doc (gen-arglist-doc args)
+        arglist-doc (gen-arglist-doc args method?)
         [x] args
-        body (if (sequence? x) (single-arity-body args fname)
-                 (list? x) (multi-arity-body args fname)
+        body (if (sequence? x) (single-arity-body args fname method?)
+                 (list? x) (multi-arity-body args fname method?)
                  (assert-compile false "fn*: expected parameters table.
 
 * Try adding function parameters as a list of identifiers in brackets." x))]
