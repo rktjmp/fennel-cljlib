@@ -234,8 +234,8 @@
     (assert-eq (core.kvseq {123 456}) [[123 456]])
     (assert-eq (core.kvseq {:a 1}) [[:a 1]])
     (assert-eq (core.kvseq [0 0 0 10]) [[1 0] [2 0] [3 0] [4 10]])
-    (assert-eq (core.kvseq (core.ordered-set :a :b :c)) [[1 :a] [2 :b] [3 :c]])
-    (assert-eq (core.kvseq (core.hash-set :a)) [[1 :a]])
+    (assert-eq (core.kvseq (core.ordered-set :a :b :c)) [[:a :a] [:b :b] [:c :c]])
+    (assert-eq (core.kvseq (core.hash-set :a)) [[:a :a]])
     (assert-eq (core.kvseq "abc") [[1 "a"] [2 "b"] [3 "c"]]))
 
   (testing "mapv"

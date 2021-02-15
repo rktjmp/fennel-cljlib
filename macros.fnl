@@ -55,7 +55,7 @@
     (fennel.metadata:set value k v)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;; Runtime function builers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;; Runtime function builders ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO: This code should be shared with `init.fnl`
 
@@ -1205,9 +1205,9 @@ Always run some side effect action:
  : defmethod
  : def
  : defonce
- :_VERSION #"0.4.0"
+ :_VERSION #"0.5.0"
  :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
- :_COPYRIGHT #"Copyright (C) 2020 Andrey Orst"
+ :_COPYRIGHT #"Copyright (C) 2020-2021 Andrey Listopadov"
  :_DOC_ORDER #[:fn*
                :try
                :def :defonce :defmulti :defmethod
@@ -1221,3 +1221,4 @@ Always run some side effect action:
 ;; LocalWords:  defonce metadata metatable fac defmulti Umm defmethod
 ;; LocalWords:  multimethods multimethod multifn REPL fnl AST Lua's
 ;; LocalWords:  lua tostring str concat namespace ns Cljlib Clojure
+;; LocalWords:  TODO init Andrey Listopadov
