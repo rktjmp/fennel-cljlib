@@ -1,4 +1,4 @@
-# Macros.fnl (0.4.0)
+# Macros.fnl (0.5.0)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
@@ -589,7 +589,7 @@ If `test` sets `binding` to non-`nil`, evaluates `body` in implicit
 
 ---
 
-Copyright (C) 2020 Andrey Orst
+Copyright (C) 2020-2021 Andrey Listopadov
 
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 

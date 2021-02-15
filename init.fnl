@@ -1,6 +1,6 @@
-(local core {:_VERSION "0.4.0"
+(local core {:_VERSION "0.5.0"
              :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
-             :_COPYRIGHT "Copyright (C) 2020 Andrey Orst"
+             :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
              :_MODULE_NAME "cljlib"
              :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
@@ -1091,15 +1091,17 @@ default."
                        "{")
             set-indent (length prefix)
             indent-str (string.rep " " set-indent)
-            lines (icollect [i v (pairs Set)]
-                    (.. (if (= i 1) "" indent-str)
+            lines (icollect [v (pairs Set)]
+                    (.. indent-str
                         (view v inspector (+ indent set-indent) true)))]
-        (tset lines 1 (.. prefix (or (. lines 1) "")))
+        (tset lines 1 (.. prefix (string.gsub (or (. lines 1) "") "^%s+" "")))
         (tset lines (length lines) (.. (. lines (length lines)) "}"))
         lines)))
 
 (fn ordered-set-newindex [Set]
-  "`__newindex` metamethod for ordered-set."
+  "`__newindex` metamethod for ordered-set.
+
+Updates order of all items when some key removed from set."
   (fn [t k v]
     (if (= nil v)
         (let [k (. Set k)]
@@ -1137,28 +1139,29 @@ default."
         (lua :break)))
   (and res (= size (length s2))))
 
-(fn ordered-set-ipairs [Set]
+(fn set->iseq [Set]
+  (collect [v k (pairs Set)]
+    (values k v)))
+
+(fn ordered-set-pairs [Set]
   "Returns stateless `ipairs` iterator for ordered sets."
   (fn []
-    (fn set-next [t i]
-      (fn loop [t k]
-        (local (k v) (next t k))
-        (if v (if (= v (+ 1 i))
-                  (values v k)
-                  (loop t k))))
-      (loop t))
-    (values set-next Set 0)))
+    (var i 0)
+    (var iseq nil)
+    (fn set-next [t _]
+      (when (not iseq)
+        (set iseq (set->iseq Set)))
+      (set i (+ i 1))
+      (let [v (. iseq i)]
+        (values v v)))
+    (values set-next Set nil)))
 
-(fn hash-set-ipairs [Set]
+(fn hash-set-pairs [Set]
   "Returns stateful `ipairs` iterator for hashed sets."
   (fn []
-    (var i 0)
-    (fn iter [t _]
-      (var (k v) (next t))
-      (for [j 1 i]
-        (set (k v) (next t k)))
-      (if k (do (set i (+ i 1))
-                (values i k))))
+    (fn iter [t k]
+      (let [v (next t k)]
+        (values v v)))
     (values iter Set nil)))
 
 (fn into-set [Set tbl]
@@ -1252,7 +1255,7 @@ same size:
 ```"
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})
-        set-ipairs (ordered-set-ipairs Set)]
+        set-pairs (ordered-set-pairs Set)]
     (var i 1)
     (each [_ val (ipairs xs)]
       (when (not (. Set val))
@@ -1268,8 +1271,7 @@ same size:
                    :__len (set-length Set)
                    :__index #(if (. Set $2) $2 nil)
                    :__newindex (ordered-set-newindex Set)
-                   :__ipairs set-ipairs
-                   :__pairs set-ipairs
+                   :__pairs set-pairs
                    :__name "ordered set"
                    :__fennelview viewset})))
 
@@ -1290,7 +1292,7 @@ supported by the Fennel reader, so you can't create sets with this
 syntax. Use `hash-set` function instead."
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})
-        set-ipairs (hash-set-ipairs Set)]
+        set-pairs (hash-set-pairs Set)]
     (each [_ val (ipairs xs)]
       (when (not (. Set val))
         (tset Set val true)))
@@ -1304,8 +1306,7 @@ syntax. Use `hash-set` function instead."
                    :__len (set-length Set)
                    :__index #(if (. Set $2) $2 nil)
                    :__newindex (hash-set-newindex Set)
-                   :__ipairs set-ipairs
-                   :__pairs set-ipairs
+                   :__pairs set-pairs
                    :__name "hash set"
                    :__fennelview viewset})))
 
@@ -1327,4 +1328,5 @@ syntax. Use `hash-set` function instead."
 ;; LocalWords:  cljlib Clojure's clj lua PUC mapv concat Clojure fn zs
 ;; LocalWords:  defmulti multi arity eq metadata prepending variadic
 ;; LocalWords:  args tbl LocalWords memoized referentially Andrey
-;; LocalWords:  Orst codepoints
+;; LocalWords:  Orst codepoints Listopadov metamethods nums multifn
+;; LocalWords:  stateful LuaJIT

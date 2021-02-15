@@ -1,4 +1,4 @@
-# Cljlib (0.4.0)
+# Cljlib (0.5.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -1162,7 +1162,7 @@ syntax. Use `hash-set` function instead.
 
 ---
 
-Copyright (C) 2020 Andrey Orst
+Copyright (C) 2020-2021 Andrey Listopadov
 
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
