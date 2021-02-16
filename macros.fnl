@@ -108,7 +108,14 @@
                (let [assoc-res# (setmetatable {} {:cljlib/type :seq})]
                  (each [k# v# (pairs col#)]
                    (if (and (not assoc?#)
-                            (not (= (type k#) :number)))
+                            (if (= (type col#) :table)
+                                (let [m# (or (getmetatable col#) {})
+                                      t# (. m# :cljlib/type)]
+                                  (if t#
+                                      (= t# :table)
+                                      (let [(k# _#) ((or m#.cljlib/next next) col#)]
+                                        (and (not= k# nil)
+                                             (not= k# 1)))))))
                        (set assoc?# true))
                    (insert# res# v#)
                    (insert# assoc-res# [k# v#]))
@@ -131,10 +138,10 @@
   `(fn [tbl#]
      (let [t# (type tbl#)]
        (if (= t# :table)
-           (let [meta# (getmetatable tbl#)
-                 table-type# (and meta# (. meta# :cljlib/type))]
+           (let [meta# (or (getmetatable tbl#) {})
+                 table-type# (. meta# :cljlib/type)]
              (if table-type# table-type#
-                 (let [(k# _#) (next tbl#)]
+                 (let [(k# _#) ((or meta#.cljlib/next next) tbl#)]
                    (if (and (= (type k#) :number) (= k# 1)) :seq
                        (= k# nil) :empty
                        :table))))
