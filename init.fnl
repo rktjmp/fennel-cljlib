@@ -958,12 +958,14 @@ use."
 (fn* core.assoc
   "Associate key `k` with value `v` in `tbl`."
   ([tbl k v]
+   (assert (not (nil? k)) "attempt to use nil as key")
    (setmetatable
     (doto tbl (tset k v))
     {:cljlib/type :table}))
   ([tbl k v & kvs]
    (assert (= (% (length kvs) 2) 0)
            (.. "no value supplied for key " (. kvs (length kvs))))
+   (assert (not (nil? k)) "attempt to use nil as key")
    (tset tbl k v)
    (var [k v] [nil nil])
    (var (i k) (next kvs))

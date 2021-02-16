@@ -721,7 +721,8 @@
     (assert-eq (core.hash-map) {})
     (assert-eq (core.hash-map :a 1) {:a 1})
     (assert-eq (core.hash-map :a 1 :b 2 :c 3) {:a 1 :b 2 :c 3})
-    (assert-eq (getmetatable (core.hash-map)) {:cljlib/type :table})))
+    (assert-eq (getmetatable (core.hash-map)) {:cljlib/type :table})
+    (assert-not (pcall core.hash-map nil 1))))
 
 (deftest sets
   (testing "hash-set"
