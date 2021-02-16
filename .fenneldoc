@@ -2,7 +2,8 @@
 ;; Configuration file for Fenneldoc.
 ;; https://gitlab.com/andreyorst/fenneldoc
 
-{:test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :tests.test)"
+{:ignored-args-patterns ["[a-z]" "%.%.%." "[xkf]s" "kvs" "col[0-9]" "cols?" "rest" "more" "keys" "tbl" "args"]
+ :test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :tests.test)"
                      :macros.fnl "(require-macros :macros)
                                   (import-macros {: assert-eq} :tests.test)
                                   (local {: eq : vector : hash-map} (require :init))"
