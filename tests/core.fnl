@@ -790,6 +790,7 @@
 
   (testing "sets into tables"
     (assert-eq (into [] (core.ordered-set 1 2 3)) [1 2 3])
+    (assert-eq (into [] (core.ordered-set :a :b :c)) [:a :b :c])
     (assert-eq (into {} (core.ordered-set [:a 1] [:b 2])) {:a 1 :b 2})))
 
 (deftest memoization

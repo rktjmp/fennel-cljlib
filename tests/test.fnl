@@ -59,12 +59,16 @@ Deep compare values:
   `(let [left# ,expr1
          right# ,expr2
          eq# ,(eq-fn)
-         fennel# (require :fennel)]
-     (assert (pick-values 1 (pcall #(do eq# left# right#)))
-             (or ,msg (.. "assertion failed for expression:
+         fennel# (require :fennel)
+         (suc# res#) (pcall eq# left# right#)]
+     (if suc#
+         (assert res# (or ,msg (.. "assertion failed for expression:
 (= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
-  Right: " (fennel#.view right# {:one-line? true}) "\n")))))
+  Right: " (fennel#.view right# {:one-line? true}) "\n")))
+         (error (.. "in expression:
+(= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
+  " res#" \n")))))
 
 (fn test.assert-ne
   [expr1 expr2 msg]
@@ -74,12 +78,16 @@ Deep compare values:
   `(let [left# ,expr1
          right# ,expr2
          eq# ,(eq-fn)
-         fennel# (require :fennel)]
-     (assert (pick-values 1 (pcall #(not (eq# left# right#))))
-             (or ,msg (.. "assertion failed for expression:
+         fennel# (require :fennel)
+         (suc# res#) (pcall eq# left# right#)]
+     (if suc#
+         (assert (not res#) (or ,msg (.. "assertion failed for expression:
 (not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
   Left:  " (fennel#.view left# {:one-line? true}) "
-  Right: " (fennel#.view right# {:one-line? true}) "\n")))))
+  Right: " (fennel#.view right# {:one-line? true}) "\n")))
+         (error (.. "in expression:
+(not= " ,(view expr1 {:one-line? true}) " " ,(view expr2 {:one-line? true}) ")
+  " res#" \n")))))
 
 (fn test.assert-is
   [expr msg]
@@ -90,17 +98,27 @@ Deep compare values:
 ;; (assert-is (= 1 2 3))
 ;; => runtime error: assertion failed for (= 1 2 3)
 ```"
-  `(assert (pick-values 1 (pcall #(do ,expr)))
-           (.. "assertion failed: "
-               (or ,msg ,(view expr {:one-line? true})))))
+  `(let [(suc# res#) (pcall #(do ,expr))]
+     (if suc#
+         (assert res#
+                 (.. "assertion failed: "
+                     (or ,msg ,(view expr {:one-line? true}))))
+         (error (.. "in expression: "
+                    ,(view expr {:one-line? true}) "
+  " res#" \n")))))
 
 (fn test.assert-not
   [expr msg]
   "Assert `expr` for not truth. Generates more verbose message if
   `msg` is not set. Works the same as [`assert-is`](#assert-is)."
-  `(assert (pick-values 1 (pcall #(not ,expr)))
-           (.. "assertion failed: "
-               (or ,msg ,(view expr {:one-line? true})))))
+  `(let [(suc# res#) (pcall #(not ,expr))]
+     (if suc#
+         (assert res#
+                 (.. "assertion failed: "
+                     (or ,msg ,(view expr {:one-line? true}))))
+         (error (.. "in expression: "
+                    ,(view expr {:one-line? true}) "
+  " res#" \n")))))
 
 (fn test.deftest
   [name ...]
