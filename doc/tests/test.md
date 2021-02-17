@@ -93,5 +93,5 @@ Assert `expr` for not truth. Generates more verbose message if
   `msg` is not set. Works the same as [`assert-is`](#assert-is).
 
 
-<!-- Generated with Fenneldoc 0.1.0
+<!-- Generated with Fenneldoc 0.1.2
      https://gitlab.com/andreyorst/fenneldoc -->

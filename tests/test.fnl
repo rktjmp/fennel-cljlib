@@ -74,7 +74,7 @@ Deep compare values:
   [expr1 expr2 msg]
   "Assert for unequality.  Like `assert`, except compares results of
 `expr1` and `expr2` for equality.  Generates formatted message if
-`msg` is not set to other message.  Same as [`assert-eq`](#assert-eq)."
+`msg` is not set to other message.  Same as `assert-eq'."
   `(let [left# ,expr1
          right# ,expr2
          eq# ,(eq-fn)
@@ -110,7 +110,7 @@ Deep compare values:
 (fn test.assert-not
   [expr msg]
   "Assert `expr` for not truth. Generates more verbose message if
-  `msg` is not set. Works the same as [`assert-is`](#assert-is)."
+  `msg` is not set. Works the same as `assert-is'."
   `(let [(suc# res#) (pcall #(not ,expr))]
      (if suc#
          (assert res#

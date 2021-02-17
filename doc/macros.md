@@ -231,7 +231,7 @@ Function signature:
 
 Wrapper around `local` which can declare variables inside namespace,
 and as local `name` at the same time similarly to
-[`fn*`](#fn*). Accepts optional `attr-map?` which can contain a
+[`fn*`](#fn). Accepts optional `attr-map?` which can contain a
 docstring, and whether variable should be mutable or not.  Sets
 variable to the result of `expr`.
 
@@ -594,5 +594,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.1.0
+<!-- Generated with Fenneldoc 0.1.2
      https://gitlab.com/andreyorst/fenneldoc -->

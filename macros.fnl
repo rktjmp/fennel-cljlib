@@ -815,7 +815,7 @@ and return result of the same type:
 (assert-eq (map #(* $ $) [1 2 3 4])
            [1 4 9 16])
 ```
-See [`into`](#into) for more info on how conversion is done."
+See `into' for more info on how conversion is done."
   (match (table-type x)
     :seq `(setmetatable {} {:cljlib/type :seq})
     :table `(setmetatable {} {:cljlib/type :table})
@@ -892,7 +892,7 @@ attributes.  Supported options:
 `:default` - the default dispatch value, defaults to `:default`.
 
 By default, multifunction has no multimethods, see
-[`defmethod`](#defmethod) on how to add one."})
+`defmethod' on how to add one."})
 
 
 (fn defmethod [multifn dispatch-val ...]
@@ -903,7 +903,7 @@ By default, multifunction has no multimethods, see
                         :fnl/docstring "Attach new method to multi-function dispatch value. accepts the
 `multi-fn` as its first argument, the `dispatch-value` as second, and
 `fnspec` - a function tail starting from argument list, followed by
-function body as in [`fn*`](#fn).
+function body as in `fn*'.
 
 # Examples
 Here are some examples how multimethods can be used.
@@ -984,7 +984,7 @@ function as a separate multimethods for respective types."})
 (fn def [...]
   "Wrapper around `local` which can declare variables inside namespace,
 and as local `name` at the same time similarly to
-[`fn*`](#fn*). Accepts optional `attr-map?` which can contain a
+`fn*'. Accepts optional `attr-map?` which can contain a
 docstring, and whether variable should be mutable or not.  Sets
 variable to the result of `expr`.
 
@@ -1017,7 +1017,7 @@ supported, which is `:mutable`, which allows mutating variable with
 
 However, attaching documentation metadata to anything other than
 tables and functions considered bad practice, due to how Lua
-works. More info can be found in [`with-meta`](#with-meta)
+works. More info can be found in `with-meta'
 description."
   (let [[attr-map name expr] (match (select :# ...)
                                2 [{} ...]
@@ -1039,7 +1039,7 @@ description."
 (attach-meta def {:fnl/arglist [:attr-map? :name :expr]})
 
 (fn defonce [...]
-  "Works the same as [`def`](#def), but ensures that later `defonce`
+  "Works the same as `def', but ensures that later `defonce`
 calls will not override existing bindings. Accepts same `attr-map?` as
 `def`, and sets `name` to the result of `expr`:
 

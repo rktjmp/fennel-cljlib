@@ -20,7 +20,7 @@ This example is mapping an anonymous `function` over a table,
 producing new table and concatenating it with `\" \"`.
 
 However this library also provides Fennel-specific set of
-[macros](./cljlib-macros.md), that provides additional facilities like
+[macros](./macros.md), that provides additional facilities like
 `fn*` or `defmulti` which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
@@ -64,7 +64,7 @@ arguments to `args`, and `f` must support variadic amount of
 arguments.
 
 # Examples
-Applying [`add`](#add) to different amount of arguments:
+Applying `add' to different amount of arguments:
 
 ``` fennel
 (assert-eq (apply add [1 2 3 4]) 10)
@@ -183,9 +183,9 @@ Non empty associative tables are tested for two things:
 - `next` returns the key-value pair,
 - key, that is returned by the `next` is not equal to `1`.
 
-Empty tables can't be analyzed with this method, and `map?` will
+Empty tables can't be analyzed with this method, and `map?' will
 return `false`.  If you need this test pass for empty table, see
-[`hash-map`](#hash-map) for creating tables that have additional
+`hash-map' for creating tables that have additional
 metadata attached for this test to work.
 
 # Examples
@@ -205,7 +205,7 @@ Empty tables:
 (assert-not (map? some-table))
 ```
 
-Empty tables created with [`hash-map`](#hash-map) will pass the test:
+Empty tables created with `hash-map' will pass the test:
 
 ``` fennel
 (local some-table (hash-map))
@@ -226,9 +226,9 @@ Non empty sequential tables are tested for two things:
 - `next` returns the key-value pair,
 - key, that is returned by the `next` is equal to `1`.
 
-Empty tables can't be analyzed with this method, and `vector?` will
+Empty tables can't be analyzed with this method, and `vector?' will
 always return `false`.  If you need this test pass for empty table,
-see [`vector`](#vector) for creating tables that have additional
+see `vector' for creating tables that have additional
 metadata attached for this test to work.
 
 # Examples
@@ -248,7 +248,7 @@ Empty tables:
 (assert-not (vector? some-table))
 ```
 
-Empty tables created with [`vector`](#vector) will pass the test:
+Empty tables created with `vector' will pass the test:
 
 ``` fennel
 (local some-table (vector))
@@ -265,7 +265,7 @@ Empty tables created with [`vector`](#vector) will pass the test:
   "Test if `mf` is an instance of `multifn`.
 
 `multifn` is a special kind of table, created with `defmulti` macros
-from `cljlib-macros.fnl`."
+from `macros.fnl`."
   [mf]
   (= (. (or (getmetatable mf) {}) :cljlib/type) :multifn))
 
@@ -415,8 +415,8 @@ Associative tables are transformed to format like this `[[key1 value1]
 ```
 
 See `into` macros for transforming this back to associative table.
-Additionally you can use [`conj`](#conj) and [`apply`](#apply) with
-[`hash-map`](#hash-map):
+Additionally you can use `conj' and `apply' with
+`hash-map':
 
 ``` fennel
 (apply conj (hash-map) [:c 3] [[:a 1] [:b 2]])
@@ -543,7 +543,7 @@ Note, that passing literal empty associative table `{}` will not work:
 ;; => {:a 1 :b 2}
 ```
 
-See [`hash-map`](#hash-map) for creating empty associative tables."
+See `hash-map' for creating empty associative tables."
   ([] (empty []))
   ([tbl] tbl)
   ([tbl x]
@@ -574,7 +574,7 @@ See [`hash-map`](#hash-map) for creating empty associative tables."
         (consj (doto tbl (insert 1 x)) (_unpack xs)))))
 
 (fn* core.cons
-  "Insert `x` to `tbl` at the front.  Calls [`seq`](#seq) on `tbl`."
+  "Insert `x` to `tbl` at the front.  Calls `seq' on `tbl`."
   [x tbl]
   (if-some [x x]
     (doto (or (seq tbl) (empty []))
@@ -606,11 +606,11 @@ of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
 val and f is not called.  Calls `seq` on `col`.
 
-Early termination is possible with the use of [`reduced`](#reduced)
+Early termination is possible with the use of `reduced'
 function.
 
 # Examples
-Reduce sequence of numbers with [`add`](#add)
+Reduce sequence of numbers with `add'
 
 ``` fennel
 (reduce add [1 2 3 4])
@@ -641,7 +641,7 @@ Reduce sequence of numbers with [`add`](#add)
              (reduce f (f val x) xs)))))))
 
 (fn* core.reduced
-  "Wraps `x` in such a way so [`reduce`](#reduce) will terminate early
+  "Wraps `x` in such a way so `reduce' will terminate early
 with this value.
 
 # Examples
@@ -680,7 +680,7 @@ then applying `f` to that result and the 2nd key and value, etc.  If
 that reduce-kv is supported on sequential tables and strings, where
 the keys will be the ordinals.
 
-Early termination is possible with the use of [`reduced`](#reduced)
+Early termination is possible with the use of `reduced'
 function.
 
 # Examples
@@ -737,7 +737,7 @@ Map `string.upcase` over the string:
 ;; => [\"S\" \"T\" \"R\" \"I\" \"N\" \"G\"]
 ```
 
-Map [`mul`](#mul) over two tables:
+Map `mul' over two tables:
 
 ``` fennel
 (mapv mul [1 2 3 4] [1 0 -1])
@@ -1006,7 +1006,7 @@ found in the table."
    res))
 
 (fn* core.keys
-  "Returns a sequence of the table's keys, in the same order as [`seq`](#seq)."
+  "Returns a sequence of the table's keys, in the same order as `seq'."
   [tbl]
   (let [res []]
     (each [k _ (pairs tbl)]
@@ -1014,7 +1014,7 @@ found in the table."
     res))
 
 (fn* core.vals
-  "Returns a sequence of the table's values, in the same order as [`seq`](#seq)."
+  "Returns a sequence of the table's values, in the same order as `seq'."
   [tbl]
   (let [res []]
     (each [_ v (pairs tbl)]
@@ -1183,8 +1183,8 @@ tell you if something is in the set or not.
 `ordered-set` is follows the argument insertion order, unlike sorted
 sets, which apply some sorting algorithm internally. New items added
 at the end of the set. Ordered set supports removal of items via
-`tset` and [`disj`](#disj). To add element to the ordered set use
-`tset` or [`conj`](#conj). Both operations modify the set.
+`tset` and `disj'. To add element to the ordered set use
+`tset` or `conj'. Both operations modify the set.
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
@@ -1225,7 +1225,7 @@ desired key will either return the key, or `nil`:
 ```
 
 ## Add items to existing set:
-To add element to the set use [`conj`](#conj) or `tset`
+To add element to the set use `conj' or `tset`
 
 ``` fennel
 (local oset (ordered-set :a :b :c))
@@ -1234,7 +1234,7 @@ To add element to the set use [`conj`](#conj) or `tset`
 ```
 
 ### Remove items from the set:
-To add element to the set use [`disj`](#disj) or `tset`
+To add element to the set use `disj' or `tset`
 
 ``` fennel
 (local oset (ordered-set :a :b :c))
@@ -1246,7 +1246,7 @@ oset
 ```
 
 ## Equality semantics
-Both `ordered-set` and [`hash-set`](#hash-set) implement `__eq` metamethod,
+Both `ordered-set` and `hash-set' implement `__eq` metamethod,
 and are compared for having the same keys without particular order and
 same size:
 
@@ -1285,9 +1285,9 @@ tell you if something is in the set or not.
 
 Hash set differs from ordered set in that the keys are do not have any
 particular order. New items are added at the arbitrary position by
-using [`conj`](#con) or `tset` functions, and items can be removed
-with [`disj`](#disj) or `tset` functions. Rest semantics are the same
-as for [`ordered-set`](#ordered-set)
+using `conj' or `tset` functions, and items can be removed
+with `disj' or `tset` functions. Rest semantics are the same
+as for `ordered-set'
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this

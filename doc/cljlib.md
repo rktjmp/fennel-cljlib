@@ -17,7 +17,7 @@ This example is mapping an anonymous `function` over a table,
 producing new table and concatenating it with `" "`.
 
 However this library also provides Fennel-specific set of
-[macros](./cljlib-macros.md), that provides additional facilities like
+[macros](./macros.md), that provides additional facilities like
 `fn*` or `defmulti` which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
@@ -258,7 +258,7 @@ Non empty associative tables are tested for two things:
 - `next` returns the key-value pair,
 - key, that is returned by the `next` is not equal to `1`.
 
-Empty tables can't be analyzed with this method, and `map?` will
+Empty tables can't be analyzed with this method, and [`map?`](#map) will
 return `false`.  If you need this test pass for empty table, see
 [`hash-map`](#hash-map) for creating tables that have additional
 metadata attached for this test to work.
@@ -300,9 +300,9 @@ Non empty sequential tables are tested for two things:
 - `next` returns the key-value pair,
 - key, that is returned by the `next` is equal to `1`.
 
-Empty tables can't be analyzed with this method, and `vector?` will
+Empty tables can't be analyzed with this method, and [`vector?`](#vector) will
 always return `false`.  If you need this test pass for empty table,
-see [`vector`](#vector) for creating tables that have additional
+see [`vector`](#vector-1) for creating tables that have additional
 metadata attached for this test to work.
 
 ### Examples
@@ -322,7 +322,7 @@ Empty tables:
 (assert-not (vector? some-table))
 ```
 
-Empty tables created with [`vector`](#vector) will pass the test:
+Empty tables created with [`vector`](#vector-1) will pass the test:
 
 ``` fennel
 (local some-table (vector))
@@ -339,7 +339,7 @@ Function signature:
 Test if `mf` is an instance of `multifn`.
 
 `multifn` is a special kind of table, created with `defmulti` macros
-from `cljlib-macros.fnl`.
+from `macros.fnl`.
 
 ## `set?`
 Function signature:
@@ -1151,7 +1151,7 @@ tell you if something is in the set or not.
 
 Hash set differs from ordered set in that the keys are do not have any
 particular order. New items are added at the arbitrary position by
-using [`conj`](#con) or `tset` functions, and items can be removed
+using [`conj`](#conj) or `tset` functions, and items can be removed
 with [`disj`](#disj) or `tset` functions. Rest semantics are the same
 as for [`ordered-set`](#ordered-set)
 
@@ -1167,5 +1167,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.1.0
+<!-- Generated with Fenneldoc 0.1.2
      https://gitlab.com/andreyorst/fenneldoc -->
