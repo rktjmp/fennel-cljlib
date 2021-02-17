@@ -170,14 +170,14 @@ inner expressions of `catch-clause*`, and `finally-clause?` are
 wrapped in implicit `do`.
 
 Finally clause is optional, and written as (finally body*).  If
-present, it must be the last clause in the `try` form, and the only
+present, it must be the last clause in the [`try`](#try) form, and the only
 `finally` clause.  Note that `finally` clause is for side effects
-only, and runs either after succesful run of `try` body, or after any
+only, and runs either after succesful run of [`try`](#try) body, or after any
 `catch` clause body, before returning the result.  If no `catch`
 clause is provided `finally` runs in implicit catch-all clause, and
 trows error to upper scope using `error` function.
 
-To throw error from `try` to catch it with `catch` clause use `error`
+To throw error from [`try`](#try) to catch it with `catch` clause use `error`
 or `assert` functions.
 
 ### Examples
@@ -274,9 +274,9 @@ Function signature:
 (defonce attr-map? name expr)
 ```
 
-Works the same as [`def`](#def), but ensures that later `defonce`
+Works the same as [`def`](#def), but ensures that later [`defonce`](#defonce)
 calls will not override existing bindings. Accepts same `attr-map?` as
-`def`, and sets `name` to the result of `expr`:
+[`def`](#def), and sets `name` to the result of `expr`:
 
 ``` fennel
 (defonce a 10)
@@ -402,7 +402,7 @@ Transform table `from` into another table `to`.  Mutates first table.
 
 Transformation happens in runtime, but type deduction happens in
 compile time if possible.  This means, that if literal values passed
-to `into` this will have different effects for associative tables and
+to [`into`](#into) this will have different effects for associative tables and
 vectors:
 
 ``` fennel
@@ -425,7 +425,7 @@ will not work for empty tables:
 (assert-eq (into empty-table {:a 1}) [[:a 1]])
 ``` fennel
 
-If table is empty, `into` defaults to sequential table, because it
+If table is empty, [`into`](#into) defaults to sequential table, because it
 allows safe conversion from both sequential and associative tables.
 
 Type for non empty tables hidden in variables can be deduced at
@@ -495,7 +495,7 @@ Function signature:
 (with-meta value meta)
 ```
 
-Attach `meta` to a `value`.  When metadata feature is not enabled,
+Attach [`meta`](#meta) to a `value`.  When metadata feature is not enabled,
 returns the value without additional metadata.
 
 ``` fennel

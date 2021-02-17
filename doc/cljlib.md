@@ -43,7 +43,7 @@ Main difference is that when comparing two tables, they must have
 exactly the same `__eq` metamethods, so comparing hash sets with hash
 sets will work, but comparing sets with other tables works only in
 Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
-inbuilt UTF-8 library, therefore `seq` function will not work for
+inbuilt UTF-8 library, therefore [`seq`](#seq) function will not work for
 non-ASCII strings.
 
 **Table of contents**
@@ -505,7 +505,7 @@ Function signature:
 
 Constructs sequential table out of it's arguments.
 
-Sets additional metadata for function `vector?` to work.
+Sets additional metadata for function [`vector?`](#vector) to work.
 
 ### Examples
 
@@ -570,7 +570,7 @@ Function signature:
 (first ([col]))
 ```
 
-Return first element of a table. Calls `seq` on its argument.
+Return first element of a table. Calls [`seq`](#seq) on its argument.
 
 ## `rest`
 Function signature:
@@ -580,7 +580,7 @@ Function signature:
 ```
 
 Returns table of all elements of a table but the first one. Calls
-  `seq` on its argument.
+  [`seq`](#seq) on its argument.
 
 ## `last`
 Function signature:
@@ -589,7 +589,7 @@ Function signature:
 (last ([col]))
 ```
 
-Returns the last element of a table. Calls `seq` on its argument.
+Returns the last element of a table. Calls [`seq`](#seq) on its argument.
 
 ## `butlast`
 Function signature:
@@ -599,7 +599,7 @@ Function signature:
 ```
 
 Returns everything but the last element of a table as a new
-  table. Calls `seq` on its argument.
+  table. Calls [`seq`](#seq) on its argument.
 
 ## `conj`
 Function signature:
@@ -613,7 +613,7 @@ Insert `x` as a last element of a table `tbl`.
 If `tbl` is a sequential table or empty table, inserts `x` and
 optional `xs` as final element in the table.
 
-If `tbl` is an associative table, that satisfies `map?` test,
+If `tbl` is an associative table, that satisfies [`map?`](#map) test,
 insert `[key value]` pair into the table.
 
 Mutates `tbl`.
@@ -690,7 +690,7 @@ result of calling f with no arguments.  If coll has only 1 item, it is
 returned and f is not called.  If val is supplied, returns the result
 of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
-val and f is not called.  Calls `seq` on `col`.
+val and f is not called.  Calls [`seq`](#seq) on `col`.
 
 Early termination is possible with the use of [`reduced`](#reduced)
 function.
@@ -795,9 +795,9 @@ Function signature:
 
 Maps function `f` over one or more collections.
 
-Accepts arbitrary amount of collections, calls `seq` on each of it.
+Accepts arbitrary amount of collections, calls [`seq`](#seq) on each of it.
 Function `f` must take the same amount of arguments as the amount of
-tables, passed to `mapv`. Applies `f` over first value of each
+tables, passed to [`mapv`](#mapv). Applies `f` over first value of each
 table. Then applies `f` to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a sequential table of results.
@@ -1009,7 +1009,7 @@ Function signature:
 (dissoc ([tbl]) ([tbl key]) ([tbl key & keys]))
 ```
 
-Remove `key` from table `tbl`.  Optionally takes more `keys`.
+Remove `key` from table `tbl`.  Optionally takes more [`keys`](#keys).
 
 ## `remove-method`
 Function signature:
@@ -1061,7 +1061,7 @@ Create ordered set.
 Set is a collection of unique elements, which sore purpose is only to
 tell you if something is in the set or not.
 
-`ordered-set` is follows the argument insertion order, unlike sorted
+[`ordered-set`](#ordered-set) is follows the argument insertion order, unlike sorted
 sets, which apply some sorting algorithm internally. New items added
 at the end of the set. Ordered set supports removal of items via
 `tset` and [`disj`](#disj). To add element to the ordered set use
@@ -1069,7 +1069,7 @@ at the end of the set. Ordered set supports removal of items via
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
-syntax. Use `hash-set` function instead.
+syntax. Use [`ordered-set`](#ordered-set) function instead.
 
 Below are some examples of how to create and manipulate sets.
 
@@ -1127,7 +1127,7 @@ oset
 ```
 
 #### Equality semantics
-Both `ordered-set` and [`hash-set`](#hash-set) implement `__eq` metamethod,
+Both [`ordered-set`](#ordered-set) and [`hash-set`](#hash-set) implement `__eq` metamethod,
 and are compared for having the same keys without particular order and
 same size:
 
@@ -1157,7 +1157,7 @@ as for [`ordered-set`](#ordered-set)
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
-syntax. Use `hash-set` function instead.
+syntax. Use [`hash-set`](#hash-set) function instead.
 
 
 ---

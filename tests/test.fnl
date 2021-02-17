@@ -35,8 +35,8 @@ the tables uses tables as keys."
 
 (fn test.assert-eq
   [expr1 expr2 msg]
-  "Like `assert`, except compares results of `expr1` and `expr2` for equality.
-Generates formatted message if `msg` is not set to other message.
+  "Like `assert', except compares results of `expr1' and `expr2' for equality.
+Generates formatted message if `msg' is not set to other message.
 
 # Example
 Compare two expressions:
@@ -72,9 +72,9 @@ Deep compare values:
 
 (fn test.assert-ne
   [expr1 expr2 msg]
-  "Assert for unequality.  Like `assert`, except compares results of
-`expr1` and `expr2` for equality.  Generates formatted message if
-`msg` is not set to other message.  Same as `assert-eq'."
+  "Assert for unequality.  Like `assert', except compares results of
+`expr1' and `expr2' for equality.  Generates formatted message if
+`msg' is not set to other message.  Same as `assert-eq'."
   `(let [left# ,expr1
          right# ,expr2
          eq# ,(eq-fn)
@@ -91,8 +91,8 @@ Deep compare values:
 
 (fn test.assert-is
   [expr msg]
-  "Assert `expr` for truth. Same as inbuilt `assert`, except generates more
-  verbose message if `msg` is not set.
+  "Assert `expr' for truth. Same as inbuilt `assert', except generates more
+  verbose message if `msg' is not set.
 
 ``` fennel
 ;; (assert-is (= 1 2 3))
@@ -109,8 +109,8 @@ Deep compare values:
 
 (fn test.assert-not
   [expr msg]
-  "Assert `expr` for not truth. Generates more verbose message if
-  `msg` is not set. Works the same as `assert-is'."
+  "Assert `expr' for not truth. Generates more verbose message if
+  `msg' is not set. Works the same as `assert-is'."
   `(let [(suc# res#) (pcall #(not ,expr))]
      (if suc#
          (assert res#
@@ -122,12 +122,12 @@ Deep compare values:
 
 (fn test.deftest
   [name ...]
-  "Simple way of grouping tests with `name`."
+  "Simple way of grouping tests with `name'."
   `(do ,...))
 
 (fn test.testing
   [description ...]
-  "Print test `description` and run it."
+  "Print test `description' and run it."
   `(do (io.stdout:write (.. "testing: " ,description "\n"))
        ,...))
 

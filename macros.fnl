@@ -28,7 +28,7 @@
         (values s false))))
 
 (fn contains? [tbl x]
-  ;; Checks if `x` is stored in `tbl` in linear time.
+  ;; Checks if `x' is stored in `tbl' in linear time.
   (var res false)
   (each [i v (ipairs tbl)]
     (if (= v x)
@@ -37,8 +37,8 @@
   res)
 
 (fn check-two-binding-vec [bindings]
-  ;; Test if `bindings` is a `sequence` that holds two forms, first of
-  ;; which is a `sym`, `table` or `sequence`.
+  ;; Test if `bindings' is a `sequence' that holds two forms, first of
+  ;; which is a `sym', `table' or `sequence'.
   (and (assert-compile (sequence? bindings)
                        "expected binding table" [])
        (assert-compile (= (length bindings) 2)
@@ -57,7 +57,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; Runtime function builders ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: This code should be shared with `init.fnl`
+;; TODO: This code should be shared with `init.fnl'
 
 (fn eq-fn []
   ;; Returns recursive equality function.
@@ -160,8 +160,8 @@
 (fn when-meta [...]
   "Wrapper that compiles away if metadata support was not enabled.
 What this effectively means, is that everything that is wrapped with
-this macro and its `body` will disappear from the resulting Lua code
-if metadata is not enabled when compiling with `fennel --compile`
+this macro and its `body' will disappear from the resulting Lua code
+if metadata is not enabled when compiling with `fennel --compile'
 without `--metadata` switch."
   (when meta-enabled
     `(do ,...)))
@@ -169,8 +169,8 @@ without `--metadata` switch."
 (attach-meta when-meta {:fnl/arglist ["[& body]"]})
 
 (fn meta [value]
-  "Get `value` metadata.  If value has no metadata, or metadata
-feature is not enabled returns `nil`.
+  "Get `value' metadata.  If value has no metadata, or metadata
+feature is not enabled returns `nil'.
 
 # Example
 
@@ -193,18 +193,18 @@ used.  This, for example, may cause documentation collision, when
 you've set some variable holding a number value to have certain
 docstring, and later you've defined another variable with the same
 value, but different docstring.  While this isn't a major breakage, it
-may confuse if someone will explore your code in the REPL with `doc`.
+may confuse if someone will explore your code in the REPL with `doc'.
 
-Lastly, note that prior to Fennel 0.7.1 `import-macros` wasn't
+Lastly, note that prior to Fennel 0.7.1 `import-macros' wasn't
 respecting `--metadata` switch.  So if you're using Fennel < 0.7.1
-this stuff will only work if you use `require-macros` instead of
-`import-macros`."
+this stuff will only work if you use `require-macros' instead of
+`import-macros'."
   (when-meta
     `(let [(res# fennel#) (pcall require :fennel)]
        (if res# (. fennel#.metadata ,value)))))
 
 (fn with-meta [value meta]
-  "Attach `meta` to a `value`.  When metadata feature is not enabled,
+  "Attach `meta' to a `value'.  When metadata feature is not enabled,
 returns the value without additional metadata.
 
 ``` fennel
@@ -276,7 +276,7 @@ returns the value without additional metadata.
         arglist)))
 
 (fn has-amp? [args]
-  ;; Check if arglist has `&` and return its position of `false`.  Performs
+  ;; Check if arglist has `&` and return its position of `false'.  Performs
   ;; additional checks for `&` and `...` usage in arglist.
   (var res false)
   (each [i s (ipairs args)]
@@ -326,21 +326,21 @@ returns the value without additional metadata.
     prev))
 
 (fn arity-dispatcher [len fixed amp-body name]
-  ;; Forms an `if` expression with all fixed arities first, then `&` arity,
+  ;; Forms an `if' expression with all fixed arities first, then `&` arity,
   ;; if present, and default error message as last arity.
   ;;
-  ;; `len` is a symbol, that represents the length of the current argument
+  ;; `len' is a symbol, that represents the length of the current argument
   ;; list, and is computed at runtime.
   ;;
-  ;; `fixed` is a table of arities with fixed amount of arguments.  These
-  ;; are put in this `if` as: `(= len fixed-len)`, where `fixed-len` is the
-  ;; length of current arity arglist, computed with `gen-arity`.
+  ;; `fixed' is a table of arities with fixed amount of arguments.  These
+  ;; are put in this `if' as: `(= len fixed-len)`, where `fixed-len' is the
+  ;; length of current arity arglist, computed with `gen-arity'.
   ;;
-  ;; `amp-body` stores size of fixed part of arglist, that is, everything up
-  ;; until `&`, and the body itself.  When `amp-body` provided, the `(>= len
-  ;; more-len)` is added to the resulting `if` expression.
+  ;; `amp-body' stores size of fixed part of arglist, that is, everything up
+  ;; until `&`, and the body itself.  When `amp-body' provided, the `(>= len
+  ;; more-len)` is added to the resulting `if' expression.
   ;;
-  ;; Lastly the catchall branch is added to `if` expression, which ensures
+  ;; Lastly the catchall branch is added to `if' expression, which ensures
   ;; that only valid amount of arguments were passed to function, which are
   ;; defined by previous branches.
   (let [bodies '(if)
@@ -417,10 +417,10 @@ returns the value without additional metadata.
 
 (fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
-Accepts optional `name` and `docstring?` as first two arguments,
+Accepts optional `name' and `docstring?' as first two arguments,
 followed by single or multiple arity bodies defined as lists. Each
-list starts with `arglist*` vector, which supports destructuring, and
-is followed by `body*` wrapped in implicit `do`.
+list starts with `arglist*' vector, which supports destructuring, and
+is followed by `body*' wrapped in implicit `do'.
 
 # Examples
 Named function of fixed arity 2:
@@ -456,17 +456,17 @@ argument list:
 
 ``` fennel
 (fn* cube
-     \"raise `x` to power of 3\"
+     \"raise `x' to power of 3\"
      [x]
      (^ x 3))
 
 (fn* greet
-     \"greet a `person`, optionally specifying default `greeting`.\"
+     \"greet a `person', optionally specifying default `greeting'.\"
      ([person] (print (.. \"Hello, \" person \"!\")))
      ([greeting person] (print (.. greeting \", \" person \"!\"))))
 ```
 
-Argument lists follow the same destruction rules as per `let`.
+Argument lists follow the same destruction rules as per `let'.
 Variadic arguments with `...` are not supported use `& rest` instead.
 Note that only one arity with `&` is supported.
 
@@ -480,12 +480,12 @@ This roughly means, that instead of writing this:
 ``` fennel
 (local ns {})
 
-(fn f [x]                   ;; we have to define `f` without `ns`
-  (if (> x 0) (f (- x 1)))) ;; because we're going to use it in `g`
+(fn f [x]                   ;; we have to define `f' without `ns'
+  (if (> x 0) (f (- x 1)))) ;; because we're going to use it in `g'
 
 (set ns.f f)
 
-(fn ns.g [x] (f (* x 100))) ;; `g` can be defined as `ns.g` as it is only exported
+(fn ns.g [x] (f (* x 100))) ;; `g' can be defined as `ns.g' as it is only exported
 
 ns
 ```
@@ -498,16 +498,16 @@ It is possible to write:
 (fn* ns.f [x]
   (if (> x 0) (f (- x 1))))
 
-(fn* ns.g [x] (f (* x 100))) ;; we can use `f` here no problem
+(fn* ns.g [x] (f (* x 100))) ;; we can use `f' here no problem
 
 ns
 ```
 
-It is still possible to call `f` and `g` in current scope without `ns`
-part, so functions can be reused inside the module, and `ns` will hold
+It is still possible to call `f' and `g' in current scope without `ns'
+part, so functions can be reused inside the module, and `ns' will hold
 both functions, so it can be exported from the module.
 
-Note that `fn` will not create the `ns` for you, hence this is just a
+Note that `fn' will not create the `ns' for you, hence this is just a
 syntax sugar. Functions deeply nested in namespaces require exising
 namespace tables:
 
@@ -518,7 +518,7 @@ namespace tables:
 (fn* ns.strings.join
   ([s1 s2] (.. s1 s2))
   ([s1 s2 & strings]
-   (join (join s1 s2) ((or table.unpack _G.unpack) strings)))) ;; call `join` resolves to ns.strings.join
+   (join (join s1 s2) ((or table.unpack _G.unpack) strings)))) ;; call `join' resolves to ns.strings.join
 
 (fn* ns.tables.join
   ([t1 t2]
@@ -527,7 +527,7 @@ namespace tables:
      (each [_ v (ipairs t2)] (table.insert res v))
      res))
   ([t1 t2 & tables]
-   (join (join t1 t2) ((or table.unpack _G.unpack) tables)))) ;; call to `join` resolves to ns.tables.join
+   (join (join t1 t2) ((or table.unpack _G.unpack) tables)))) ;; call to `join' resolves to ns.tables.join
 
 (assert-eq (ns.strings.join \"a\" \"b\" \"c\") \"abc\")
 
@@ -537,9 +537,9 @@ namespace tables:
            [])
 ```
 
-Note that this creates a collision and local `join` overrides `join`
-from `ns.strings`, so the latter must be fully qualified
-`ns.strings.join` when called outside of the function."
+Note that this creates a collision and local `join' overrides `join'
+from `ns.strings', so the latter must be fully qualified
+`ns.strings.join' when called outside of the function."
   (assert-compile (not (string? name)) "fn* expects symbol, vector, or list as first argument" name)
   (let [docstring (if (string? doc?) doc? nil)
         (name-wo-namespace namespaced?) (multisym->sym name)
@@ -569,17 +569,17 @@ from `ns.strings`, so the latter must be fully qualified
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; let variants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Fennel indeed has more advanced macro `match` which can be used in
+;; Fennel indeed has more advanced macro `match' which can be used in
 ;; place of any of the following macros, however it is sometimes more
-;; convenient to convey intentions by explicitly saying `when-some`
+;; convenient to convey intentions by explicitly saying `when-some'
 ;; implying that we're interested in non-nil value and only single branch
-;; of execution.  The `match` macro on the other hand does not convey
+;; of execution.  The `match' macro on the other hand does not convey
 ;; such intention
 
 (fn if-let [...]
-  "If `binding` is set by `test` to logical true, evaluates `then-branch`
+  "If `binding' is set by `test' to logical true, evaluates `then-branch'
 with binding-form bound to the value of test, if not, yields
-`else-branch`."
+`else-branch'."
   (let [[bindings then else] (match (select :# ...)
                                2 [...]
                                3 [...]
@@ -596,8 +596,8 @@ with binding-form bound to the value of test, if not, yields
 
 
 (fn when-let [...]
-  "If `binding` was bound by `test` to logical true, evaluates `body` in
-implicit `do`."
+  "If `binding' was bound by `test' to logical true, evaluates `body' in
+implicit `do'."
   (let [[bindings & body] (if (> (select :# ...) 0) [...]
                               (error "wrong argument amount for when-let" 2))]
     (check-two-binding-vec bindings)
@@ -611,8 +611,8 @@ implicit `do`."
 
 
 (fn if-some [...]
-  "If `test` is non-`nil`, evaluates `then-branch` with `binding`-form bound
-to the value of test, if not, yields `else-branch`."
+  "If `test' is non-`nil', evaluates `then-branch' with `binding'-form bound
+to the value of test, if not, yields `else-branch'."
   (let [[bindings then else] (match (select :# ...)
                                2 [...]
                                3 [...]
@@ -629,8 +629,8 @@ to the value of test, if not, yields `else-branch`."
 
 
 (fn when-some [...]
-  "If `test` sets `binding` to non-`nil`, evaluates `body` in implicit
-`do`."
+  "If `test' sets `binding' to non-`nil', evaluates `body' in implicit
+`do'."
   (let [[bindings & body] (if (> (select :# ...) 0) [...]
                               (error "wrong argument amount for when-some" 2))]
     (check-two-binding-vec bindings)
@@ -651,11 +651,11 @@ to the value of test, if not, yields `else-branch`."
       :else))
 
 (fn into [to from]
-  "Transform table `from` into another table `to`.  Mutates first table.
+  "Transform table `from' into another table `to'.  Mutates first table.
 
 Transformation happens in runtime, but type deduction happens in
 compile time if possible.  This means, that if literal values passed
-to `into` this will have different effects for associative tables and
+to `into' this will have different effects for associative tables and
 vectors:
 
 ``` fennel
@@ -678,7 +678,7 @@ will not work for empty tables:
 (assert-eq (into empty-table {:a 1}) [[:a 1]])
 ``` fennel
 
-If table is empty, `into` defaults to sequential table, because it
+If table is empty, `into' defaults to sequential table, because it
 allows safe conversion from both sequential and associative tables.
 
 Type for non empty tables hidden in variables can be deduced at
@@ -691,8 +691,8 @@ runtime, and this works as expected:
 (assert-eq (into t2 {:a 1}) {:a 1 :c 3})
 ```
 
-`cljlib.fnl` module provides two additional functions `vector` and
-`hash-map`, that can create empty tables, which can be distinguished
+`cljlib.fnl' module provides two additional functions `vector' and
+`hash-map', that can create empty tables, which can be distinguished
 at runtime:
 
 ``` fennel
@@ -796,11 +796,11 @@ at runtime:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; empty ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn empty [x]
-  "Return empty table of the same kind as input table `x`, with
+  "Return empty table of the same kind as input table `x', with
 additional metadata indicating its type.
 
 # Example
-Creating a generic `map` function, that will work on any table type,
+Creating a generic `map' function, that will work on any table type,
 and return result of the same type:
 
 ``` fennel
@@ -849,7 +849,7 @@ See `into' for more info on how conversion is done."
     (let [options (seq->table options)]
       (if (in-scope? name)
           `nil
-          `(local ,name
+          '(local ,name
                   (setmetatable
                    ,(with-meta {} {:fnl/docstring docstring})
                    {:__index
@@ -879,14 +879,14 @@ See `into' for more info on how conversion is done."
                     :cljlib/type :multifn}))))))
 
 (attach-meta defmulti {:fnl/arglist [:name :docstring? :dispatch-fn :options*]
-                       :fnl/docstring "Create multifunction `name` with runtime dispatching based on results
-from `dispatch-fn`.  Returns a proxy table with `__call` metamethod,
-that calls `dispatch-fn` on its arguments.  Amount of arguments
-passed, should be the same as accepted by `dispatch-fn`.  Looks for
-multimethod based on result from `dispatch-fn`.
+                       :fnl/docstring "Create multifunction `name' with runtime dispatching based on results
+from `dispatch-fn'.  Returns a proxy table with `__call` metamethod,
+that calls `dispatch-fn' on its arguments.  Amount of arguments
+passed, should be the same as accepted by `dispatch-fn'.  Looks for
+multimethod based on result from `dispatch-fn'.
 
-Accepts optional `docstring?`, and `options*` arguments, where
-`options*` is a sequence of key value pairs representing additional
+Accepts optional `docstring?', and `options*' arguments, where
+`options*' is a sequence of key value pairs representing additional
 attributes.  Supported options:
 
 `:default` - the default dispatch value, defaults to `:default`.
@@ -901,8 +901,8 @@ By default, multifunction has no multimethods, see
 
 (attach-meta defmethod {:fnl/arglist [:multi-fn :dispatch-value :fnspec]
                         :fnl/docstring "Attach new method to multi-function dispatch value. accepts the
-`multi-fn` as its first argument, the `dispatch-value` as second, and
-`fnspec` - a function tail starting from argument list, followed by
+`multi-fn' as its first argument, the `dispatch-value' as second, and
+`fnspec' - a function tail starting from argument list, followed by
 function body as in `fn*'.
 
 # Examples
@@ -910,7 +910,7 @@ Here are some examples how multimethods can be used.
 
 ## Factorial example
 Key idea here is that multimethods can call itself with different
-values, and will dispatch correctly.  Here, `fac` recursively calls
+values, and will dispatch correctly.  Here, `fac' recursively calls
 itself with less and less number until it reaches `0` and dispatches
 to another multimethod:
 
@@ -940,7 +940,7 @@ Multi-arity function tails are also supported:
 
 Calling `(foo 10)` will print `\"I've knew I'll get 10\"`, and calling
 `(foo 10 20)` will print `\"I've knew I'll get both 10 and 20\"`.
-However, calling `foo` with any other numbers will default either to
+However, calling `foo' with any other numbers will default either to
 `\"Umm, got x\"` message, when called with single value, and `\"Umm, got
 both x and y\"` when calling with two values.
 
@@ -975,44 +975,44 @@ function, that uses if statement and branches on the type, however one
 of the additional features of multimethods, is that separate libraries
 can extend such multimethod by adding additional claues to it without
 needing to patch the source of the function.  For example later on
-support for userdata or coroutines can be added to `to-lua-str`
+support for userdata or coroutines can be added to `to-lua-str'
 function as a separate multimethods for respective types."})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; def and defonce ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn def [...]
-  "Wrapper around `local` which can declare variables inside namespace,
-and as local `name` at the same time similarly to
-`fn*'. Accepts optional `attr-map?` which can contain a
+  "Wrapper around `local' which can declare variables inside namespace,
+and as local `name' at the same time similarly to
+`fn*'. Accepts optional `attr-map?' which can contain a
 docstring, and whether variable should be mutable or not.  Sets
-variable to the result of `expr`.
+variable to the result of `expr'.
 
 ``` fennel
 (def ns {})
-(def a 10) ;; binds `a` to `10`
+(def a 10) ;; binds `a' to `10`
 
 (assert-eq a 10)
 
-(def ns.b 20) ;; binds `ns.b` and `b` to `20`
+(def ns.b 20) ;; binds `ns.b' and `b' to `20`
 
 (assert-eq b 20)
 (assert-eq ns.b 20)
 ```
 
-`a` is a `local`, and both `ns.b` and `b` refer to the same value.
+`a' is a `local', and both `ns.b' and `b' refer to the same value.
 
 Additionally metadata can be attached to values, by providing
 attribute map or keyword as first parameter.  Only one keyword is
 supported, which is `:mutable`, which allows mutating variable with
-`set` later on:
+`set' later on:
 
 ``` fennel
 ;; Bad, will override existing documentation for 299792458 (if any)
 (def {:doc \"speed of light in m/s\"} c 299792458)
 
 (def :mutable address \"Lua St.\") ;; same as (def {:mutable true} address \"Lua St.\")
-(set address \"Lisp St.\") ;; can mutate `address`
+(set address \"Lisp St.\") ;; can mutate `address'
 ```
 
 However, attaching documentation metadata to anything other than
@@ -1039,9 +1039,9 @@ description."
 (attach-meta def {:fnl/arglist [:attr-map? :name :expr]})
 
 (fn defonce [...]
-  "Works the same as `def', but ensures that later `defonce`
-calls will not override existing bindings. Accepts same `attr-map?` as
-`def`, and sets `name` to the result of `expr`:
+  "Works the same as `def', but ensures that later `defonce'
+calls will not override existing bindings. Accepts same `attr-map?' as
+`def', and sets `name' to the result of `expr':
 
 ``` fennel
 (defonce a 10)
@@ -1070,10 +1070,10 @@ calls will not override existing bindings. Accepts same `attr-map?` as
   (= (tostring fun) :finally))
 
 (fn add-finally [finally form]
-  "Stores `form` as body of `finally`, which will be injected into
-`match` branches at places appropriate for it to run.
+  "Stores `form' as body of `finally', which will be injected into
+`match' branches at places appropriate for it to run.
 
-Checks if there already was `finally` clause met, which can be only
+Checks if there already was `finally' clause met, which can be only
 one."
   (assert-compile (= (length finally) 0)
                   "Only one finally clause can exist in try expression"
@@ -1081,17 +1081,17 @@ one."
   (table.insert finally (list 'do ((or table.unpack _G.unpack) form 2))))
 
 (fn add-catch [finally catches form]
-  "Appends `catch` body to a sequence of catch bodies that will later
-be used in `make-catch-clauses` to produce AST.
+  "Appends `catch' body to a sequence of catch bodies that will later
+be used in `make-catch-clauses' to produce AST.
 
-Checks if there already was `finally` clause met."
+Checks if there already was `finally' clause met."
   (assert-compile (= (length finally) 0)
                   "finally clause must be last in try expression"
                   [])
   (table.insert catches (list 'do ((or table.unpack _G.unpack) form 2))))
 
 (fn make-catch-clauses [catches finally]
-  "Generates AST of error branches for `match` macro."
+  "Generates AST of error branches for `match' macro."
   (let [clauses []]
     (var add-catchall? true)
     (each [_ [_ binding-or-val & body] (ipairs catches)]
@@ -1109,7 +1109,7 @@ Checks if there already was `finally` clause met."
     ((or table.unpack _G.unpack) clauses)))
 
 (fn add-to-try [finally catches try form]
-  "Append form to the try body.  There must be no `catch` of `finally`
+  "Append form to the try body.  There must be no `catch' of `finally'
 clauses when we push body epression."
   (assert-compile (and (= (length finally) 0)
                        (= (length catches) 0))
@@ -1133,26 +1133,26 @@ clauses when we push body epression."
 
 (attach-meta try {:fnl/arglist [:body* :catch-clause* :finally-clause?]
                   :fnl/docstring "General purpose try/catch/finally macro.
-Wraps its body in `pcall` and checks the return value with `match`
+Wraps its body in `pcall' and checks the return value with `match'
 macro.
 
 Catch clause is written either as `(catch symbol body*)`, thus acting
 as catch-all, or `(catch value body*)` for catching specific errors.
-It is possible to have several `catch` clauses.  If no `catch` clauses
-specified, an implicit catch-all clause is created.  `body*`, and
-inner expressions of `catch-clause*`, and `finally-clause?` are
-wrapped in implicit `do`.
+It is possible to have several `catch' clauses.  If no `catch' clauses
+specified, an implicit catch-all clause is created.  `body*', and
+inner expressions of `catch-clause*', and `finally-clause?' are
+wrapped in implicit `do'.
 
 Finally clause is optional, and written as (finally body*).  If
-present, it must be the last clause in the `try` form, and the only
-`finally` clause.  Note that `finally` clause is for side effects
-only, and runs either after succesful run of `try` body, or after any
-`catch` clause body, before returning the result.  If no `catch`
-clause is provided `finally` runs in implicit catch-all clause, and
-trows error to upper scope using `error` function.
+present, it must be the last clause in the `try' form, and the only
+`finally' clause.  Note that `finally' clause is for side effects
+only, and runs either after succesful run of `try' body, or after any
+`catch' clause body, before returning the result.  If no `catch'
+clause is provided `finally' runs in implicit catch-all clause, and
+trows error to upper scope using `error' function.
 
-To throw error from `try` to catch it with `catch` clause use `error`
-or `assert` functions.
+To throw error from `try' to catch it with `catch' clause use `error'
+or `assert' functions.
 
 # Examples
 Catch all errors, ignore those and return fallback value:

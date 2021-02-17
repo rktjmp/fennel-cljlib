@@ -16,19 +16,19 @@ Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
 -- 1 4 9
 ```
 
-This example is mapping an anonymous `function` over a table,
+This example is mapping an anonymous `function' over a table,
 producing new table and concatenating it with `\" \"`.
 
 However this library also provides Fennel-specific set of
 [macros](./macros.md), that provides additional facilities like
-`fn*` or `defmulti` which extend the language allowing writing code
+`fn*' or `defmulti' which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
-Each function in this library is created with `fn*`, which is a
+Each function in this library is created with `fn*', which is a
 special macros for creating multi-arity functions.  So when you see
 function signature like `(foo [x])`, this means that this is function
-`foo`, that accepts exactly one argument `x`.  In contrary, functions
-created with `fn` will produce `(foo x)` signature (`x` is not inside
+`foo', that accepts exactly one argument `x'.  In contrary, functions
+created with `fn' will produce `(foo x)` signature (`x' is not inside
 brackets).
 
 Functions, which signatures look like `(foo ([x]) ([x y]) ([x y &
@@ -46,7 +46,7 @@ Main difference is that when comparing two tables, they must have
 exactly the same `__eq` metamethods, so comparing hash sets with hash
 sets will work, but comparing sets with other tables works only in
 Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
-inbuilt UTF-8 library, therefore `seq` function will not work for
+inbuilt UTF-8 library, therefore `seq' function will not work for
 non-ASCII strings."})
 
 (local insert table.insert)
@@ -59,8 +59,8 @@ non-ASCII strings."})
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.apply
-  "Apply `f` to the argument list formed by prepending intervening
-arguments to `args`, and `f` must support variadic amount of
+  "Apply `f' to the argument list formed by prepending intervening
+arguments to `args', and `f' must support variadic amount of
 arguments.
 
 # Examples
@@ -162,8 +162,8 @@ Applying `add' to different amount of arguments:
            (> y (. more 1)))
        false)))
 
-(fn* core.inc "Increase number `x` by one" [x] (+ x 1))
-(fn* core.dec "Decrease number `x` by one" [x] (- x 1))
+(fn* core.inc "Increase number `x' by one" [x] (+ x 1))
+(fn* core.dec "Decrease number `x' by one" [x] (- x 1))
 
 (local utility-doc-order
        [:apply :add :sub :mul :div :le :lt :ge :gt :inc :dec])
@@ -177,14 +177,14 @@ Applying `add' to different amount of arguments:
       t)))
 
 (fn* core.map?
-  "Check whether `tbl` is an associative table.
+  "Check whether `tbl' is an associative table.
 
 Non empty associative tables are tested for two things:
-- `next` returns the key-value pair,
-- key, that is returned by the `next` is not equal to `1`.
+- `next' returns the key-value pair,
+- key, that is returned by the `next' is not equal to `1`.
 
 Empty tables can't be analyzed with this method, and `map?' will
-return `false`.  If you need this test pass for empty table, see
+return `false'.  If you need this test pass for empty table, see
 `hash-map' for creating tables that have additional
 metadata attached for this test to work.
 
@@ -220,14 +220,14 @@ Empty tables created with `hash-map' will pass the test:
                (not= k 1))))))
 
 (fn* core.vector?
-  "Check whether `tbl` is an sequential table.
+  "Check whether `tbl' is an sequential table.
 
 Non empty sequential tables are tested for two things:
-- `next` returns the key-value pair,
-- key, that is returned by the `next` is equal to `1`.
+- `next' returns the key-value pair,
+- key, that is returned by the `next' is equal to `1`.
 
 Empty tables can't be analyzed with this method, and `vector?' will
-always return `false`.  If you need this test pass for empty table,
+always return `false'.  If you need this test pass for empty table,
 see `vector' for creating tables that have additional
 metadata attached for this test to work.
 
@@ -262,10 +262,10 @@ Empty tables created with `vector' will pass the test:
           (and (not= k nil) (= k 1))))))
 
 (fn* core.multifn?
-  "Test if `mf` is an instance of `multifn`.
+  "Test if `mf' is an instance of `multifn'.
 
-`multifn` is a special kind of table, created with `defmulti` macros
-from `macros.fnl`."
+`multifn' is a special kind of table, created with `defmulti' macros
+from `macros.fnl'."
   [mf]
   (= (. (or (getmetatable mf) {}) :cljlib/type) :multifn))
 
@@ -278,77 +278,77 @@ from `macros.fnl`."
     _ false))
 
 (fn* core.nil?
-  "Test if `x` is nil."
+  "Test if `x' is nil."
   ([] true)
   ([x] (= x nil)))
 
 (fn* core.zero?
-  "Test if `x` is equal to zero."
+  "Test if `x' is equal to zero."
   [x]
   (= x 0))
 
 (fn* core.pos?
-  "Test if `x` is greater than zero."
+  "Test if `x' is greater than zero."
   [x]
   (> x 0))
 
 (fn* core.neg?
-  "Test if `x` is less than zero."
+  "Test if `x' is less than zero."
   [x]
   (< x 0))
 
 (fn* core.even?
-  "Test if `x` is even."
+  "Test if `x' is even."
   [x]
   (= (% x 2) 0))
 
 (fn* core.odd?
-  "Test if `x` is odd."
+  "Test if `x' is odd."
   [x]
   (not (even? x)))
 
 (fn* core.string?
-  "Test if `x` is a string."
+  "Test if `x' is a string."
   [x]
   (= (type x) :string))
 
 (fn* core.boolean?
-  "Test if `x` is a Boolean"
+  "Test if `x' is a Boolean"
   [x]
   (= (type x) :boolean))
 
 (fn* core.true?
-  "Test if `x` is `true`"
+  "Test if `x' is `true'"
   [x]
   (= x true))
 
 (fn* core.false?
-  "Test if `x` is `false`"
+  "Test if `x' is `false'"
   [x]
   (= x false))
 
 (fn* core.int?
-  "Test if `x` is a number without floating point data.
+  "Test if `x' is a number without floating point data.
 
-Number is rounded with `math.floor` and compared with original number."
+Number is rounded with `math.floor' and compared with original number."
   [x]
   (and (= (type x) :number)
        (= x (math.floor x))))
 
 (fn* core.pos-int?
-  "Test if `x` is a positive integer."
+  "Test if `x' is a positive integer."
   [x]
   (and (int? x)
        (pos? x)))
 
 (fn* core.neg-int?
-  "Test if `x` is a negative integer."
+  "Test if `x' is a negative integer."
   [x]
   (and (int? x)
        (neg? x)))
 
 (fn* core.double?
-  "Test if `x` is a number with floating point data."
+  "Test if `x' is a number with floating point data."
   [x]
   (and (= (type x) :number)
        (not= x (math.floor x))))
@@ -362,7 +362,7 @@ Number is rounded with `math.floor` and compared with original number."
     _ (error "empty?: unsupported collection")))
 
 (fn* core.not-empty
-  "If `x` is empty, returns `nil`, otherwise `x`."
+  "If `x' is empty, returns `nil', otherwise `x'."
   [x]
   (if (not (empty? x))
       x))
@@ -378,7 +378,7 @@ Number is rounded with `math.floor` and compared with original number."
 (fn* core.vector
   "Constructs sequential table out of it's arguments.
 
-Sets additional metadata for function `vector?` to work.
+Sets additional metadata for function `vector?' to work.
 
 # Examples
 
@@ -393,10 +393,10 @@ Sets additional metadata for function `vector?` to work.
   "Create sequential table.
 
 Transforms original table to sequential table of key value pairs
-stored as sequential tables in linear time.  If `col` is an
+stored as sequential tables in linear time.  If `col' is an
 associative table, returns sequential table of vectors with key and
-value.  If `col` is sequential table, returns its shallow copy.  If
-`col` is string, return sequential table of its codepoints.
+value.  If `col' is sequential table, returns its shallow copy.  If
+`col' is string, return sequential table of its codepoints.
 
 # Examples
 Sequential tables remain as is:
@@ -414,7 +414,7 @@ Associative tables are transformed to format like this `[[key1 value1]
 ;; [[:b 2] [:a 1] [:c 3]]
 ```
 
-See `into` macros for transforming this back to associative table.
+See `into' macros for transforming this back to associative table.
 Additionally you can use `conj' and `apply' with
 `hash-map':
 
@@ -450,7 +450,7 @@ Additionally you can use `conj' and `apply' with
       _ (error (.. "expected table, string or nil, got " (type col)) 2))))
 
 (fn* core.kvseq
-  "Transforms any table `col` to key-value sequence."
+  "Transforms any table `col' to key-value sequence."
   [col]
   (let [res (empty [])]
     (match (type col)
@@ -473,21 +473,21 @@ Additionally you can use `conj' and `apply' with
       _ (error (.. "expected table, string or nil, got " (type col)) 2))))
 
 (fn* core.first
-  "Return first element of a table. Calls `seq` on its argument."
+  "Return first element of a table. Calls `seq' on its argument."
   [col]
   (when-some [col (seq col)]
     (. col 1)))
 
 (fn* core.rest
   "Returns table of all elements of a table but the first one. Calls
-  `seq` on its argument."
+  `seq' on its argument."
   [col]
   (if-some [col (seq col)]
     (vector (_unpack col 2))
     (empty [])))
 
 (fn* core.last
-  "Returns the last element of a table. Calls `seq` on its argument."
+  "Returns the last element of a table. Calls `seq' on its argument."
   [col]
   (when-some [col (seq col)]
     (var (i v) (next col))
@@ -499,7 +499,7 @@ Additionally you can use `conj' and `apply' with
 
 (fn* core.butlast
   "Returns everything but the last element of a table as a new
-  table. Calls `seq` on its argument."
+  table. Calls `seq' on its argument."
   [col]
   (when-some [col (seq col)]
     (table.remove col (length col))
@@ -507,15 +507,15 @@ Additionally you can use `conj' and `apply' with
       col)))
 
 (fn* core.conj
-  "Insert `x` as a last element of a table `tbl`.
+  "Insert `x' as a last element of a table `tbl'.
 
-If `tbl` is a sequential table or empty table, inserts `x` and
-optional `xs` as final element in the table.
+If `tbl' is a sequential table or empty table, inserts `x' and
+optional `xs' as final element in the table.
 
-If `tbl` is an associative table, that satisfies `map?` test,
+If `tbl' is an associative table, that satisfies `map?' test,
 insert `[key value]` pair into the table.
 
-Mutates `tbl`.
+Mutates `tbl'.
 
 # Examples
 Adding to sequential tables:
@@ -557,7 +557,7 @@ See `hash-map' for creating empty associative tables."
    (apply conj (conj tbl x) xs)))
 
 (fn* core.disj
-  "Remove key `k` from set `s`."
+  "Remove key `k' from set `s'."
   ([s] (if (set? s) s
            (error "expected either hash-set or ordered-set as first argument" 2)))
   ([s k]
@@ -568,13 +568,13 @@ See `hash-map' for creating empty associative tables."
    (apply disj (disj s k) ks)))
 
 (fn consj [...]
-  "Like conj but joins at the front. Modifies `tbl`."
+  "Like conj but joins at the front. Modifies `tbl'."
   (let [[tbl x & xs] [...]]
     (if (nil? x) tbl
         (consj (doto tbl (insert 1 x)) (_unpack xs)))))
 
 (fn* core.cons
-  "Insert `x` to `tbl` at the front.  Calls `seq' on `tbl`."
+  "Insert `x' to `tbl' at the front.  Calls `seq' on `tbl'."
   [x tbl]
   (if-some [x x]
     (doto (or (seq tbl) (empty []))
@@ -594,9 +594,9 @@ See `hash-map' for creating empty associative tables."
    (apply concat (concat x y) xs)))
 
 (fn* core.reduce
-  "Reduce collection `col` using function `f` and optional initial value `val`.
+  "Reduce collection `col' using function `f' and optional initial value `val'.
 
-`f` should be a function of 2 arguments.  If val is not supplied,
+`f' should be a function of 2 arguments.  If val is not supplied,
 returns the result of applying f to the first 2 items in coll, then
 applying f to that result and the 3rd item, etc.  If coll contains no
 items, f must accept no arguments as well, and reduce returns the
@@ -604,7 +604,7 @@ result of calling f with no arguments.  If coll has only 1 item, it is
 returned and f is not called.  If val is supplied, returns the result
 of applying f to val and the first item in coll, then applying f to
 that result and the 2nd item, etc.  If coll contains no items, returns
-val and f is not called.  Calls `seq` on `col`.
+val and f is not called.  Calls `seq' on `col'.
 
 Early termination is possible with the use of `reduced'
 function.
@@ -641,7 +641,7 @@ Reduce sequence of numbers with `add'
              (reduce f (f val x) xs)))))))
 
 (fn* core.reduced
-  "Wraps `x` in such a way so `reduce' will terminate early
+  "Wraps `x' in such a way so `reduce' will terminate early
 with this value.
 
 # Examples
@@ -671,12 +671,12 @@ valid number, but we've terminated right before we've reached it."
                         :val x}}))
 
 (fn* core.reduce-kv
-  "Reduces an associative table using function `f` and initial value `val`.
+  "Reduces an associative table using function `f' and initial value `val'.
 
-`f` should be a function of 3 arguments.  Returns the result of
-applying `f` to `val`, the first key and the first value in `tbl`,
-then applying `f` to that result and the 2nd key and value, etc.  If
-`tbl` contains no entries, returns `val` and `f` is not called.  Note
+`f' should be a function of 3 arguments.  Returns the result of
+applying `f' to `val', the first key and the first value in `tbl',
+then applying `f' to that result and the 2nd key and value, etc.  If
+`tbl' contains no entries, returns `val' and `f' is not called.  Note
 that reduce-kv is supported on sequential tables and strings, where
 the keys will be the ordinals.
 
@@ -696,7 +696,7 @@ Reduce associative table by adding values from all keys:
 ;; => 8
 ```
 
-Reduce table by adding values from keys that start with letter `a`:
+Reduce table by adding values from keys that start with letter `a':
 
 ``` fennel
 (local t {:a1 1
@@ -720,17 +720,17 @@ Reduce table by adding values from keys that start with letter `a`:
   res)
 
 (fn* core.mapv
-  "Maps function `f` over one or more collections.
+  "Maps function `f' over one or more collections.
 
-Accepts arbitrary amount of collections, calls `seq` on each of it.
-Function `f` must take the same amount of arguments as the amount of
-tables, passed to `mapv`. Applies `f` over first value of each
-table. Then applies `f` to second value of each table. Continues until
+Accepts arbitrary amount of collections, calls `seq' on each of it.
+Function `f' must take the same amount of arguments as the amount of
+tables, passed to `mapv'. Applies `f' over first value of each
+table. Then applies `f' to second value of each table. Continues until
 any of the tables is exhausted. All remaining values are
 ignored. Returns a sequential table of results.
 
 # Examples
-Map `string.upcase` over the string:
+Map `string.upcase' over the string:
 
 ``` fennel
 (mapv string.upper \"string\")
@@ -744,7 +744,7 @@ Map `mul' over two tables:
 ;; => [1 0 -3]
 ```
 
-Basic `zipmap` implementation:
+Basic `zipmap' implementation:
 
 ``` fennel
 (import-macros {: into} :macros)
@@ -801,7 +801,7 @@ Basic `zipmap` implementation:
      res)))
 
 (fn* core.filter
-  "Returns a sequential table of the items in `col` for which `pred`
+  "Returns a sequential table of the items in `col' for which `pred'
   returns logical true."
   [pred col]
   (if-let [col (seq col)]
@@ -813,25 +813,25 @@ Basic `zipmap` implementation:
     (empty [])))
 
 (fn* core.every?
-  "Test if every item in `tbl` satisfies the `pred`."
+  "Test if every item in `tbl' satisfies the `pred'."
   [pred tbl]
   (if (empty? tbl) true
       (pred (. tbl 1)) (every? pred [(_unpack tbl 2)])
       false))
 
 (fn* core.some
-  "Test if any item in `tbl` satisfies the `pred`."
+  "Test if any item in `tbl' satisfies the `pred'."
   [pred tbl]
   (when-let [tbl (seq tbl)]
     (or (pred (. tbl 1)) (some pred [(_unpack tbl 2)]))))
 
 (fn* core.not-any?
-  "Test if no item in `tbl` satisfy the `pred`."
+  "Test if no item in `tbl' satisfy the `pred'."
   [pred tbl]
   (some #(not (pred $)) tbl))
 
 (fn* core.range
-  "return range of of numbers from `lower` to `upper` with optional `step`."
+  "return range of of numbers from `lower' to `upper' with optional `step'."
   ([upper] (range 0 upper 1))
   ([lower upper] (range lower upper 1))
   ([lower upper step]
@@ -841,7 +841,7 @@ Basic `zipmap` implementation:
      res)))
 
 (fn* core.reverse
-  "Returns table with same items as in `tbl` but in reverse order."
+  "Returns table with same items as in `tbl' but in reverse order."
   [tbl]
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
@@ -856,8 +856,8 @@ Basic `zipmap` implementation:
 (var eq nil)
 
 (fn deep-index [tbl key]
-  "This function uses the pre-declared `eq`, which we set later on,
-because `eq` requires this function internally.  Several other
+  "This function uses the pre-declared `eq', which we set later on,
+because `eq' requires this function internally.  Several other
 functions also reuse this indexing method, such as sets."
   (var res nil)
   (each [k v (pairs tbl)]
@@ -914,8 +914,8 @@ functions also reuse this indexing method, such as sets."
    (reduce comp (consj fs g f))))
 
 (fn* core.complement
-  "Takes a function `f` and returns the function that takes the same
-amount of arguments as `f`, has the same effect, and returns the
+  "Takes a function `f' and returns the function that takes the same
+amount of arguments as `f', has the same effect, and returns the
 oppisite truth value."
   [f]
   (fn*
@@ -925,7 +925,7 @@ oppisite truth value."
     ([a b & cs] (not (apply f a b cs)))))
 
 (fn* core.constantly
-  "Returns a function that takes any number of arguments and returns `x`."
+  "Returns a function that takes any number of arguments and returns `x'."
   [x]
   (fn [] x))
 
@@ -956,7 +956,7 @@ use."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Hash table extras ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.assoc
-  "Associate key `k` with value `v` in `tbl`."
+  "Associate key `k' with value `v' in `tbl'."
   ([tbl k v]
    (assert (not (nil? k)) "attempt to use nil as key")
    (setmetatable
@@ -976,14 +976,14 @@ use."
    (setmetatable tbl {:cljlib/type :table})))
 
 (fn* core.hash-map
-  "Create associative table from `kvs` represented as sequence of keys
+  "Create associative table from `kvs' represented as sequence of keys
 and values"
   ([] (empty {}))
   ([& kvs] (apply assoc {} kvs)))
 
 (fn* core.get
-  "Get value from the table by accessing it with a `key`.
-Accepts additional `not-found` as a marker to return if value wasn't
+  "Get value from the table by accessing it with a `key'.
+Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
   ([tbl key] (get tbl key nil))
   ([tbl key not-found]
@@ -993,7 +993,7 @@ found in the table."
 
 (fn* core.get-in
   "Get value from nested set of tables by providing key sequence.
-Accepts additional `not-found` as a marker to return if value wasn't
+Accepts additional `not-found' as a marker to return if value wasn't
 found in the table."
   ([tbl keys] (get-in tbl keys nil))
   ([tbl keys not-found]
@@ -1022,13 +1022,13 @@ found in the table."
     res))
 
 (fn* core.find
-  "Returns the map entry for `key`, or `nil` if key not present in `tbl`."
+  "Returns the map entry for `key', or `nil' if key not present in `tbl'."
   [tbl key]
   (when-some [v (. tbl key)]
     [key v]))
 
 (fn* core.dissoc
-  "Remove `key` from table `tbl`.  Optionally takes more `keys`."
+  "Remove `key' from table `tbl'.  Optionally takes more `keys`."
   ([tbl] tbl)
   ([tbl key]
    (doto tbl (tset key nil)))
@@ -1042,7 +1042,7 @@ found in the table."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Multimethods ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn* core.remove-method
-  "Remove method from `multimethod` for given `dispatch-value`."
+  "Remove method from `multimethod' for given `dispatch-value'."
   [multimethod dispatch-value]
   (if (multifn? multimethod)
       (tset multimethod dispatch-value nil)
@@ -1050,7 +1050,7 @@ found in the table."
   multimethod)
 
 (fn* core.remove-all-methods
-  "Removes all of the methods of `multimethod`"
+  "Removes all of the methods of `multimethod'"
   [multimethod]
   (if (multifn? multimethod)
       (each [k _ (pairs multimethod)]
@@ -1059,7 +1059,7 @@ found in the table."
   multimethod)
 
 (fn* core.methods
-  "Given a `multimethod`, returns a map of dispatch values -> dispatch fns"
+  "Given a `multimethod', returns a map of dispatch values -> dispatch fns"
   [multimethod]
   (if (multifn? multimethod)
       (let [m {}]
@@ -1069,8 +1069,8 @@ found in the table."
       (error (.. (tostring multimethod) " is not a multifn") 2)))
 
 (fn* core.get-method
-  "Given a `multimethod` and a `dispatch-value`, returns the dispatch
-`fn` that would apply to that value, or `nil` if none apply and no
+  "Given a `multimethod' and a `dispatch-value', returns the dispatch
+`fn' that would apply to that value, or `nil' if none apply and no
 default."
   [multimethod dispatch-value]
   (if (multifn? multimethod)
@@ -1146,7 +1146,7 @@ Updates order of all items when some key removed from set."
     (values k v)))
 
 (fn ordered-set-pairs [Set]
-  "Returns stateless `ipairs` iterator for ordered sets."
+  "Returns stateless `ipairs' iterator for ordered sets."
   (fn []
     (var i 0)
     (var iseq nil)
@@ -1159,7 +1159,7 @@ Updates order of all items when some key removed from set."
     (values set-next Set nil)))
 
 (fn hash-set-pairs [Set]
-  "Returns stateful `ipairs` iterator for hashed sets."
+  "Returns stateful `ipairs' iterator for hashed sets."
   (fn []
     (fn iter [t k]
       (let [v (next t k)]
@@ -1167,7 +1167,7 @@ Updates order of all items when some key removed from set."
     (values iter Set nil)))
 
 (fn into-set [Set tbl]
-  "Transform `tbl` into `Set`"
+  "Transform `tbl' into `Set`"
   (each [_ v (pairs (or (seq tbl) []))]
     (conj Set v))
   Set)
@@ -1180,15 +1180,15 @@ Updates order of all items when some key removed from set."
 Set is a collection of unique elements, which sore purpose is only to
 tell you if something is in the set or not.
 
-`ordered-set` is follows the argument insertion order, unlike sorted
+`ordered-set' is follows the argument insertion order, unlike sorted
 sets, which apply some sorting algorithm internally. New items added
 at the end of the set. Ordered set supports removal of items via
-`tset` and `disj'. To add element to the ordered set use
-`tset` or `conj'. Both operations modify the set.
+`tset' and `disj'. To add element to the ordered set use
+`tset' or `conj'. Both operations modify the set.
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
-syntax. Use `hash-set` function instead.
+syntax. Use `ordered-set' function instead.
 
 Below are some examples of how to create and manipulate sets.
 
@@ -1212,7 +1212,7 @@ Duplicate items are not added:
 
 ## Check if set contains desired value:
 Sets are functions of their keys, so simply calling a set with a
-desired key will either return the key, or `nil`:
+desired key will either return the key, or `nil':
 
 ``` fennel
 (local oset (ordered-set [:a :b :c] [:c :d :e] :e :f))
@@ -1225,7 +1225,7 @@ desired key will either return the key, or `nil`:
 ```
 
 ## Add items to existing set:
-To add element to the set use `conj' or `tset`
+To add element to the set use `conj' or `tset'
 
 ``` fennel
 (local oset (ordered-set :a :b :c))
@@ -1234,7 +1234,7 @@ To add element to the set use `conj' or `tset`
 ```
 
 ### Remove items from the set:
-To add element to the set use `disj' or `tset`
+To add element to the set use `disj' or `tset'
 
 ``` fennel
 (local oset (ordered-set :a :b :c))
@@ -1246,7 +1246,7 @@ oset
 ```
 
 ## Equality semantics
-Both `ordered-set` and `hash-set' implement `__eq` metamethod,
+Both `ordered-set' and `hash-set' implement `__eq` metamethod,
 and are compared for having the same keys without particular order and
 same size:
 
@@ -1285,13 +1285,13 @@ tell you if something is in the set or not.
 
 Hash set differs from ordered set in that the keys are do not have any
 particular order. New items are added at the arbitrary position by
-using `conj' or `tset` functions, and items can be removed
-with `disj' or `tset` functions. Rest semantics are the same
+using `conj' or `tset' functions, and items can be removed
+with `disj' or `tset' functions. Rest semantics are the same
 as for `ordered-set'
 
 **Note**: Hash set prints as `@set{a b c}`, but this construct is not
 supported by the Fennel reader, so you can't create sets with this
-syntax. Use `hash-set` function instead."
+syntax. Use `hash-set' function instead."
   [& xs]
   (let [Set (setmetatable {} {:__index deep-index})
         set-pairs (hash-set-pairs Set)]
