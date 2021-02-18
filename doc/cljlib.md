@@ -348,7 +348,7 @@ Function signature:
 (set? ([s]))
 ```
 
-
+Test if `s` is either instance of a [`hash-set`](#hash-set) or [`ordered-set`](#ordered-set).
 
 ## `nil?`
 Function signature:
@@ -1009,7 +1009,7 @@ Function signature:
 (dissoc ([tbl]) ([tbl key]) ([tbl key & keys]))
 ```
 
-Remove `key` from table `tbl`.  Optionally takes more [`keys`](#keys).
+Remove `key` from table `tbl`.  Optionally takes more `keys`.
 
 ## `remove-method`
 Function signature:

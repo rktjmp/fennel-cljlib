@@ -270,7 +270,7 @@ from `macros.fnl'."
   (= (. (or (getmetatable mf) {}) :cljlib/type) :multifn))
 
 (fn* core.set?
-  ""
+  "Test if `s` is either instance of a `hash-set' or `ordered-set'."
   [s]
   (match (. (or (getmetatable s) {}) :cljlib/type)
     :cljlib/ordered-set :cljlib/ordered-set
