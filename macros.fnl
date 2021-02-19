@@ -1197,31 +1197,33 @@ Always run some side effect action:
 "})
 
 
-{: fn*
- : try
- : if-let
- : when-let
- : if-some
- : when-some
- : empty
- : into
- : when-meta
- : with-meta
- : meta
- : defmulti
- : defmethod
- : def
- : defonce
- :_VERSION #"0.5.0"
- :_LICENSE #"[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
- :_COPYRIGHT #"Copyright (C) 2020-2021 Andrey Listopadov"
- :_DOC_ORDER #[:fn*
-               :try
-               :def :defonce :defmulti :defmethod
-               :into :empty
-               :when-meta :with-meta :meta
-               :if-let :when-let :if-some :when-some]
- :_DESCRIPTION #"Macros for Cljlib that implement various facilities from Clojure."}
+(setmetatable
+ {: fn*
+  : try
+  : if-let
+  : when-let
+  : if-some
+  : when-some
+  : empty
+  : into
+  : when-meta
+  : with-meta
+  : meta
+  : defmulti
+  : defmethod
+  : def
+  : defonce}
+ {:__index
+  {:_VERSION "0.5.1"
+   :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
+   :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
+   :_DOC_ORDER [:fn*
+                :try
+                :def :defonce :defmulti :defmethod
+                :into :empty
+                :when-meta :with-meta :meta
+                :if-let :when-let :if-some :when-some]
+   :_DESCRIPTION "Macros for Cljlib that implement various facilities from Clojure."}})
 
 ;; LocalWords:  arglist fn runtime arities arity multi destructuring
 ;; LocalWords:  docstring Variadic LocalWords multisym sym tbl eq Lua

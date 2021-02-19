@@ -1,4 +1,4 @@
-# Cljlib (0.5.0)
+# Cljlib (0.5.1)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -186,7 +186,7 @@ Divide arbitrary amount of numbers.
 Function signature:
 
 ```
-(le ([x]) ([x y]) ([x y & more]))
+(le ([a]) ([a b]) ([a b & [c d & more]]))
 ```
 
 Returns true if nums are in monotonically non-decreasing order
@@ -195,7 +195,7 @@ Returns true if nums are in monotonically non-decreasing order
 Function signature:
 
 ```
-(lt ([x]) ([x y]) ([x y & more]))
+(lt ([a]) ([a b]) ([a b & [c d & more]]))
 ```
 
 Returns true if nums are in monotonically decreasing order
@@ -204,7 +204,7 @@ Returns true if nums are in monotonically decreasing order
 Function signature:
 
 ```
-(ge ([x]) ([x y]) ([x y & more]))
+(ge ([a]) ([a b]) ([a b & [c d & more]]))
 ```
 
 Returns true if nums are in monotonically non-increasing order
@@ -213,7 +213,7 @@ Returns true if nums are in monotonically non-increasing order
 Function signature:
 
 ```
-(gt ([x]) ([x y]) ([x y & more]))
+(gt ([a]) ([a b]) ([a b & [c d & more]]))
 ```
 
 Returns true if nums are in monotonically increasing order
@@ -244,6 +244,27 @@ Function signature:
 ```
 
 Deep compare values.
+
+### Examples
+
+[`eq`](#eq) can compare both primitive types, tables, and user defined types
+that have `__eq` metamethod.
+
+``` fennel
+(assert-is (eq 42 42))
+(assert-is (eq [1 2 3] [1 2 3]))
+(assert-is (eq (hash-set :a :b :c) (hash-set :a :b :c)))
+(assert-is (eq (hash-set :a :b :c) (ordered-set :c :b :a)))
+```
+
+Deep comparison is used for tables which use tables as keys:
+
+``` fennel
+(assert-is (eq {[1 2 3] {:a [1 2 3]} {:a 1} {:b 2}}
+               {{:a 1} {:b 2} [1 2 3] {:a [1 2 3]}}))
+(assert-is (eq {{{:a 1} {:b 1}} {{:c 3} {:d 4}} [[1] [2 [3]]] {:a 2}}
+               {[[1] [2 [3]]] {:a 2} {{:a 1} {:b 1}} {{:c 3} {:d 4}}}))
+```
 
 ## `map?`
 Function signature:

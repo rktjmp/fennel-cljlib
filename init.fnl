@@ -1,8 +1,9 @@
-(local core {:_VERSION "0.5.0"
-             :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
-             :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
-             :_MODULE_NAME "cljlib"
-             :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
+(local module-info
+       {:_VERSION "0.5.1"
+        :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
+        :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
+        :_MODULE_NAME "cljlib"
+        :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
 This library contains a set of functions providing functions that
@@ -49,11 +50,14 @@ Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
 inbuilt UTF-8 library, therefore `seq' function will not work for
 non-ASCII strings."})
 
+(local core {})
+
 (local insert table.insert)
 (local _unpack (or table.unpack _G.unpack))
+
 (import-macros {: fn* : into : empty : with-meta
                 : when-let : if-let : when-some : if-some}
-               (.. (if (and ... (not= ... :init)) (.. ... ".") "") :macros))
+               (if (and ... (not= ... :init)) (.. ... :.macros) :macros))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,46 +124,42 @@ Applying `add' to different amount of arguments:
 
 (fn* core.le
   "Returns true if nums are in monotonically non-decreasing order"
-  ([x] true)
-  ([x y] (<= x y))
-  ([x y & more]
-   (if (<= x y)
-       (if (next more 1)
-           (le y (. more 1) (_unpack more 2))
-           (<= y (. more 1)))
+  ([a] true)
+  ([a b] (<= a b))
+  ([a b & [c d & more]]
+   (if (<= a b)
+       (if d (apply le b c d more)
+           (<= b c))
        false)))
 
 (fn* core.lt
   "Returns true if nums are in monotonically decreasing order"
-  ([x] true)
-  ([x y] (< x y))
-  ([x y & more]
-   (if (< x y)
-       (if (next more 1)
-           (lt y (. more 1) (_unpack more 2))
-           (< y (. more 1)))
+  ([a] true)
+  ([a b] (< a b))
+  ([a b & [c d & more]]
+   (if (< a b)
+       (if d (apply lt b c d more)
+           (< b c))
        false)))
 
 (fn* core.ge
   "Returns true if nums are in monotonically non-increasing order"
-  ([x] true)
-  ([x y] (>= x y))
-  ([x y & more]
-   (if (>= x y)
-       (if (next more 1)
-           (ge y (. more 1) (_unpack more 2))
-           (>= y (. more 1)))
+  ([a] true)
+  ([a b] (>= a b))
+  ([a b & [c d & more]]
+   (if (>= a b)
+       (if d (apply ge b c d more)
+           (>= b c))
        false)))
 
 (fn* core.gt
   "Returns true if nums are in monotonically increasing order"
-  ([x] true)
-  ([x y] (> x y))
-  ([x y & more]
-   (if (> x y)
-       (if (next more 1)
-           (gt y (. more 1) (_unpack more 2))
-           (> y (. more 1)))
+  ([a] true)
+  ([a b] (> a b))
+  ([a b & [c d & more]]
+   (if (> a b)
+       (if d (apply gt b c d more)
+           (> b c))
        false)))
 
 (fn* core.inc "Increase number `x' by one" [x] (+ x 1))
@@ -172,9 +172,7 @@ Applying `add' to different amount of arguments:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;; Tests and predicates ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fn fast-table-type [tbl]
-  (let [m (getmetatable tbl)]
-    (if-let [t (and m (. m :cljlib/type))]
-      t)))
+  (-?> tbl getmetatable (. :cljlib/type)))
 
 (fn* core.map?
   "Check whether `tbl' is an associative table.
@@ -617,9 +615,7 @@ Reduce sequence of numbers with `add'
 ;; => 10
 (reduce add 10 [1 2 3 4])
 ;; => 20
-```
-
-"
+```"
   ([f col]
    (let [col (or (seq col) (empty []))]
      (match (length col)
@@ -792,7 +788,8 @@ Basic `zipmap' implementation:
                 (if (->> cols
                          (mapv #(not= (next $) nil))
                          (reduce #(and $1 $2)))
-                    (cons (mapv #(. (or (seq $) (empty [])) 1) cols) (step (mapv #(do [(_unpack $ 2)]) cols)))
+                    (cons (mapv #(. (or (seq $) (empty [])) 1) cols)
+                          (step (mapv #(do [(_unpack $ 2)]) cols)))
                     (empty [])))
          res (empty [])]
      (each [_ v (ipairs (step (consj cols col3 col2 col1)))]
@@ -846,9 +843,10 @@ Basic `zipmap' implementation:
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
 
-(local sequence-doc--order [:vector :seq :kvseq :first :rest :last :butlast
-                            :conj :disj :cons :concat :reduce :reduced :reduce-kv
-                            :mapv :filter :every? :some :not-any? :range :reverse])
+(local sequence-doc-order
+       [:vector :seq :kvseq :first :rest :last :butlast
+        :conj :disj :cons :concat :reduce :reduced :reduce-kv
+        :mapv :filter :every? :some :not-any? :range :reverse])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Equality ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -872,27 +870,42 @@ functions also reuse this indexing method, such as sets."
            (if (= x y)
                true
                (and (= (type x) :table) (= (type y) :table))
-               (let [oldmeta (getmetatable y)]
-                 ;; In case if we'll get something like
-                 ;; (eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})
-                 ;; we have to do even deeper search
-                 (setmetatable y {:__index deep-index})
-                 (var [res count-a count-b] [true 0 0])
-                 (each [k v (pairs x)]
-                   (set res (eq v (. y k)))
-                   (set count-a (+ count-a 1))
-                   (when (not res) (lua :break)))
-                 (when res
-                   (each [_ _ (pairs y)]
-                     (set count-b (+ count-b 1)))
-                   (set res (= count-a count-b)))
-                 (setmetatable y oldmeta)
-                 res)
+               (do (var [res count-a count-b] [true 0 0])
+                   (each [k v (pairs x)]
+                     (set res (eq v (deep-index y k)))
+                     (set count-a (+ count-a 1))
+                     (when (not res) (lua :break)))
+                   (when res
+                     (each [_ _ (pairs y)]
+                       (set count-b (+ count-b 1)))
+                     (set res (= count-a count-b)))
+                   res)
                false))
           ([x y & xs]
            (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs)))))
 
-(set core.eq (with-meta eq {:fnl/docstring "Deep compare values."}))
+(set core.eq (with-meta eq {:fnl/docstring "Deep compare values.
+
+# Examples
+
+`eq' can compare both primitive types, tables, and user defined types
+that have `__eq` metamethod.
+
+``` fennel
+(assert-is (eq 42 42))
+(assert-is (eq [1 2 3] [1 2 3]))
+(assert-is (eq (hash-set :a :b :c) (hash-set :a :b :c)))
+(assert-is (eq (hash-set :a :b :c) (ordered-set :c :b :a)))
+```
+
+Deep comparison is used for tables which use tables as keys:
+
+``` fennel
+(assert-is (eq {[1 2 3] {:a [1 2 3]} {:a 1} {:b 2}}
+               {{:a 1} {:b 2} [1 2 3] {:a [1 2 3]}}))
+(assert-is (eq {{{:a 1} {:b 1}} {{:c 3} {:d 4}} [[1] [2 [3]]] {:a 2}}
+               {[[1] [2 [3]]] {:a 2} {{:a 1} {:b 1}} {{:c 3} {:d 4}}}))
+```"}))
 
 
 ;;;;;;;;;;;;;;;;;;;;;; Function manipulation functions ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -936,11 +949,7 @@ arguments to results and, when calls with the same arguments are
 repeated often, has higher performance at the expense of higher memory
 use."
   [f]
-  (let [memo (setmetatable {} {:__index
-                               (fn [tbl key]
-                                 (each [k v (pairs tbl)]
-                                   (when (eq k key)
-                                     (lua "return v"))))})]
+  (let [memo (setmetatable {} {:__index deep-index})]
     (fn [...]
       (let [args [...]]
         (if-some [res (. memo args)]
@@ -1316,15 +1325,18 @@ syntax. Use `hash-set' function instead."
        [:ordered-set :hash-set])
 
 
-(doto core
-  (tset :_DOC_ORDER (concat utility-doc-order
-                            [:eq]
-                            predicate-doc-order
-                            sequence-doc--order
-                            function-manipulation-doc-order
-                            hash-table-doc-order
-                            multimethods-doc-order
-                            set-doc-order)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;; Module info and export ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(set module-info._DOC_ORDER (concat utility-doc-order
+                                    [:eq]
+                                    predicate-doc-order
+                                    sequence-doc-order
+                                    function-manipulation-doc-order
+                                    hash-table-doc-order
+                                    multimethods-doc-order
+                                    set-doc-order))
+
+(setmetatable core {:__index module-info})
 
 
 ;; LocalWords:  cljlib Clojure's clj lua PUC mapv concat Clojure fn zs

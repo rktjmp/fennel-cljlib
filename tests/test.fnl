@@ -131,7 +131,9 @@ Deep compare values:
   `(do (io.stdout:write (.. "testing: " ,description "\n"))
        ,...))
 
-(doto test
-  (tset :_DOC_ORDER #[:deftest :testing
-                      :assert-eq :assert-ne
-                      :assert-is :assert-not]))
+(setmetatable
+ test
+ {:__index
+  {:_DOC_ORDER [:deftest :testing
+                :assert-eq :assert-ne
+                :assert-is :assert-not]}})

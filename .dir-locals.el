@@ -6,6 +6,8 @@
                           `((,(rx word-start
                                   (group (or "fn*"
                                              "try"
+                                             "catch"
+                                             "finally"
                                              "if-let"
                                              "if-some"
                                              "when-let"
