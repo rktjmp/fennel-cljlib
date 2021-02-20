@@ -1,8 +1,5 @@
 # Fennel Cljlib
 
-[![img](https://gitlab.com/andreyorst/fennel-cljlib/badges/master/pipeline.svg)](https://gitlab.com/andreyorst/fennel-cljlib/-/commits/master)
-[![img](https://gitlab.com/andreyorst/fennel-cljlib/badges/master/coverage.svg)](https://gitlab.com/andreyorst/fennel-cljlib/-/commits/master)
-
 Experimental library for [Fennel](https://fennel-lang.org/) language, that adds many functions from [Clojure](https://clojure.org/)'s standard library.
 This is not a one to one port of Clojure `core`, because many Clojure functions require certain guarantees, like immutability and laziness, which are hard to efficiently implement on top of Lua.
 Some semantics like concurrency, or dynamic scope is not supported by Lua runtime at all.

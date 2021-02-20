@@ -1,2 +1,2 @@
-*.fnl gitlab-language=clojure linguist-language=Fennel
-.fenneldoc gitlab-language=clojure linguist-language=Fennel
+*.fnl gitlab-language=clojure linguist-language=clojure
+.fenneldoc gitlab-language=clojure linguist-language=clojure
