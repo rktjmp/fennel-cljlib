@@ -594,5 +594,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.1.2
+<!-- Generated with Fenneldoc v0.1.3
      https://gitlab.com/andreyorst/fenneldoc -->

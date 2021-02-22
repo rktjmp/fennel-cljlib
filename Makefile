@@ -8,7 +8,7 @@ LUATESTS = $(FNLTESTS:.fnl=.lua)
 LUA_EXECUTABLES ?= lua luajit
 FENNELDOC := $(shell command -v fenneldoc)
 
-.PHONY: build clean distclean help test luacov luacov-console fenneldoc $(LUA_EXECUTABLES)
+.PHONY: build clean distclean help test luacov luacov-console doc $(LUA_EXECUTABLES)
 
 build: $(LUASOURCES)
 
@@ -48,11 +48,12 @@ luacov-console: luacov
 	luacov-console .
 	@$(foreach test, $(LUATESTS), mv $(test).tmp $(test);)
 
-fenneldoc:
+doc:
 	fenneldoc $(FNLDOCS)
 
 help:
-	@echo "make                -- run tests and create lua library" >&2
+	@echo "make                -- create lua library" >&2
+	@echo "make doc            -- generate documentation files (requires fenneldoc)" >&2
 	@echo "make test           -- run tests" >&2
 	@echo "make clean          -- remove lua files" >&2
 	@echo "make distclean      -- remove all unnecessary files" >&2

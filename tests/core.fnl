@@ -209,6 +209,8 @@
   (testing "kvseq"
     (assert-not (pcall kvseq))
     (assert-not (pcall kvseq [] []))
+    (assert-eq (kvseq nil) nil)
+    (assert-eq (kvseq []) nil)
     (assert-eq (kvseq {123 456}) [[123 456]])
     (assert-eq (kvseq {:a 1}) [[:a 1]])
     (assert-eq (kvseq [0 0 0 10]) [[1 0] [2 0] [3 0] [4 10]])
@@ -240,6 +242,32 @@
                ["Bob Smith works as secretary at Happy Days co."
                 "Alice Watson works as chief officer at Coffee With You"])
     (assert-eq (table.concat (mapv string.upper "vaiv")) "VAIV"))
+
+  (testing "partition"
+    (assert-not (pcall partition))
+    (assert-not (pcall partition 1))
+    (assert-eq (partition 1 [1 2 3 4]) [[1] [2] [3] [4]])
+    (assert-eq (partition 1 2 [1 2 3 4]) [[1] [3]])
+    (assert-eq (partition 3 2 [1 2 3 4 5]) [[1 2 3] [3 4 5]])
+    (assert-eq (partition 3 3 [0 -1 -2 -3] [1 2 3 4]) [[1 2 3] [4 0 -1]]))
+
+  (testing "nthrest"
+    (assert-not (pcall nthrest))
+    (assert-not (pcall nthrest []))
+    (assert-eq (nthrest [1 2 3] 0) [1 2 3])
+    (assert-eq (nthrest [1 2 3] 1) [2 3])
+    (assert-eq (nthrest [1 2 3] 2) [3])
+    (assert-eq (nthrest [1 2 3] 3) []))
+
+  (testing "take"
+    (assert-not (pcall take))
+    (assert-not (pcall take []))
+    (assert-not (pcall take :a []))
+    (assert-not (pcall take -1 []))
+    (assert-eq (take 0 [1 2 3]) [])
+    (assert-eq (take 1 {:a 1}) [[:a 1]])
+    (assert-eq (take 10 [1 2 3]) [1 2 3])
+    (assert-eq (take 1 [1 2 3]) [1]))
 
   (testing "reduce"
     (fn* add

@@ -843,10 +843,87 @@ Basic `zipmap' implementation:
   (when-some [tbl (seq tbl)]
     (reduce consj (empty []) tbl)))
 
+(fn* core.take
+  "Returns a sequence of the first `n' items in `col', or all items if
+there are fewer than `n'."
+  [n col]
+  (if (= n 0)
+      []
+      (pos-int? n)
+      (if-let [s (seq col)]
+        (cons (first s) (take (dec n) (rest s)))
+        nil)
+      (error "expected positive integer as first argument" 2)))
+
+(fn* core.nthrest
+  "Returns the nth rest of `col', `col' when `n' is 0.
+
+# Examples
+
+``` fennel
+(assert-eq (nthrest [1 2 3 4] 3) [4])
+(assert-eq (nthrest [1 2 3 4] 2) [3 4])
+(assert-eq (nthrest [1 2 3 4] 1) [2 3 4])
+(assert-eq (nthrest [1 2 3 4] 0) [1 2 3 4])
+```
+"
+  [col n]
+  [(_unpack col (inc n))])
+
+(fn* core.partition
+  "Returns a sequence of sequences of `n' items each, at offsets step
+apart. If `step' is not supplied, defaults to `n', i.e. the partitions
+do not overlap. If a `pad' collection is supplied, use its elements as
+necessary to complete last partition up to `n' items. In case there
+are not enough padding elements, return a partition with less than `n'
+items.
+
+# Examples
+Partition sequence into sub-sequences of size 3:
+
+``` fennel
+(assert-eq (partition 3 [1 2 3 4 5 6]) [[1 2 3] [4 5 6]])
+```
+
+When collection doesn't have enough elements, partition will not include those:
+
+``` fennel
+(assert-eq (partition 3 [1 2 3 4]) [[1 2 3]])
+```
+
+Partitions can overlap if step is supplied:
+
+``` fennel
+(assert-eq (partition 2 1 [1 2 3 4]) [[1 2] [2 3] [3 4]])
+```
+
+Additional padding can be used to supply insufficient elements:
+
+``` fennel
+(assert-eq (partition 3 3 [3 2 1] [1 2 3 4]) [[1 2 3] [4 3 2]])
+```"
+  ([n col]
+   (partition n n col))
+  ([n step col]
+   (if-let [s (seq col)]
+     (let [p (take n s)]
+       (if (= n (length p))
+           (cons p (partition n step (nthrest s step)))
+           nil))
+     nil))
+  ([n step pad col]
+   (if-let [s (seq col)]
+     (let [p (take n s)]
+       (if (= n (length p))
+           (cons p (partition n step pad (nthrest s step)))
+           [(take n (concat p pad))]))
+     nil)))
+
 (local sequence-doc-order
        [:vector :seq :kvseq :first :rest :last :butlast
         :conj :disj :cons :concat :reduce :reduced :reduce-kv
-        :mapv :filter :every? :some :not-any? :range :reverse])
+        :mapv :filter :every? :some :not-any? :range :reverse :take
+        :nthrest :partition])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Equality ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

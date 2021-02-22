@@ -101,6 +101,9 @@ non-ASCII strings.
 - [`not-any?`](#not-any)
 - [`range`](#range)
 - [`reverse`](#reverse)
+- [`take`](#take)
+- [`nthrest`](#nthrest)
+- [`partition`](#partition)
 - [`identity`](#identity)
 - [`comp`](#comp)
 - [`complement`](#complement)
@@ -904,6 +907,73 @@ Function signature:
 
 Returns table with same items as in `tbl` but in reverse order.
 
+## `take`
+Function signature:
+
+```
+(take ([n col]))
+```
+
+Returns a sequence of the first `n` items in `col`, or all items if
+there are fewer than `n`.
+
+## `nthrest`
+Function signature:
+
+```
+(nthrest ([col n]))
+```
+
+Returns the nth rest of `col`, `col` when `n` is 0.
+
+### Examples
+
+``` fennel
+(assert-eq (nthrest [1 2 3 4] 3) [4])
+(assert-eq (nthrest [1 2 3 4] 2) [3 4])
+(assert-eq (nthrest [1 2 3 4] 1) [2 3 4])
+(assert-eq (nthrest [1 2 3 4] 0) [1 2 3 4])
+```
+
+## `partition`
+Function signature:
+
+```
+(partition ([n col]) ([n step col]) ([n step pad col]))
+```
+
+Returns a sequence of sequences of `n` items each, at offsets step
+apart. If `step` is not supplied, defaults to `n`, i.e. the partitions
+do not overlap. If a `pad` collection is supplied, use its elements as
+necessary to complete last partition up to `n` items. In case there
+are not enough padding elements, return a partition with less than `n`
+items.
+
+### Examples
+Partition sequence into sub-sequences of size 3:
+
+``` fennel
+(assert-eq (partition 3 [1 2 3 4 5 6]) [[1 2 3] [4 5 6]])
+```
+
+When collection doesn't have enough elements, partition will not include those:
+
+``` fennel
+(assert-eq (partition 3 [1 2 3 4]) [[1 2 3]])
+```
+
+Partitions can overlap if step is supplied:
+
+``` fennel
+(assert-eq (partition 2 1 [1 2 3 4]) [[1 2] [2 3] [3 4]])
+```
+
+Additional padding can be used to supply insufficient elements:
+
+``` fennel
+(assert-eq (partition 3 3 [3 2 1] [1 2 3 4]) [[1 2 3] [4 3 2]])
+```
+
 ## `identity`
 Function signature:
 
@@ -1188,5 +1258,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc 0.1.2
+<!-- Generated with Fenneldoc v0.1.3
      https://gitlab.com/andreyorst/fenneldoc -->
