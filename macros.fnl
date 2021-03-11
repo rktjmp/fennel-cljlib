@@ -1197,7 +1197,6 @@ Always run some side effect action:
 
 (setmetatable
  {: fn*
-  : eq-fn
   : try
   : if-let
   : when-let
