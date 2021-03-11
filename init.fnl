@@ -957,6 +957,7 @@ functions also reuse this indexing method, such as sets."
                        (set count-b (+ count-b 1)))
                      (set res (= count-a count-b)))
                    res)
+               :else
                false))
           ([x y & xs]
            (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs)))))

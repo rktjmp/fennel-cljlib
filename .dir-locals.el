@@ -31,7 +31,7 @@
                                   word-end)
                              1 'font-lock-keyword-face))))
                  (eval . (put 'when-meta 'fennel-indent-function 'defun))
-                 (eval . (put 'defmethod 'fennel-indent-function 'defun))
+                 (eval . (put 'defmethod 'fennel-indent-function 3))
                  (eval . (put 'defmulti 'bfennel-indent-function 'defun))
                  (eval . (put 'deftest 'fennel-indent-function 'defun))
                  (eval . (put 'testing 'fennel-indent-function 'defun))

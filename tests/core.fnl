@@ -27,13 +27,13 @@
     (assert-eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
                [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]])
     (assert-is (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
-                        [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
+                   [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
     (assert-is (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
-                        [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
-                        [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
+                   [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                   [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]))
     (assert-not (eq [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
-                         [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
-                         [[1 [2 [3]] {[6] {:a [1 [1 [1 [1]]]]}}]]))
+                    [[1 [2 [3]] {[5] {:a [1 [1 [1 [1]]]]}}]]
+                    [[1 [2 [3]] {[6] {:a [1 [1 [1 [1]]]]}}]]))
     (assert-ne [1] [1 2])
     (assert-ne [1 2] [1])
     (assert-is (eq [1 [2]] [1 [2]] [1 [2]]))
@@ -227,18 +227,18 @@
                (into {} [[:a 1] [:b 4] [:c 9]]))
 
     (assert-eq (into {} (mapv (fn [[k1 v1] [k2 v2]] [k1 (* v1 v2)])
-                                   {:a 1 :b 2 :c 3}
-                                   {:a -1 :b 0 :c 2}))
+                              {:a 1 :b 2 :c 3}
+                              {:a -1 :b 0 :c 2}))
                {:a -1 :b 0 :c 6})
     (assert-eq (mapv #(* $1 $2 $3) [1] [2] [-1]) [-2])
     (assert-eq (mapv string.upper ["a" "b" "c"]) ["A" "B" "C"])
     (assert-eq (mapv #(+ $1 $2 $3 $4) [1 -1] [2 -2] [3 -3] [4 -4]) [(+ 1 2 3 4) (+ -1 -2 -3 -4)])
     (assert-eq (mapv (fn [f-name s-name company position]
                        (.. f-name " " s-name " works as " position " at " company))
-                          ["Bob" "Alice"]
-                          ["Smith" "Watson"]
-                          ["Happy Days co." "Coffee With You"]
-                          ["secretary" "chief officer"])
+                     ["Bob" "Alice"]
+                     ["Smith" "Watson"]
+                     ["Happy Days co." "Coffee With You"]
+                     ["secretary" "chief officer"])
                ["Bob Smith works as secretary at Happy Days co."
                 "Alice Watson works as chief officer at Coffee With You"])
     (assert-eq (table.concat (mapv string.upper "vaiv")) "VAIV"))

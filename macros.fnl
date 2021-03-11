@@ -65,30 +65,29 @@
   ;; This function is able to compare tables of any depth, even if one of
   ;; the tables uses tables as keys.
   `(fn eq# [left# right#]
-     (if (and (= (type left#) :table) (= (type right#) :table))
-         (let [oldmeta# (getmetatable right#)]
-           ;; In case if we'll get something like
-           ;; `(eq {[1 2 3] {:a [1 2 3]}} {[1 2 3] {:a [1 2 3]}})`
-           ;; we have to do even deeper search
-           (setmetatable right# {:__index (fn [tbl# key#]
-                                            (var res# nil)
-                                            (each [k# v# (pairs tbl#)]
-                                              (when (eq# k# key#)
-                                                (set res# v#)
-                                                (lua :break)))
-                                            res#)})
-           (var [res# count-a# count-b#] [true 0 0])
-           (each [k# v# (pairs left#)]
-             (set res# (eq# v# (. right# k#)))
-             (set count-a# (+ count-a# 1))
-             (when (not res#) (lua :break)))
-           (when res#
-             (each [_# _# (pairs right#)]
-               (set count-b# (+ count-b# 1)))
-             (set res# (= count-a# count-b#)))
-           (setmetatable right# oldmeta#)
-           res#)
-         (= left# right#))))
+     (if (= left# right#)
+         true
+         (and (= (type left#) :table) (= (type right#) :table))
+         (do (var [res# count-a# count-b#] [true 0 0])
+             (each [k# v# (pairs left#)]
+               (set res# (eq# v# ((fn deep-index# [tbl# key#]
+                                    (var res# nil)
+                                    (each [k# v# (pairs tbl#)]
+                                      (when (eq# k# key#)
+                                        (set res# v#)
+                                        (lua :break)))
+                                    res#)
+                                  right# k#)))
+               (set count-a# (+ count-a# 1))
+               (when (not res#)
+                 (lua :break)))
+             (when res#
+               (each [_# _# (pairs right#)]
+                 (set count-b# (+ count-b# 1)))
+               (set res# (= count-a# count-b#)))
+             res#)
+         :else
+         false)))
 
 (fn seq-fn []
   ;; Returns function that transforms tables and strings into sequences.
@@ -865,14 +864,13 @@ See `into' for more info on how conversion is done."
                     (fn [t# ...]
                       ,docstring
                       (let [dispatch-value# (,dispatch-fn ...)
-                            (res# view#) (pcall require :fennelview)
-                            tostr# (if res# #(view# $ {:one-line true}) tostring)]
+                            view# #((. (require :fennel) :view) $ {:one-line true})]
                         ((or (. t# dispatch-value#)
                              (. t# (or (. ,options :default) :default))
                              (error (.. "No method in multimethod '"
                                         ,(tostring name)
                                         "' for dispatch value: "
-                                        (tostr# dispatch-value#))
+                                        (view# dispatch-value#))
                                     2)) ...)))
                     :__name (.. "multifn " ,(tostring name))
                     :__fennelview tostring
@@ -1199,6 +1197,7 @@ Always run some side effect action:
 
 (setmetatable
  {: fn*
+  : eq-fn
   : try
   : if-let
   : when-let
