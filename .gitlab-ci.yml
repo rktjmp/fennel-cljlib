@@ -4,21 +4,41 @@ stages:
     - test
     - coverage
 
+cache:
+    paths:
+        - .cache
+
+.install_fennel: &fennel |-
+    cd .cache
+    [ -d fennel ] || git clone -q --depth 1 https://git.sr.ht/~technomancy/fennel 
+    cd fennel || exit -1
+    git checkout 0.8.1
+    make clean
+    make install
+    cd "$CI_PROJECT_DIR"
+
+.install_fenneldoc: &fenneldoc |-
+    cd .cache
+    [ -d fenneldoc ] || git clone -q --depth 1 https://gitlab.com/andreyorst/fenneldoc
+    cd fenneldoc || exit -1
+    git checkout -q --recurse-submodules v0.1.0
+    make clean
+    make install
+    cd "$CI_PROJECT_DIR"
+
 Lua:
     image: alpine:edge
     stage: test
     before_script:
+        - mkdir -p .cache
         - >
             apk add -q
             lua5.2 lua5.3 lua5.3-dev lua5.4 luarocks5.3
             git make gcc musl-dev
-        - git clone --depth 1 https://git.sr.ht/~technomancy/fennel
-        - (cd fennel; LUA=lua5.3 make install)
         - luarocks-5.3 install luafilesystem
-        - >
-            git clone --depth 1 --branch v0.1.0 --recursive
-            https://gitlab.com/andreyorst/fenneldoc.git
-        - (cd fenneldoc; LUA=lua5.3 make install)
+        - export LUA=lua5.3
+        - *fennel
+        - *fenneldoc
     script:
         - LUA_EXECUTABLES="lua5.2 lua5.3 lua5.4" make testall >/dev/null
 
@@ -30,12 +50,11 @@ Luajit:
     image: fedora:33
     stage: test
     before_script:
+        - mkdir -p .cache
         - dnf install -y -q lua luajit git make
-        - git clone https://git.sr.ht/~technomancy/fennel
-        - (cd fennel; make install)
+        - *fennel
     script:
         - LUA=luajit make test
-
 
 # We install fennel via luarocks because I don't want to figure out
 # how to install luacov without luarocks
