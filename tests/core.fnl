@@ -411,11 +411,17 @@
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 0 [10 5]) 15)
     (assert-eq (reduce #(if (> $1 10) (reduced -1) (+ $1 $2)) 1 [10 7]) -1)
 
+    (assert-eq (reduce #(if (> $1 10) (reduced false) (+ $1 $2)) 1 [10 7]) false)
+    (assert-eq (reduce #(if (> $1 10) (reduced nil) (+ $1 $2)) 1 [10 7]) nil)
+
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 1 :b 2}) 3)
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 0 {:a 10 :b 2}) 12)
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 {:a 3 :b 3 :c 3 :d 3}) 13)
     (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 2 {:a 3 :b 3 :c 3 :d 3}) -1)
-    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 [10 12]) -1))
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced -1) (+ res v))) 1 [10 12]) -1)
+
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced false) (+ res v))) 1 [10 12]) false)
+    (assert-eq (reduce-kv (fn [res _ v] (if (> res 10) (reduced nil) (+ res v))) 1 [10 12]) nil))
 
   (testing "assoc"
     (assert-not (pcall assoc))

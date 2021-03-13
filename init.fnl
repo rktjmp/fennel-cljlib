@@ -625,16 +625,16 @@ Reduce sequence of numbers with `add'
        _ (let [[a b & rest] col]
            (reduce f (f a b) rest)))))
   ([f val col]
-   (if-some [reduced (when-some [m (getmetatable val)]
-                       (and m.cljlib/reduced
-                            (= m.cljlib/reduced.status :ready)
-                            m.cljlib/reduced.val))]
-     reduced
-     (let [col (or (seq col) (empty []))]
-       (let [[x & xs] col]
-         (if (nil? x)
-             val
-             (reduce f (f val x) xs)))))))
+   (let [m (getmetatable val)]
+     (if (and m
+              m.cljlib/reduced
+              (= m.cljlib/reduced.status :ready))
+         m.cljlib/reduced.val
+         (let [col (or (seq col) (empty []))]
+           (let [[x & xs] col]
+             (if (nil? x)
+                 val
+                 (reduce f (f val x) xs))))))))
 
 (fn* core.reduced
   "Wraps `x' in such a way so `reduce' will terminate early
