@@ -409,10 +409,10 @@ returns the value without additional metadata.
       (and res (> n 1)))))
 
 (fn demethodize [s]
-  (-> s
-      tostring
-      (string.gsub ":" ".")
-      sym))
+  (let [s (-> s
+              tostring
+              (string.gsub ":" "."))]
+    (sym s)))
 
 (fn fn* [name doc? ...]
   "Create (anonymous) function of fixed arity.
