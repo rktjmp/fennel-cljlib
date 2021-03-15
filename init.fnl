@@ -960,7 +960,7 @@ functions also reuse this indexing method, such as sets."
                :else
                false))
           ([x y & xs]
-           (reduce #(and $1 $2) (eq x y) (mapv #(eq x $) xs)))))
+           (and (eq x y) (apply eq x xs)))))
 
 (set core.eq (with-meta eq {:fnl/docstring "Deep compare values.
 

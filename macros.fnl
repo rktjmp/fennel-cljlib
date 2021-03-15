@@ -64,12 +64,12 @@
   ;;
   ;; This function is able to compare tables of any depth, even if one of
   ;; the tables uses tables as keys.
-  `(fn eq# [left# right#]
-     (if (= left# right#)
+  `(fn eq# [x# y#]
+     (if (= x# y#)
          true
-         (and (= (type left#) :table) (= (type right#) :table))
-         (do (var [res# count-a# count-b#] [true 0 0])
-             (each [k# v# (pairs left#)]
+         (and (= (type x#) :table) (= (type y#) :table))
+         (do (var [res# count-x# count-y#] [true 0 0])
+             (each [k# v# (pairs x#)]
                (set res# (eq# v# ((fn deep-index# [tbl# key#]
                                     (var res# nil)
                                     (each [k# v# (pairs tbl#)]
@@ -77,14 +77,14 @@
                                         (set res# v#)
                                         (lua :break)))
                                     res#)
-                                  right# k#)))
-               (set count-a# (+ count-a# 1))
+                                  y# k#)))
+               (set count-x# (+ count-x# 1))
                (when (not res#)
                  (lua :break)))
              (when res#
-               (each [_# _# (pairs right#)]
-                 (set count-b# (+ count-b# 1)))
-               (set res# (= count-a# count-b#)))
+               (each [_# _# (pairs y#)]
+                 (set count-y# (+ count-y# 1)))
+               (set res# (= count-x# count-y#)))
              res#)
          :else
          false)))
