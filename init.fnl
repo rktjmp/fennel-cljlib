@@ -549,7 +549,7 @@ See `hash-map' for creating empty associative tables."
      (let [tbl (or tbl (empty []))]
        (if (map? tbl)
            (tset tbl (. x 1) (. x 2))
-           (insert tbl x))))
+           (tset tbl (+ 1 (length tbl)) x))))
    tbl)
   ([tbl x & xs]
    (apply conj (conj tbl x) xs)))
