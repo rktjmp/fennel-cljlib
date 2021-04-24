@@ -13,17 +13,19 @@ variables:
 
 .install_fennel: &fennel |-
     cd .cache
-    [ -d fennel ] || git clone -q --depth 1 https://git.sr.ht/~technomancy/fennel
+    [ -d fennel ] || git clone -q https://git.sr.ht/~technomancy/fennel
     cd fennel || exit -1
-    git checkout 0.8.1
+    git pull
+    git checkout 0.9.1
     make clean
     make install
     cd "$CI_PROJECT_DIR"
 
 .install_fenneldoc: &fenneldoc |-
     cd .cache
-    [ -d fenneldoc ] || git clone -q --depth 1 https://gitlab.com/andreyorst/fenneldoc
+    [ -d fenneldoc ] || git clone -q https://gitlab.com/andreyorst/fenneldoc
     cd fenneldoc || exit -1
+    git pull
     git checkout -q --recurse-submodules v0.1.0
     make clean
     make install
