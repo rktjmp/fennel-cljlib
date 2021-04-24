@@ -8,9 +8,12 @@ cache:
     paths:
         - .cache
 
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
 .install_fennel: &fennel |-
     cd .cache
-    [ -d fennel ] || git clone -q --depth 1 https://git.sr.ht/~technomancy/fennel 
+    [ -d fennel ] || git clone -q --depth 1 https://git.sr.ht/~technomancy/fennel
     cd fennel || exit -1
     git checkout 0.8.1
     make clean
