@@ -1,4 +1,4 @@
-# Macros.fnl (0.5.1)
+# Macros.fnl (0.5.3)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
@@ -594,5 +594,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc v0.1.3
+<!-- Generated with Fenneldoc v0.1.5
      https://gitlab.com/andreyorst/fenneldoc -->

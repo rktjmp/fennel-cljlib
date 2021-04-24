@@ -1,4 +1,4 @@
-(require-macros :tests.test)
+(require-macros :fennel-test.test)
 (require-macros :macros)
 
 (deftest fn*

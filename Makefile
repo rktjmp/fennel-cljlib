@@ -3,7 +3,7 @@ FENNEL ?= fennel
 FNLSOURCES = init.fnl
 LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 FNLTESTS = tests/fn.fnl tests/macros.fnl tests/core.fnl
-FNLDOCS = init.fnl macros.fnl tests/test.fnl
+FNLDOCS = init.fnl macros.fnl
 LUATESTS = $(FNLTESTS:.fnl=.lua)
 LUA_EXECUTABLES ?= lua luajit
 FENNELDOC := $(shell command -v fenneldoc)

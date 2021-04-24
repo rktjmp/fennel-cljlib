@@ -1,3 +1,11 @@
+## Cljlib v0.5.3 (2021-04-24)
+
+- test library is now external dependency.
+
+## Cljlib v0.5.2 (2021-03-16)
+
+- `conj` fix for better Luajit compatibility.
+
 ## Cljlib v0.5.1 (2021-02-19)
 
 - `eq` will no longer change metamethods of tables.

@@ -1,5 +1,5 @@
 (require-macros :macros)
-(require-macros :tests.test)
+(require-macros :fennel-test.test)
 
 (macro require-module [module]
   `(local ,(collect [k (pairs (require module))]

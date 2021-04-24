@@ -1,8 +1,5 @@
 (local module-info
-       {:_VERSION "0.5.1"
-        :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
-        :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
-        :_MODULE_NAME "cljlib"
+       {:_MODULE_NAME "cljlib"
         :_DESCRIPTION "Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 

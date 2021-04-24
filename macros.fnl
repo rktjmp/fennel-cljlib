@@ -1212,10 +1212,7 @@ Always run some side effect action:
   : def
   : defonce}
  {:__index
-  {:_VERSION "0.5.1"
-   :_LICENSE "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
-   :_COPYRIGHT "Copyright (C) 2020-2021 Andrey Listopadov"
-   :_DOC_ORDER [:fn*
+  {:_DOC_ORDER [:fn*
                 :try
                 :def :defonce :defmulti :defmethod
                 :into :empty

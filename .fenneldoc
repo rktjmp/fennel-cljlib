@@ -3,8 +3,11 @@
 ;; https://gitlab.com/andreyorst/fenneldoc
 
 {:ignored-args-patterns ["[a-z]" "%.%.%." "[xkf]s" "kvs" "col[0-9]" "cols?" "rest" "more" "keys" "tbl" "args"]
- :test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :tests.test)"
+ :project-version "0.5.3"
+ :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
+ :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
+ :test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test.test)"
                      :macros.fnl "(require-macros :macros)
-                                  (import-macros {: assert-eq} :tests.test)
+                                  (import-macros {: assert-eq} :fennel-test.test)
                                   (local {: eq : vector : hash-map} (require :init))"
-                     :tests/test.fnl "(require-macros :tests.test)"}}
+                     :tests/test.fnl "(require-macros :fennel-test.test)"}}
