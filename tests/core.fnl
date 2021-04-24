@@ -445,9 +445,10 @@
     (assert-eq (keys {:a 1}) [:a])
     (assert-eq (vals {:a 1}) [1])
     (match (pcall #(assert-eq (keys {:a 1 :b 2 :c 3}) (hash-set :a :b :c)))
-      (false msg) (io.stderr:write (.. "WARNING: " msg)))
+      (false msg) (io.stderr:write "WARNING: " msg))
+    (print "10")
     (match (pcall #(assert-eq (vals {:a 1 :b 2 :c 3}) (hash-set 1 2 3)))
-      (false msg) (io.stderr:write (.. "WARNING: " msg)))
+      (false msg) (io.stderr:write "WARNING: " msg))
     (assert-eq (find {:a 1 :b 2 :c 3} :c) [:c 3])
     (assert-eq (find {:a 1 :b 2 :c 3} :d) nil)))
 
