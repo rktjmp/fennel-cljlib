@@ -12,6 +12,8 @@ variables:
     GIT_SUBMODULE_STRATEGY: recursive
 
 .install_fennel: &fennel |-
+    cd "$CI_PROJECT_DIR"
+    mkdir -p .cache
     cd .cache
     [ -d fennel ] || git clone -q https://git.sr.ht/~technomancy/fennel
     cd fennel || exit -1
@@ -22,11 +24,16 @@ variables:
     cd "$CI_PROJECT_DIR"
 
 .install_fenneldoc: &fenneldoc |-
+    cd "$CI_PROJECT_DIR"
+    mkdir -p .cache
     cd .cache
-    [ -d fenneldoc ] || git clone -q https://gitlab.com/andreyorst/fenneldoc
+    [ -d fenneldoc ] || git clone -q https://gitlab.com/andreyorst/fenneldoc.git
     cd fenneldoc || exit -1
-    git pull
-    git checkout -q --recurse-submodules v0.1.0
+    git checkout -q .
+    git checkout -q master
+    git pull -q --rebase
+    git checkout -q v0.1.5
+    git submodule update --init
     make clean
     make install
     cd "$CI_PROJECT_DIR"
@@ -35,7 +42,6 @@ Lua:
     image: alpine:edge
     stage: test
     before_script:
-        - mkdir -p .cache
         - >
             apk add -q
             lua5.2 lua5.3 lua5.3-dev lua5.4 luarocks5.3
@@ -55,7 +61,6 @@ Luajit:
     image: fedora:33
     stage: test
     before_script:
-        - mkdir -p .cache
         - dnf install -y -q lua luajit git make
         - *fennel
     script:
