@@ -210,6 +210,7 @@
     (assert-eq (try (+ 1 2 3) (catch _ 0) (finally 10)) 6)
     (assert-eq (try (+ 1 2 3 nil) (catch _ 0) (finally 10)) 0)
     (assert-eq (try (+ 1 2 3 nil) (catch _) (finally 10)) nil))
+
   (testing "catch-all"
     (assert-eq (try
                  (error "10")
@@ -219,6 +220,7 @@
                  (error [10])
                  (catch err err))
                [10]))
+
   (testing "finally"
     (let [tbl []]
       (try
@@ -234,4 +236,14 @@
         (catch _ (table.insert tbl 5))
         (catch 20 (table.insert tbl 6))
         (finally (table.insert tbl 7)))
-      (assert-eq tbl [1 2 3 4 5 7]))))
+      (assert-eq tbl [1 2 3 4 5 7])))
+
+  (testing "runtime error"
+    (assert-eq 0 (try
+                   (/ 1 nil)
+                   (catch _ 0))))
+
+  (testing "multi-value results"
+    (assert-eq 3 (select :# (try (values 1 2 3))))
+    (assert-eq [1 2 3] [(try (values 1 2 3))])
+    (assert-eq 6 (select :# (try (values 1 nil 3 nil nil nil))))))

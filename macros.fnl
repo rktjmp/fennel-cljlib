@@ -1116,7 +1116,7 @@ clauses when we push body epression."
   (table.insert try form))
 
 (fn try [...]
-  (let [try '(fn [])
+  (let [try '(do)
         catches []
         finally []]
     (each [_ form (ipairs [...])]
@@ -1125,8 +1125,8 @@ clauses when we push body epression."
               (finally? form) (add-finally finally form)
               (add-to-try finally catches try form))
           (add-to-try finally catches try form)))
-    `(match (pcall ,try)
-       (true _#) (do ,(. finally 1) _#)
+    `(match (pcall (fn [] ((or table.pack #(doto [$...] (tset :n (select :# $...)))) ,try)))
+       (true _#) (do ,(. finally 1) ((or table.unpack _G.unpack) _# 1 _#.n))
        ,(make-catch-clauses catches finally))))
 
 (attach-meta try {:fnl/arglist [:body* :catch-clause* :finally-clause?]
