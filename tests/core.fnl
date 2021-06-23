@@ -1,4 +1,4 @@
-(require-macros :macros)
+(require-macros :init-macros)
 (require-macros :fennel-test.test)
 
 (macro require-module [module]

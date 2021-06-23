@@ -1,5 +1,5 @@
 (require-macros :fennel-test.test)
-(require-macros :macros)
+(require-macros :init-macros)
 
 (deftest into
   (testing "into"
