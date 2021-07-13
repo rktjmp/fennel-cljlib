@@ -1195,6 +1195,78 @@ Always run some side effect action:
 "})
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fn loop [args ...]
+  "Recursive loop macro.
+
+Similar to `let`, but binds a special `recur` call that will reassign the values
+of the bindings and restart the loop.
+
+The first argument is a binding table with alternating symbols (or destructure
+forms), and the values to bind to them.
+
+For example:
+
+```fennel
+  (loop [[first & rest] [1 2 3 4 5]
+         i 0]
+    (if (= nil first)
+        i
+        (recur rest (+ 1 i))))
+```
+
+This would destructure the first table argument, with the first value inside it
+being assigned to `first` and the remainder of the table being assigned to
+`rest`. `i` simply gets bound to 0.
+
+The body of the form executes for every item in the table, calling `recur` each
+time with the table lacking its head element (thus consuming one element per
+iteration), and with `i` being called with one value greater than the previous.
+
+When the loop terminates (When the user doesn't call `recur`) it will return the
+number of elements in the passed in table. (In this case, 5)"
+  (let [recur (sym :recur)
+        keys []
+        gensyms []
+        bindings []]
+    (each [i v (ipairs args)]
+      (when (= 0 (% i 2))
+        (let [key (. args (- i 1))
+              gs (gensym i)]
+          ;; Converts a form like
+          ;; (loop [[first & rest] (expression)]
+          ;;   ...)
+          ;;
+          ;; to code like:
+          ;; (let [sym1# (expression)       ; bindings table
+          ;;       [first & rest] sym1#]
+          ;;   ((fn recur [[first & rest]]  ; keys table
+          ;;      ...)
+          ;;     sym1#))                    ; gensyms table, but unpacked
+          ;;
+          ;; That way it only evaluates once, and so destructuring
+          ;; doesn't stomp us.
+
+          ;; [sym1# sym2# etc...], for the function application below
+          (table.insert gensyms gs)
+
+          ;; let bindings
+          (table.insert bindings gs) ;; sym1#
+          (table.insert bindings v) ;; (expression)
+          (table.insert bindings key) ;; [first & rest]
+          (table.insert bindings gs) ;; sym1#
+
+          ;; The gensyms we use for function application
+          (table.insert keys key))))
+    `(let ,bindings
+       ((fn ,recur ,keys
+          ,...)
+        ,(table.unpack gensyms)))))
+
+(attach-meta loop {:fnl/arglist [:binding-vec :body*]})
+
+
 (setmetatable
  {: fn*
   : try
@@ -1210,7 +1282,8 @@ Always run some side effect action:
   : defmulti
   : defmethod
   : def
-  : defonce}
+  : defonce
+  : loop}
  {:__index
   {:_DOC_ORDER [:fn*
                 :try
