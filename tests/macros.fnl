@@ -247,3 +247,21 @@
     (assert-eq 3 (select :# (try (values 1 2 3))))
     (assert-eq [1 2 3] [(try (values 1 2 3))])
     (assert-eq 6 (select :# (try (values 1 nil 3 nil nil nil))))))
+
+(deftest loop
+  (testing "loop macro"
+    (assert-eq
+     (loop [[first & rest] [1 2 3 4 5]
+            acc 0]
+       (if (= nil first)
+           acc
+           (recur rest (+ acc first))))
+     15)
+
+    (assert-eq
+     (loop [a 2
+            b (+ a 3)]
+       (if (= b 5)
+           (recur a (+ 1 b))
+           b))
+     6)))
