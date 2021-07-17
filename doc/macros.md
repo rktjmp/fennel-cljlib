@@ -1,4 +1,4 @@
-# Macros.fnl (0.5.3)
+# Macros (v0.5.3)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
@@ -18,6 +18,7 @@ Macros for Cljlib that implement various facilities from Clojure.
 - [`when-let`](#when-let)
 - [`if-some`](#if-some)
 - [`when-some`](#when-some)
+- [`loop`](#loop)
 
 ## `fn*`
 Function signature:
@@ -586,6 +587,42 @@ Function signature:
 If `test` sets `binding` to non-`nil`, evaluates `body` in implicit
 `do`.
 
+
+## `loop`
+Function signature:
+
+```
+(loop binding-vec body*)
+```
+
+Recursive loop macro.
+
+Similar to `let`, but binds a special `recur` call that will reassign the values
+of the `binding-vec` and restart the loop `body*`.
+
+The first argument is a binding table with alternating symbols (or destructure
+forms), and the values to bind to them.
+
+For example:
+
+```fennel
+(loop [[first & rest] [1 2 3 4 5]
+       i 0]
+  (if (= nil first)
+      i
+      (recur rest (+ 1 i))))
+```
+
+This would destructure the first table argument, with the first value inside it
+being assigned to `first` and the remainder of the table being assigned to
+`rest`. `i` simply gets bound to 0.
+
+The body of the form executes for every item in the table, calling `recur` each
+time with the table lacking its head element (thus consuming one element per
+iteration), and with `i` being called with one value greater than the previous.
+
+When the loop terminates (When the user doesn't call `recur`) it will return the
+number of elements in the passed in table. (In this case, 5)
 
 ---
 

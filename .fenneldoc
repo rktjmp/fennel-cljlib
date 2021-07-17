@@ -1,13 +1,42 @@
 ;; -*- mode: fennel; -*- vi:ft=fennel
-;; Configuration file for Fenneldoc 0.1.2
+;; Configuration file for Fenneldoc v0.1.5
 ;; https://gitlab.com/andreyorst/fenneldoc
 
-{:ignored-args-patterns ["[a-z]" "%.%.%." "[xkf]s" "kvs" "col[0-9]" "cols?" "rest" "more" "keys" "tbl" "args"]
- :project-version "0.5.3"
- :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
+{:fennel-path {}
+ :function-signatures true
+ :ignored-args-patterns ["[a-z]"
+                         "%.%.%."
+                         "[xkf]s"
+                         "kvs"
+                         "col[0-9]"
+                         "cols?"
+                         "rest"
+                         "more"
+                         "keys"
+                         "tbl"
+                         "args"]
+ :inline-references "link"
+ :insert-comment true
+ :insert-copyright true
+ :insert-license true
+ :insert-version true
+ :keys {:copyright "_COPYRIGHT"
+        :description "_DESCRIPTION"
+        :doc-order "_DOC_ORDER"
+        :license "_LICENSE"
+        :module-name "_MODULE_NAME"
+        :version "_VERSION"}
+ :mode "checkdoc"
+ :order "alphabetic"
+ :out-dir "./doc"
  :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
- :test-requirements {:init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test.test)"
-                     :init-macros.fnl "(require-macros :init-macros)
+ :project-doc-order {}
+ :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
+ :project-version "v0.5.3"
+ :sandbox true
+ :test-requirements {:init-macros.fnl "(require-macros :init-macros)
                                        (import-macros {: assert-eq} :fennel-test.test)
                                        (local {: eq : vector : hash-map} (require :init))"
-                     :tests/test.fnl "(require-macros :fennel-test.test)"}}
+                     :init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test.test)"
+                     :tests/test.fnl "(require-macros :fennel-test.test)"}
+ :toc true}

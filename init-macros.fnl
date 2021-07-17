@@ -1201,7 +1201,7 @@ Always run some side effect action:
   "Recursive loop macro.
 
 Similar to `let`, but binds a special `recur` call that will reassign the values
-of the bindings and restart the loop.
+of the `binding-vec` and restart the loop `body*`.
 
 The first argument is a binding table with alternating symbols (or destructure
 forms), and the values to bind to them.
@@ -1209,11 +1209,11 @@ forms), and the values to bind to them.
 For example:
 
 ```fennel
-  (loop [[first & rest] [1 2 3 4 5]
-         i 0]
-    (if (= nil first)
-        i
-        (recur rest (+ 1 i))))
+(loop [[first & rest] [1 2 3 4 5]
+       i 0]
+  (if (= nil first)
+      i
+      (recur rest (+ 1 i))))
 ```
 
 This would destructure the first table argument, with the first value inside it
@@ -1282,6 +1282,7 @@ number of elements in the passed in table. (In this case, 5)"
   : defmulti
   : defmethod
   : def
+  :defn fn*
   : defonce
   : loop}
  {:__index
@@ -1291,7 +1292,8 @@ number of elements in the passed in table. (In this case, 5)"
                 :into :empty
                 :when-meta :with-meta :meta
                 :if-let :when-let :if-some :when-some]
-   :_DESCRIPTION "Macros for Cljlib that implement various facilities from Clojure."}})
+   :_DESCRIPTION "Macros for Cljlib that implement various facilities from Clojure."
+   :_MODULE_NAME "macros"}})
 
 ;; LocalWords:  arglist fn runtime arities arity multi destructuring
 ;; LocalWords:  docstring Variadic LocalWords multisym sym tbl eq Lua

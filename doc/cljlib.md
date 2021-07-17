@@ -1,4 +1,4 @@
-# Cljlib (0.5.3)
+# Cljlib (v0.5.3)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -18,10 +18,10 @@ producing new table and concatenating it with `" "`.
 
 However this library also provides Fennel-specific set of
 [macros](./macros.md), that provides additional facilities like
-`fn*` or `defmulti` which extend the language allowing writing code
+`defn` or `defmulti` which extend the language allowing writing code
 that looks and works mostly like Clojure.
 
-Each function in this library is created with `fn*`, which is a
+Each function in this library is created with `defn`, which is a
 special macros for creating multi-arity functions.  So when you see
 function signature like `(foo [x])`, this means that this is function
 `foo`, that accepts exactly one argument `x`.  In contrary, functions
@@ -844,7 +844,7 @@ Map [`mul`](#mul) over two tables:
 Basic `zipmap` implementation:
 
 ``` fennel
-(import-macros {: into} :macros)
+(import-macros {: into} :init-macros)
 (fn zipmap [keys vals]
   (into {} (mapv vector keys vals)))
 
