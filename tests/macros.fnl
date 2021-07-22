@@ -128,9 +128,9 @@
 
   (testing "defmulti docstring"
     (defmulti f "documentation" (fn [x] x))
-    (assert-eq (meta f) (when-meta {:fnl/docstring "documentation"}))
+    (assert-eq (meta f) {:fnl/docstring "documentation"})
     (defmulti g "documentation" (fn [x] x) :default 0)
-    (assert-eq (meta g) (when-meta {:fnl/docstring "documentation"})))
+    (assert-eq (meta g) {:fnl/docstring "documentation"}))
 
   (testing "defmulti with multiple arity"
     (defmulti f (fn* ([x] x) ([x y] [x y])))
@@ -170,21 +170,21 @@
 
 (deftest meta
   (testing "with-meta"
-    (assert-eq (meta (with-meta :a {:k :v})) (when-meta {:k :v})))
+    (assert-eq (meta (with-meta :a {:k :v})) {:k :v}))
 
   (testing "def meta"
     (def {:doc "x"} x 10)
-    (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
+    (assert-eq (meta x) {:fnl/docstring "x"})
     (def {:doc "x" :mutable true} x 10)
-    (assert-eq (meta x) (when-meta {:fnl/docstring "x"})))
+    (assert-eq (meta x) {:fnl/docstring "x"}))
 
   (testing "defonce meta table"
     (defonce {:doc "x"} x 10)
-    (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
+    (assert-eq (meta x) {:fnl/docstring "x"})
     (defonce {:doc "y"} x 20)
-    (assert-eq (meta x) (when-meta {:fnl/docstring "x"}))
+    (assert-eq (meta x) {:fnl/docstring "x"})
     (defonce {:doc "y" :mutable true} y 20)
-    (assert-eq (meta y) (when-meta {:fnl/docstring "y"}))))
+    (assert-eq (meta y) {:fnl/docstring "y"})))
 
 (deftest empty
   (testing "empty map"
@@ -246,7 +246,8 @@
   (testing "multi-value results"
     (assert-eq 3 (select :# (try (values 1 2 3))))
     (assert-eq [1 2 3] [(try (values 1 2 3))])
-    (assert-eq 6 (select :# (try (values 1 nil 3 nil nil nil))))))
+    (assert-eq 6 (select :# (try (values 1 nil 3 nil nil nil))))
+    (assert-eq 6 (select :# (try (error 10) (catch _ (values 1 nil 3 nil nil nil)))))))
 
 (deftest loop
   (testing "loop macro"

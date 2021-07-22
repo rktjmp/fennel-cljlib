@@ -1,4 +1,4 @@
-# Cljlib (v0.5.3)
+# Cljlib (v0.5.4)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -935,6 +935,7 @@ Returns the nth rest of `col`, `col` when `n` is 0.
 (assert-eq (nthrest [1 2 3 4] 0) [1 2 3 4])
 ```
 
+
 ## `partition`
 Function signature:
 
@@ -1258,5 +1259,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc v0.1.5
+<!-- Generated with Fenneldoc v0.1.6
      https://gitlab.com/andreyorst/fenneldoc -->

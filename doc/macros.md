@@ -1,9 +1,9 @@
-# Macros (v0.5.3)
+# Macros (v0.5.4)
 Macros for Cljlib that implement various facilities from Clojure.
 
 **Table of contents**
 
-- [`fn*`](#fn)
+- [`fn*`, `defn`](#fn-defn)
 - [`try`](#try)
 - [`def`](#def)
 - [`defonce`](#defonce)
@@ -11,7 +11,6 @@ Macros for Cljlib that implement various facilities from Clojure.
 - [`defmethod`](#defmethod)
 - [`into`](#into)
 - [`empty`](#empty)
-- [`when-meta`](#when-meta)
 - [`with-meta`](#with-meta)
 - [`meta`](#meta)
 - [`if-let`](#if-let)
@@ -20,7 +19,7 @@ Macros for Cljlib that implement various facilities from Clojure.
 - [`when-some`](#when-some)
 - [`loop`](#loop)
 
-## `fn*`
+## `fn*`, `defn`
 Function signature:
 
 ```
@@ -476,19 +475,6 @@ and return result of the same type:
 ```
 See [`into`](#into) for more info on how conversion is done.
 
-## `when-meta`
-Function signature:
-
-```
-(when-meta [& body])
-```
-
-Wrapper that compiles away if metadata support was not enabled.
-What this effectively means, is that everything that is wrapped with
-this macro and its `body` will disappear from the resulting Lua code
-if metadata is not enabled when compiling with `fennel --compile`
-without `--metadata` switch.
-
 ## `with-meta`
 Function signature:
 
@@ -496,8 +482,7 @@ Function signature:
 (with-meta value meta)
 ```
 
-Attach [`meta`](#meta) to a `value`.  When metadata feature is not enabled,
-returns the value without additional metadata.
+Attach [`meta`](#meta) to a `value`.
 
 ``` fennel
 (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
@@ -515,8 +500,7 @@ Function signature:
 (meta value)
 ```
 
-Get `value` metadata.  If value has no metadata, or metadata
-feature is not enabled returns `nil`.
+Get `value` metadata.  If value has no metadata returns `nil`.
 
 ### Example
 
@@ -624,6 +608,7 @@ iteration), and with `i` being called with one value greater than the previous.
 When the loop terminates (When the user doesn't call `recur`) it will return the
 number of elements in the passed in table. (In this case, 5)
 
+
 ---
 
 Copyright (C) 2020-2021 Andrey Listopadov
@@ -631,5 +616,5 @@ Copyright (C) 2020-2021 Andrey Listopadov
 License: [MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)
 
 
-<!-- Generated with Fenneldoc v0.1.5
+<!-- Generated with Fenneldoc v0.1.6
      https://gitlab.com/andreyorst/fenneldoc -->

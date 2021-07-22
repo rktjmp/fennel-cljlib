@@ -151,25 +151,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Metadata ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; compile time check that `--metadata` feature was enabled
-(local meta-enabled (pcall _SCOPE.specials.doc
-                           (list (sym :doc) (sym :doc))
-                           _SCOPE _CHUNK))
-
-(fn when-meta [...]
-  "Wrapper that compiles away if metadata support was not enabled.
-What this effectively means, is that everything that is wrapped with
-this macro and its `body' will disappear from the resulting Lua code
-if metadata is not enabled when compiling with `fennel --compile'
-without `--metadata` switch."
-  (when meta-enabled
-    `(do ,...)))
-
-(attach-meta when-meta {:fnl/arglist ["[& body]"]})
-
 (fn meta [value]
-  "Get `value' metadata.  If value has no metadata, or metadata
-feature is not enabled returns `nil'.
+  "Get `value' metadata.  If value has no metadata returns `nil'.
 
 # Example
 
@@ -198,13 +181,11 @@ Lastly, note that prior to Fennel 0.7.1 `import-macros' wasn't
 respecting `--metadata` switch.  So if you're using Fennel < 0.7.1
 this stuff will only work if you use `require-macros' instead of
 `import-macros'."
-  (when-meta
-    `(let [(res# fennel#) (pcall require :fennel)]
-       (if res# (. fennel#.metadata ,value)))))
+  `(let [(res# fennel#) (pcall require :fennel)]
+     (if res# (. fennel#.metadata ,value))))
 
 (fn with-meta [value meta]
-  "Attach `meta' to a `value'.  When metadata feature is not enabled,
-returns the value without additional metadata.
+  "Attach `meta' to a `value'.
 
 ``` fennel
 (local foo (with-meta (fn [...] (let [[x y z] [...]] (+ x y z)))
@@ -214,13 +195,12 @@ returns the value without additional metadata.
 ;; => (foo x y z ...)
 ;; =>   sum first three values
 ```"
-  (if (not meta-enabled) value
-      `(let [value# ,value
-             (res# fennel#) (pcall require :fennel)]
-         (if res#
-             (each [k# v# (pairs ,meta)]
-               (fennel#.metadata:set value# k# v#)))
-         value#)))
+  `(let [value# ,value
+         (res# fennel#) (pcall require :fennel)]
+     (if res#
+         (each [k# v# (pairs ,meta)]
+           (fennel#.metadata:set value# k# v#)))
+     value#))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fn* ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -559,9 +539,13 @@ from `ns.strings', so the latter must be fully qualified
         (if namespaced?
             `(local ,name-wo-namespace
                     (do (set ,name (fn ,name-wo-namespace [...] ,docstring ,body)) ;; set function into module table, e.g. (set foo.bar bar)
-                        ,(with-meta name-wo-namespace `{:fnl/arglist ,arglist-doc})))
-            `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc})))
-        (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc}))))
+                        ,(with-meta name `{:fnl/arglist ,arglist-doc
+                                           :fnl/docstring ,docstring})))
+            `(local ,name ,(with-meta `(fn ,name [...] ,docstring ,body)
+                                      `{:fnl/arglist ,arglist-doc
+                                        :fnl/docstring ,docstring})))
+        (with-meta `(fn [...] ,docstring ,body) `{:fnl/arglist ,arglist-doc
+                                                  :fnl/docstring ,docstring}))))
 
 (attach-meta fn* {:fnl/arglist ["name" "docstring?" "([arglist*] body)*"]})
 
@@ -1096,9 +1080,10 @@ Checks if there already was `finally' clause met."
       (when (sym? binding-or-val)
         (set add-catchall? false))
       (table.insert clauses `(false ,binding-or-val))
-      (table.insert clauses `(let [res# (do ,((or table.unpack _G.unpack) body))]
+      (table.insert clauses `(let [res# ((or table.pack #(doto [$...] (tset :n (select :# $...))))
+                                         (do ,((or table.unpack _G.unpack) body)))]
                                ,(. finally 1)
-                               res#)))
+                               (table.unpack res# 1 res#.n))))
     (when add-catchall?
       ;; implicit catchall which retrows error further is added only
       ;; if there were no catch clause that used symbol as catch value
@@ -1276,7 +1261,6 @@ number of elements in the passed in table. (In this case, 5)"
   : when-some
   : empty
   : into
-  : when-meta
   : with-meta
   : meta
   : defmulti
@@ -1290,7 +1274,7 @@ number of elements in the passed in table. (In this case, 5)"
                 :try
                 :def :defonce :defmulti :defmethod
                 :into :empty
-                :when-meta :with-meta :meta
+                :with-meta :meta
                 :if-let :when-let :if-some :when-some]
    :_DESCRIPTION "Macros for Cljlib that implement various facilities from Clojure."
    :_MODULE_NAME "macros"}})

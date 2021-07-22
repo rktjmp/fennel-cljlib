@@ -1,3 +1,11 @@
+## Cljlib v0.5.4 (2021-07-22)
+
+- Remove `when-meta` macro.
+- Add `loop` macro.
+- Add `defn` as an alias to `fn*`.
+- Make `fn*` always set the metadata.
+- Fix `catch` in `try` not returning multiple values.
+
 ## Cljlib v0.5.3 (2021-04-24)
 
 - test library is now external dependency.
