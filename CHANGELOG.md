@@ -1,3 +1,7 @@
+## Cljlib v0.5.5 (????-??-??)
+
+- Better generation of arglist docs for single-arity functions.
+
 ## Cljlib v0.5.4 (2021-07-22)
 
 - Remove `when-meta` macro.
@@ -51,4 +55,5 @@
 First stable release of Fennel Cljlib.
 
 <!-- LocalWords: Cljlib namespace Memoization metatable metamethods
+     LocalWords:  arglist arity
  -->

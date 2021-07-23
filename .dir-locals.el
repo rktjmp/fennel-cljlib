@@ -32,6 +32,12 @@
                                              "loop"))
                                   word-end)
                              1 'font-lock-keyword-face))))
+                 (eval . (font-lock-add-keywords
+                          'fennel-mode
+                          `((,(rx (syntax open-parenthesis)
+                                  (or "fn*" "defn" "defmulti") (1+ space)
+                                  (group (1+ (or (syntax word) (syntax symbol) "-" "_"))))
+                             1 'font-lock-function-name-face))))
                  (eval . (put 'when-meta 'fennel-indent-function 'defun))
                  (eval . (put 'defmethod 'fennel-indent-function 3))
                  (eval . (put 'defmulti 'bfennel-indent-function 'defun))

@@ -4,46 +4,46 @@
 (deftest fn*
   (testing "fn* meta"
     (fn* f
-      "docstring"
+      "single arity"
       [x] x)
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
-                :fnl/arglist ["([x])"]})
+               {:fnl/docstring "single arity"
+                :fnl/arglist ["[x]"]})
     (fn* f
-      "docstring"
+      "single empty arity"
       [])
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
-                :fnl/arglist ["([])"]})
+               {:fnl/docstring "single empty arity"
+                :fnl/arglist ["[]"]})
     (fn* f
-      "docstring"
+      "multiarity with single entry"
       ([x] x))
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
-                :fnl/arglist ["([x])"]})
+               {:fnl/docstring "multiarity with single entry"
+                :fnl/arglist ["[x]"]})
     (fn* f
-      "docstring"
+      "multiarity"
       ([x] x)
       ([x y] (+ x y)))
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
+               {:fnl/docstring "multiarity"
                 :fnl/arglist ["([x])"
                               "([x y])"]})
     (fn* f
-      "docstring"
+      "multiarity with one empty arity"
       ([])
       ([x y] (+ x y)))
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
+               {:fnl/docstring "multiarity with one empty arity"
                 :fnl/arglist ["([])"
                               "([x y])"]})
     (fn* f
-      "docstring"
+      "multiarity with two or more arity"
       ([x] x)
       ([x y] (+ x y))
       ([x y & z] (+ x y)))
     (assert-eq (meta f)
-               {:fnl/docstring "docstring"
+               {:fnl/docstring "multiarity with two or more arity"
                 :fnl/arglist ["([x])"
                               "([x y])"
                               "([x y & z])"]}))
@@ -51,7 +51,10 @@
   (testing "fn* doc destructuring"
     (fn* f [[a b c]])
     (assert-eq (meta f)
-               {:fnl/arglist ["([[a b c]])"]})
+               {:fnl/arglist ["[[a b c]]"]})
+    (fn* f ([[a b c]]))
+    (assert-eq (meta f)
+               {:fnl/arglist ["[[a b c]]"]})
     (fn* f ([[a b c]]) ([{: a}]) ([[{:a [a b c]}]]))
     (assert-eq (meta f)
                {:fnl/arglist ["([[a b c]])"

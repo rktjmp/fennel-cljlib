@@ -224,11 +224,11 @@ this stuff will only work if you use `require-macros' instead of
         (string.format "%q" data)
         (tostring data))))
 
-(fn gen-arglist-doc [args method?]
+(fn gen-arglist-doc [args method? multi?]
   (if (list? (. args 1))
       (let [arglist []]
         (each [_ v (ipairs args)]
-          (let [arglist-doc (gen-arglist-doc v method?)]
+          (let [arglist-doc (gen-arglist-doc v method? (list? (. args 2)))]
             (when (next arglist-doc)
               (table.insert arglist (table.concat arglist-doc " ")))))
         (when (and (> (length (table.concat arglist " ")) 60)
@@ -239,18 +239,20 @@ this stuff will only work if you use `require-macros' instead of
 
       (sequence? (. args 1))
       (let [arglist []
+            open (if multi? "([" "[")
+            close (if multi? "])" "]")
             args (if method?
                      [(sym :self) (table.unpack (. args 1))]
                      (. args 1))
             len (length args)]
         (if (= len 0)
-            (table.insert arglist "([])")
+            (table.insert arglist (.. open close))
             (each [i v (ipairs args)]
               (table.insert arglist
                             (match i
-                              (1 ? (= len 1)) (.. "([" (deep-tostring v) "])")
-                              1   (.. "([" (deep-tostring v))
-                              len (.. (deep-tostring v) "])")
+                              (1 ? (= len 1)) (.. open (deep-tostring v) close)
+                              1   (.. open (deep-tostring v))
+                              len (.. (deep-tostring v) close)
                               _   (deep-tostring v)))))
         arglist)))
 
