@@ -77,11 +77,12 @@ Applying `add' to different amount of arguments:
   ([f a b args] (f a b (_unpack args)))
   ([f a b c args] (f a b c (_unpack args)))
   ([f a b c d & args]
-   (let [flat-args (empty [])]
-     (for [i 1 (- (length args) 1)]
-       (insert flat-args (. args i)))
-     (each [_ a (ipairs (. args (length args)))]
-       (insert flat-args a))
+   (let [flat-args []
+         len (- (length args) 1)]
+     (for [i 1 len]
+       (tset flat-args i (. args i)))
+     (each [i a (ipairs (. args (+ len 1)))]
+       (tset flat-args (+ i len) a))
      (f a b c d (_unpack flat-args)))))
 
 (defn core.add
