@@ -1,7 +1,7 @@
-(require-macros :fennel-test.test)
+(require-macros :fennel-test)
 (require-macros :init-macros)
 
-(deftest into
+(deftest test-into
   (testing "into"
     (assert-eq (into [] nil) [])
     (assert-eq (into nil nil) nil)
@@ -59,7 +59,7 @@
     (assert-eq (into [] "vaiv") ["v" "a" "i" "v"])
     (when _G.utf8 (assert-eq (into [] "ваыв") ["в" "а" "ы" "в"]))))
 
-(deftest let-variants
+(deftest test-let-variants
   (testing "when-let"
     (assert-eq (when-let [a 4] a) 4)
     (assert-not (when-let [a false] a) "(not (when-let [a false] a))")
@@ -80,7 +80,7 @@
     (assert-eq (if-some [a false] a :nothing) false)
     (assert-eq (if-some [a nil] a :nothing) :nothing)))
 
-(deftest multimethods
+(deftest test-multimethods
   (testing "defmulti"
     (defmulti x (fn [x] x))
     (assert-eq (defmulti x (fn [x] (+ x 1))) nil))
@@ -143,7 +143,7 @@
     (assert-eq (f :4) :42)
     (assert-eq (f :4 :2) 42)))
 
-(deftest def-macros
+(deftest test-def-macros
   (testing "def"
     (def {:mutable true} a 10)
     (assert-eq a 10)
@@ -168,7 +168,7 @@
     (assert-eq b.a 10)
     (assert-eq a 10)))
 
-(deftest meta
+(deftest test-meta
   (testing "with-meta"
     (assert-eq (meta (with-meta :a {:k :v})) {:k :v}))
 
@@ -186,7 +186,7 @@
     (defonce {:doc "y" :mutable true} y 20)
     (assert-eq (meta y) {:fnl/docstring "y"})))
 
-(deftest empty
+(deftest test-empty
   (testing "empty map"
     (assert-eq (empty {}) {})
     (assert-eq (getmetatable (empty {})) {:cljlib/type :table})
@@ -204,7 +204,7 @@
       (assert-eq (empty a) [])
       (assert-eq (getmetatable (empty a)) {:cljlib/type :seq}))))
 
-(deftest try
+(deftest test-try
   (testing "try"
     (assert-eq (try (+ 1 2 3)) 6)
     (assert-eq (try (+ 1 2 3) (catch _ 0) (finally 10)) 6)
@@ -249,7 +249,7 @@
     (assert-eq 6 (select :# (try (values 1 nil 3 nil nil nil))))
     (assert-eq 6 (select :# (try (error 10) (catch _ (values 1 nil 3 nil nil nil)))))))
 
-(deftest loop
+(deftest test-loop
   (testing "loop macro"
     (assert-eq
      (loop [[first & rest] [1 2 3 4 5]

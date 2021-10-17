@@ -1,7 +1,7 @@
-(require-macros :fennel-test.test)
+(require-macros :fennel-test)
 (require-macros :init-macros)
 
-(deftest fn*
+(deftest test-fn*
   (testing "fn* meta"
     (fn* f
       "single arity"

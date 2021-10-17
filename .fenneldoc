@@ -35,8 +35,8 @@
  :project-version "v0.5.4"
  :sandbox true
  :test-requirements {:init-macros.fnl "(require-macros :init-macros)
-                                       (import-macros {: assert-eq} :fennel-test.test)
+                                       (import-macros {: assert-eq} :fennel-test)
                                        (local {: eq : vector : hash-map} (require :init))"
-                     :init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test.test)"
-                     :tests/test.fnl "(require-macros :fennel-test.test)"}
+                     :init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test)"
+                     :tests/test.fnl "(require-macros :fennel-test)"}
  :toc true}

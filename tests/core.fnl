@@ -1,14 +1,83 @@
 (require-macros :init-macros)
-(require-macros :fennel-test.test)
+(require-macros :fennel-test)
 
-(macro require-module [module]
-  `(local ,(collect [k (pairs (require module))]
-             (values k (sym k)))
-          (require ,module)))
+(local {: add
+        : apply
+        : assoc
+        : boolean?
+        : butlast
+        : comp
+        : complement
+        : concat
+        : conj
+        : cons
+        : constantly
+        : dec
+        : disj
+        : dissoc
+        : div
+        : double?
+        : empty?
+        : eq
+        : even?
+        : every?
+        : false?
+        : filter
+        : find
+        : first
+        : ge
+        : get
+        : get-in
+        : get-method
+        : gt
+        : hash-map
+        : hash-set
+        : identity
+        : inc
+        : int?
+        : keys
+        : kvseq
+        : last
+        : le
+        : lt
+        : map?
+        : mapv
+        : memoize
+        : methods
+        : mul
+        : multifn?
+        : neg-int?
+        : neg?
+        : nil?
+        : not-any?
+        : not-empty
+        : nthrest
+        : odd?
+        : ordered-set
+        : partition
+        : pos-int?
+        : pos?
+        : range
+        : reduce
+        : reduce-kv
+        : reduced
+        : remove-all-methods
+        : remove-method
+        : rest
+        : reverse
+        : seq
+        : set?
+        : some
+        : string?
+        : sub
+        : take
+        : true?
+        : vals
+        : vector
+        : vector?
+        : zero?} (require :init))
 
-(require-module :init)
-
-(deftest equality
+(deftest test-equality
   (testing "comparing base-types"
     (assert-not (pcall eq))
     (assert-eq 1 1)
@@ -54,7 +123,7 @@
     (assert-eq [1 2 3] {1 1 2 2 3 3})
     (assert-eq {4 1} [nil nil nil 1])))
 
-(deftest range
+(deftest test-range
   (testing "range"
     (assert-not (pcall range))
     (assert-eq (range 10) [0 1 2 3 4 5 6 7 8 9])
@@ -62,7 +131,7 @@
     (assert-eq [0 0.2 0.4 0.6 0.8] [0 0.2 0.4 0.6 0.8])
     (assert-eq (range 0 1 0.2) (range 0 1 0.2))))
 
-(deftest predicates
+(deftest test-predicates
   (testing "zero?"
     (assert-is (zero? 0))
     (assert-is (zero? -0))
@@ -189,7 +258,7 @@
     (assert-not (pcall boolean?))
     (assert-not (pcall boolean? 1 2))))
 
-(deftest sequence-functions
+(deftest test-sequence-functions
   (testing "seq"
     (assert-not (pcall seq))
     (assert-not (pcall seq [] []))
@@ -452,7 +521,7 @@
     (assert-eq (find {:a 1 :b 2 :c 3} :d) nil)))
 
 
-(deftest function-manipulation
+(deftest test-function-manipulation
   (testing "constantly"
     (assert-not (pcall constantly))
     (assert-not (pcall constantly nil nil))
@@ -517,7 +586,7 @@
     (assert-eq (identity f) f)
     (assert-eq (identity a) a)))
 
-(deftest sequence-predicates
+(deftest test-sequence-predicates
   (testing "some"
     (assert-not (pcall some))
     (assert-not (pcall some pos-int?))
@@ -558,7 +627,7 @@
     (assert-eq (not-empty [1]) [1])
     (assert-eq (not-empty {:a 1}) {:a 1})))
 
-(deftest math-functions
+(deftest test-math-functions
   (testing "inc"
     (assert-eq (inc 1) 2)
     (assert-eq (inc -1) 0)
@@ -571,7 +640,7 @@
     (assert-not (pcall dec))
     (assert-not (pcall dec nil))))
 
-(deftest table-access
+(deftest test-table-access
   (testing "get"
     (assert-eq (get {:key1 10 :key2 20} :key1) 10)
     (assert-eq (get {:key1 10 :key2 20} :key1 false) 10)
@@ -592,7 +661,7 @@
     (assert-not (pcall get-in))
     (assert-not (pcall get-in {}))))
 
-(deftest methods
+(deftest test-methods
   (testing "methods"
     (defmulti f identity)
     (defmethod f :a [_] :a)
@@ -642,7 +711,7 @@
     (assert-not (pcall remove-all-methods []))
     (assert-not (pcall remove-all-methods f f))))
 
-(deftest math-functions
+(deftest test-math-functions
   (testing "add"
     (assert-eq (add) 0)
     (assert-eq (add 1) 1)
@@ -679,7 +748,7 @@
     (assert-eq (div 1 2 3 4) (/ 1 2 3 4))
     (assert-eq (div 1 2 3 4 5) (/ 1 2 3 4 5))))
 
-(deftest comparison-functions
+(deftest test-comparison-functions
   (testing "le"
     (assert-not (pcall le))
     (assert-is (le 1))
@@ -724,14 +793,14 @@
     (assert-not (gt 2 1 3))
     (assert-not (gt 1 2 4 4))))
 
-(deftest vector
+(deftest test-vector
   (testing "vector"
     (assert-eq (vector) [])
     (assert-eq (vector 1) [1])
     (assert-eq (vector 1 2 3) [1 2 3])
     (assert-eq (getmetatable (vector 1 2 3)) {:cljlib/type :seq})))
 
-(deftest hash-map
+(deftest test-hash-map
   (testing "hash-map"
     (assert-not (pcall hash-map :a))
     (assert-eq (hash-map) {})
@@ -740,7 +809,7 @@
     (assert-eq (getmetatable (hash-map)) {:cljlib/type :table})
     (assert-not (pcall hash-map nil 1))))
 
-(deftest sets
+(deftest test-sets
   (testing "hash-set"
     (let [h1 (hash-set [1] [1] [2] [3] [:a])
           h2 (hash-set [1] [2] [3] [:a])]
@@ -810,7 +879,7 @@
     (assert-eq (into [] (ordered-set :a :b :c)) [:a :b :c])
     (assert-eq (into {} (ordered-set [:a 1] [:b 2])) {:a 1 :b 2})))
 
-(deftest memoization
+(deftest test-memoization
   (testing "memoize"
     (macros {:time #`(let [clock# os.clock
                            start# (clock#)
