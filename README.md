@@ -15,7 +15,7 @@ Now you can require `:cljlib` from Fennel:
 
 ``` clojure
 (local clj (require :cljlib))
-(import-macros cljm :cljlib.macros)
+(import-macros cljm :cljlib)
 ```
 
 Optionally precompile the library to make it load slightly faster:
