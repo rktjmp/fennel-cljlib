@@ -1184,6 +1184,52 @@ Always run some side effect action:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(fn assert-tail [tail-sym body]
+  "Asserts that the passed in tail-sym function is a tail-call position of the
+passed-in body.
+
+Throws an error if it is in a position to be returned or if the function is
+situated to be called from a position other than the tail of the passed-in
+body."
+  (fn last-arg? [form i]
+    (= (- (length form) 1) i))
+
+  ;; Tail in special forms are (After macroexpanding):
+  ;;
+  ;; - Every second form in an if, or the last form
+  ;; (if ... (sym ...) (sym ...))
+  ;;
+  ;; - Last form in a let
+  ;; (let [] (sym ...))
+  ;;
+  ;; - Last form in a do
+  ;; (do ... (sym ...))
+  ;;
+  ;; Anything else fails the assert
+  (fn path-tail? [op i form]
+    (if (= op 'if) (and (not= 1 i) (or (last-arg? form i) (= 0 (% i 2))))
+        (= op 'let) (last-arg? form i)
+        (= op 'do) (last-arg? form i)
+        false))
+
+  ;; Check the current form for the tail-sym, and if it's in a bad
+  ;; place, error out. If we run into other forms, we recurse with the
+  ;; comprehension if this is the tail form or not
+  (fn walk [body ok]
+    (let [[op & operands] body]
+      (if (list? op) (walk op true)
+          (assert-compile (not (and (= tail-sym op) (not ok)))
+                          (.. (tostring tail-sym) " must be in tail position")
+                          op)
+          (each [i v (ipairs operands)]
+            (if (list? v) (walk v (and ok (path-tail? op i body)))
+                (assert-compile (not= tail-sym v)
+                                (.. (tostring tail-sym) " must not be passed")
+                                v))))))
+
+  (walk `(do ,(macroexpand body)) true))
+
+
 (fn loop [args ...]
   "Recursive loop macro.
 
@@ -1217,6 +1263,7 @@ number of elements in the passed in table. (In this case, 5)"
         keys []
         gensyms []
         bindings []]
+    (assert-tail recur ...)
     (each [i v (ipairs args)]
       (when (= 0 (% i 2))
         (let [key (. args (- i 1))
