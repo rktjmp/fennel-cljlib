@@ -54,7 +54,10 @@ non-ASCII strings."})
 
 (import-macros {: defn : into : empty
                 : when-let : if-let : when-some : if-some}
-               (if (and ... (not= ... :init)) (.. ... :.init-macros) :init-macros))
+               ;; tricky relative require to make it work from
+               ;; anywhere as (require :cljlib) and as well
+               ;; (import-macros cljm :cljlib)
+               (if ... (if (= ... :init) :init-macros ...) :init-macros))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utility functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
