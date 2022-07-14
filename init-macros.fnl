@@ -1233,8 +1233,9 @@ body."
 (fn loop [args ...]
   "Recursive loop macro.
 
-Similar to `let`, but binds a special `recur` call that will reassign the values
-of the `binding-vec` and restart the loop `body*`.
+Similar to `let`, but binds a special `recur` call that will reassign
+the values of the `binding-vec` and restart the loop `body*`.  Unlike
+`let`, doesn't support multiple-value destructuring.
 
 The first argument is a binding table with alternating symbols (or destructure
 forms), and the values to bind to them.
@@ -1268,28 +1269,57 @@ number of elements in the passed in table. (In this case, 5)"
       (when (= 0 (% i 2))
         (let [key (. args (- i 1))
               gs (gensym i)]
-          ;; Converts a form like
-          ;; (loop [[first & rest] (expression)]
+          (assert-compile (not (list? key)) "loop macro doesn't support multiple-value destructuring" key)
+          ;; In order to only evaluate expressions once and support sequential
+          ;; bindings, the binding table has to be transformed like this:
+          ;;
+          ;; ``` fennel
+          ;; (loop [[x & xs] (foo)
+          ;;        y (+ x 1)]
           ;;   ...)
           ;;
-          ;; to code like:
-          ;; (let [sym1# (expression)       ; bindings table
-          ;;       [first & rest] sym1#]
-          ;;   ((fn recur [[first & rest]]  ; keys table
-          ;;      ...)
-          ;;     sym1#))                    ; gensyms table, but unpacked
+          ;; (let [sym1# (foo)
+          ;;       [x & xs] sym1#
+          ;;       sym2# (+ x 1)
+          ;;       y sym2]
+          ;;   ((fn recur [[x & xs] y] ...) sym1# sym2#)
+          ;; ```
           ;;
-          ;; That way it only evaluates once, and so destructuring
-          ;; doesn't stomp us.
+          ;; This ensures that `foo` is called only once, its result is cached in a
+          ;; `sym1#` binding, and that `y` can use the destructured value, obtained
+          ;; from that binding.  The value of this binding is later passed to the
+          ;; function to begin the first iteration.
+          ;;
+          ;; This has two unfortunate consequences.  One is that the initial
+          ;; destructuring happens twice - first, to make sure that later bindings
+          ;; can be properly initialized, and second, when the first looping
+          ;; function call happens.  Another one is that as a result, `loop` macro
+          ;; can't work with multiple-value destructuring, because these can't be
+          ;; cached as described above.  E.g. this will not work:
+          ;;
+          ;; ``` fennel
+          ;; (loop [(x y) (foo)] ...)
+          ;; ```
+          ;;
+          ;; Because it would be transformed to:
+          ;;
+          ;; ``` fennel
+          ;; (let [sym1# (foo)
+          ;;       (x y) sym1#]
+          ;;   ((fn recur [(x y)] ...) sym1#)
+          ;; ```
+          ;;
+          ;; `x` is correctly set, but `y` is completely lost.  Therefore, this
+          ;; macro checks for lists in bindings.
 
           ;; [sym1# sym2# etc...], for the function application below
           (table.insert gensyms gs)
 
           ;; let bindings
-          (table.insert bindings gs) ;; sym1#
-          (table.insert bindings v) ;; (expression)
+          (table.insert bindings gs)  ;; sym1#
+          (table.insert bindings v)   ;; (expression)
           (table.insert bindings key) ;; [first & rest]
-          (table.insert bindings gs) ;; sym1#
+          (table.insert bindings gs)  ;; sym1#
 
           ;; The gensyms we use for function application
           (table.insert keys key))))
