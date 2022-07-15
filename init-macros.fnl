@@ -1230,7 +1230,7 @@ body."
   (walk `(do ,(macroexpand body)) true))
 
 
-(fn loop [args ...]
+(fn loop [binding-vec ...]
   "Recursive loop macro.
 
 Similar to `let`, but binds a special `recur` call that will reassign
@@ -1265,9 +1265,9 @@ number of elements in the passed in table. (In this case, 5)"
         gensyms []
         bindings []]
     (assert-tail recur ...)
-    (each [i v (ipairs args)]
+    (each [i v (ipairs binding-vec)]
       (when (= 0 (% i 2))
-        (let [key (. args (- i 1))
+        (let [key (. binding-vec (- i 1))
               gs (gensym i)]
           (assert-compile (not (list? key)) "loop macro doesn't support multiple-value destructuring" key)
           ;; In order to only evaluate expressions once and support sequential
@@ -1278,11 +1278,11 @@ number of elements in the passed in table. (In this case, 5)"
           ;;        y (+ x 1)]
           ;;   ...)
           ;;
-          ;; (let [sym1# (foo)
-          ;;       [x & xs] sym1#
-          ;;       sym2# (+ x 1)
-          ;;       y sym2]
-          ;;   ((fn recur [[x & xs] y] ...) sym1# sym2#)
+          ;; (let [_1_ (foo)
+          ;;       [x & xs] _1_
+          ;;       _2_ (+ x 1)
+          ;;       y _2_]
+          ;;   ((fn recur [[x & xs] y] ...) _1_ _2_)
           ;; ```
           ;;
           ;; This ensures that `foo` is called only once, its result is cached in a
@@ -1304,9 +1304,9 @@ number of elements in the passed in table. (In this case, 5)"
           ;; Because it would be transformed to:
           ;;
           ;; ``` fennel
-          ;; (let [sym1# (foo)
-          ;;       (x y) sym1#]
-          ;;   ((fn recur [(x y)] ...) sym1#)
+          ;; (let [_1_ (foo)
+          ;;       (x y) _1_]
+          ;;   ((fn recur [(x y)] ...) _1_)
           ;; ```
           ;;
           ;; `x` is correctly set, but `y` is completely lost.  Therefore, this
