@@ -1,5 +1,5 @@
 ;; -*- mode: fennel; -*- vi:ft=fennel
-;; Configuration file for Fenneldoc v0.1.6
+;; Configuration file for Fenneldoc v0.1.9
 ;; https://gitlab.com/andreyorst/fenneldoc
 
 {:fennel-path {}
@@ -14,6 +14,11 @@
                          "more"
                          "keys"
                          "tbl"
+                         "_"
+                         "cs"
+                         "sep"
+                         "coll"
+                         "Set"
                          "s[0-9]+"
                          "ss"
                          "args"]
@@ -22,11 +27,16 @@
  :insert-copyright true
  :insert-license true
  :insert-version true
+ :keys {:copyright "_COPYRIGHT"
+        :description "_DESCRIPTION"
+        :doc-order "_DOC_ORDER"
+        :license "_LICENSE"
+        :module-name "_MODULE_NAME"
+        :version "_VERSION"}
  :mode "checkdoc"
- :order "alphabetic"
- :out-dir "./doc"
- :modules-info {:init.fnl {:name "core"
-                           :description "Fennel-cljlib - functions from Clojure's core.clj implemented on top
+ :modules-info {:init-macros.fnl {:description "Macros for fennel-cljlib."
+                                  :name "macros"}
+                :init.fnl {:description "Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
 This library contains a set of functions providing functions that
@@ -72,24 +82,86 @@ sets will work, but comparing sets with other tables works only in
 Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
 inbuilt UTF-8 library, therefore `seq' function will not work for
 non-ASCII strings."
-                           :doc-order [:apply :add :sub :mul :div :le :lt :ge :gt :inc :dec :eq
-                                       :map? :vector? :multifn? :set? :nil? :zero? :pos?
-                                       :neg? :even? :odd? :string? :boolean? :true? :false?
-                                       :int? :pos-int? :neg-int? :double? :empty? :not-empty
-                                       :map? :vector? :multifn? :set? :nil? :zero? :pos?
-                                       :neg? :even? :odd? :string? :boolean? :true? :false?
-                                       :int? :pos-int? :neg-int? :double? :empty? :not-empty
-                                       :vector :seq :kvseq :first :rest :last :butlast
-                                       :conj :disj :cons :concat :reduce :reduced :reduce-kv
-                                       :mapv :filter :every? :some :not-any? :range :reverse :take
-                                       :nthrest :partition
-                                       :identity :comp :complement :constantly :memoize
-                                       :assoc :hash-map :get :get-in :keys :vals :find :dissoc
-                                       :remove-method :remove-all-methods :methods :get-method
-                                       :ordered-set :hash-set]}}
+                           :doc-order ["apply"
+                                       "add"
+                                       "sub"
+                                       "mul"
+                                       "div"
+                                       "le"
+                                       "lt"
+                                       "ge"
+                                       "gt"
+                                       "inc"
+                                       "dec"
+                                       "eq"
+                                       "map?"
+                                       "vector?"
+                                       "multifn?"
+                                       "set?"
+                                       "nil?"
+                                       "zero?"
+                                       "pos?"
+                                       "neg?"
+                                       "even?"
+                                       "odd?"
+                                       "string?"
+                                       "boolean?"
+                                       "true?"
+                                       "false?"
+                                       "int?"
+                                       "pos-int?"
+                                       "neg-int?"
+                                       "double?"
+                                       "empty?"
+                                       "not-empty"
+                                       "vector"
+                                       "seq"
+                                       "first"
+                                       "rest"
+                                       "last"
+                                       "butlast"
+                                       "conj"
+                                       "disj"
+                                       "cons"
+                                       "concat"
+                                       "reduce"
+                                       "reduced"
+                                       "reduce-kv"
+                                       "mapv"
+                                       "filter"
+                                       "every?"
+                                       "some"
+                                       "not-any?"
+                                       "range"
+                                       "reverse"
+                                       "take"
+                                       "nthrest"
+                                       "partition"
+                                       "identity"
+                                       "comp"
+                                       "complement"
+                                       "constantly"
+                                       "memoize"
+                                       "assoc"
+                                       "hash-map"
+                                       "get"
+                                       "get-in"
+                                       "keys"
+                                       "vals"
+                                       "find"
+                                       "dissoc"
+                                       "remove-method"
+                                       "remove-all-methods"
+                                       "methods"
+                                       "get-method"
+                                       "hash-set"]
+                           :name "core"}}
+ :order "alphabetic"
+ :out-dir "./doc"
  :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
+ :project-doc-order {}
  :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
- :project-version "v0.5.4"
+ :project-version "v1.0.0"
  :sandbox false
  :test-requirements {:init-macros.fnl "(require-macros :init-macros)
                                        (import-macros {: assert-eq} :fennel-test)

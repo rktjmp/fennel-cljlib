@@ -9,7 +9,7 @@ Therefore certain functions were altered to better suit the domain.
 
 Clone library into your project or put it as a git submodule:
 
-    $ git clone https://gitlab.com/andreyorst/fennel-cljlib cljlib
+    $ git clone --recursive https://gitlab.com/andreyorst/fennel-cljlib cljlib
 
 Now you can require `:cljlib` from Fennel:
 
@@ -20,9 +20,9 @@ Now you can require `:cljlib` from Fennel:
 
 Optionally precompile the library to make it load slightly faster:
 
-    $ cd cljlib; make
+    $ cd cljlib; COMPILEFLAGS="--require-as-include" make
 
-This will compile `init.fnl` into `init.lua`, so `require` should honor Lua files over Fennel files.
+This will compile `init.fnl` into `init.lua`, with all dependencies included, so `require` should honor Lua files over Fennel files.
 It is also possible to use this library from Lua this way.
 
 ## Documentation

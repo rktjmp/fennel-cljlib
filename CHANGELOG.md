@@ -1,6 +1,29 @@
-## Cljlib v0.5.5 (????-??-??)
+## Cljlib v1.0.0 (2022-08-21)
+Full rewrite of the library.
+This library now requires the minimum Fennel version 1.2.0.
+(Fennel v1.2.0 isn't yet released at the moment of cljlib v1.0.0 release, use the build from the `main` branch).
 
-- Better generation of arglist docs for single-arity functions.
+### New features
+- added [lazy-seq](https://gitlab.com/andreyorst/lazy-seq) as a dependency, and made all sequence functions use it
+- added [itable](https://gitlab.com/andreyorst/itable) as a dependency, and made all tables immutable by default
+- implemented transducers
+- implemented transients
+- added `ns` macro
+
+### Changes
+- `fn*` no longer splits multisyms and doesn't bind both local and namespaced versions
+- `fn*` is for anonymous functions, it doesn't create a local binding
+- `def` now binds in terms of the namespace, specified by `ns`
+- `def` no longer support documentation metadata
+
+### Removed features
+- removed `ordered-set` and `ordered-map`
+- `into` is no longer a macro
+- `empty` is no longer a macro
+- removed metadata-related macros
+
+### Fixes
+- #1 has been fixed, and `fn*` now generates multi-value destructuring when possible.
 
 ## Cljlib v0.5.4 (2021-07-22)
 

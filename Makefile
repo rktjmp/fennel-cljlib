@@ -10,7 +10,7 @@ LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 LUAEXECUTABLES ?= lua luajit
 FENNELDOC := $(shell command -v fenneldoc)
 LUACOV_COBERTURA := $(shell command -v luacov-cobertura)
-COMPILEFLAGS = --metadata
+COMPILEFLAGS += --metadata
 
 .PHONY: build clean distclean test luacov luacov-console doc help $(LUAEXECUTABLES)
 
