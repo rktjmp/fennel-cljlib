@@ -5,8 +5,8 @@ stages:
 
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    fennel_ver: 0.10.0
-    fenneldoc_ver: v0.1.6
+    fennel_ver: main # TODO: revert back to stable once fcollect is released
+    fenneldoc_ver: v0.1.8
 
 .install_fennel: &fennel |-
     cd "$HOME"
@@ -33,11 +33,13 @@ Lua:
             git make gcc musl-dev
         - luarocks-5.3 install luafilesystem
         - export LUA=lua5.3
-        - luarocks-5.3 install fennel "$fennel_ver"
+        - *fennel
         - luarocks-5.3 install luacov
         - luarocks-5.3 install luacov-cobertura
         - luarocks-5.3 install luacov-console
         - *fenneldoc
+        - (cd itable && make)
+        - (cd lazy-seq && make)
     script:
         - LUAEXECUTABLES="lua5.2 lua5.3 lua5.4" make testall >/dev/null
         - make luacov-console  # doesn't use --correlate, more accurate
@@ -51,13 +53,15 @@ Lua:
 
 # Luajit actually is an impostor in Alpine, as the package actually
 # uses Moonjit implementation, which is different from what I'm
-# working with, so Fedora 33 image is used, which as of this moment
+# working with, so Fedora 36 image is used, which as of this moment
 # has latest Luajit available
 Luajit:
-    image: fedora:33
+    image: fedora:36
     stage: test
     before_script:
         - dnf install -y -q lua luajit git make
         - *fennel
+        - (cd itable && make)
+        - (cd lazy-seq && make)
     script:
         - LUA=luajit make test

@@ -29,7 +29,7 @@ distclean: clean
 
 test: $(FNLTESTS)
 	@echo "Testing on" $$($(LUA) -v) >&2
-	@$(foreach test,$?,$(FENNEL) --no-compiler-sandbox --lua $(LUA) $(test) || exit;)
+	@$(foreach test,$?,LUA_PATH="./?/init.lua;$LUA_PATH" $(FENNEL) $(COMPILEFLAGS) --lua $(LUA) $(test) || exit;)
 ifdef FENNELDOC
 	@fenneldoc --mode check $(FNLDOCS) || exit
 else
@@ -43,7 +43,7 @@ endif
 testall: $(LUAEXECUTABLES)
 	@$(foreach lua,$?,LUA=$(lua) make test || exit;)
 
-luacov: COMPILEFLAGS = --no-metadata --correlate
+luacov: COMPILEFLAGS += --correlate
 luacov: distclean build $(LUATESTS)
 	@$(foreach test,$(LUATESTS),$(LUA) -lluarocks.loader -lluacov $(test) || exit;)
 	luacov
@@ -52,7 +52,6 @@ ifdef LUACOV_COBERTURA
 	luacov-cobertura -o coverage/cobertura-coverage.xml
 endif
 
-luacov-console: COMPILEFLAGS = --no-metadata
 luacov-console: clean build $(LUATESTS)
 	@$(foreach test,$(LUATESTS),$(LUA) -lluarocks.loader -lluacov $(test) || exit;)
 	luacov

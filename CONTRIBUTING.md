@@ -68,15 +68,6 @@ General notes on writing documentation:
 Check out new branch from project's main development branch.
 If you've cloned this project some time ago, consider checking if your branch has all recent changes from upstream.
 
-Each commit must have a type, which is one of `feature`, `fix`, followed by optional scope, and a must have description after `:` colon.
-For example:
-
-    fix(core macros): fix #42
-    feature(tests): add more strict tests
-
--   `feature` must be used when adding new code.
--   `fix` must be used when working with existing code.
-
 When creating merge request consider squashing your commits at merge.
 You may do this manually, or use Gitlab's "Squash commits" button.
 Either way please tag squash commit with `fix` or `feature`, depending on what you're willing to merge.

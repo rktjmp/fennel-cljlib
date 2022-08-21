@@ -14,29 +14,87 @@
                          "more"
                          "keys"
                          "tbl"
+                         "s[0-9]+"
+                         "ss"
                          "args"]
  :inline-references "link"
  :insert-comment true
  :insert-copyright true
  :insert-license true
  :insert-version true
- :keys {:copyright "_COPYRIGHT"
-        :description "_DESCRIPTION"
-        :doc-order "_DOC_ORDER"
-        :license "_LICENSE"
-        :module-name "_MODULE_NAME"
-        :version "_VERSION"}
  :mode "checkdoc"
  :order "alphabetic"
  :out-dir "./doc"
+ :modules-info {:init.fnl {:name "core"
+                           :description "Fennel-cljlib - functions from Clojure's core.clj implemented on top
+of Fennel.
+
+This library contains a set of functions providing functions that
+behave similarly to Clojure's equivalents.  Library itself has nothing
+Fennel specific so it should work on Lua, e.g:
+
+``` lua
+Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
+> clj = require\"cljlib\"
+> table.concat(clj.mapv(function (x) return x * x end, {1, 2, 3}), \" \")
+-- 1 4 9
+```
+
+This example is mapping an anonymous `function' over a table,
+producing new table and concatenating it with `\" \"`.
+
+However this library also provides Fennel-specific set of
+[macros](./macros.md), that provides additional facilities like
+`defn' or `defmulti' which extend the language allowing writing code
+that looks and works mostly like Clojure.
+
+Each function in this library is created with `defn', which is a
+special macros for creating multi-arity functions.  So when you see
+function signature like `(foo [x])`, this means that this is function
+`foo', that accepts exactly one argument `x'.  In contrary, functions
+created with `fn' will produce `(foo x)` signature (`x' is not inside
+brackets).
+
+Functions, which signatures look like `(foo ([x]) ([x y]) ([x y &
+zs]))`, it is a multi-arity function, which accepts either one, two,
+or three-or-more arguments.  Each `([...])` represents different body
+of a function which is chosen by checking amount of arguments passed
+to the function.  See [Clojure's doc section on multi-arity
+functions](https://clojure.org/guides/learn/functions#_multi_arity_functions).
+
+## Compatibility
+This library is mainly developed with Lua 5.4, and tested against
+Lua 5.2, 5.3, 5.4, and LuaJIT 2.1.0-beta3.  Note, that in lua 5.2 and
+LuaJIT equality semantics are a bit different from Lua 5.3 and Lua 5.4.
+Main difference is that when comparing two tables, they must have
+exactly the same `__eq` metamethods, so comparing hash sets with hash
+sets will work, but comparing sets with other tables works only in
+Lua5.3+.  Another difference is that Lua 5.2 and LuaJIT don't have
+inbuilt UTF-8 library, therefore `seq' function will not work for
+non-ASCII strings."
+                           :doc-order [:apply :add :sub :mul :div :le :lt :ge :gt :inc :dec :eq
+                                       :map? :vector? :multifn? :set? :nil? :zero? :pos?
+                                       :neg? :even? :odd? :string? :boolean? :true? :false?
+                                       :int? :pos-int? :neg-int? :double? :empty? :not-empty
+                                       :map? :vector? :multifn? :set? :nil? :zero? :pos?
+                                       :neg? :even? :odd? :string? :boolean? :true? :false?
+                                       :int? :pos-int? :neg-int? :double? :empty? :not-empty
+                                       :vector :seq :kvseq :first :rest :last :butlast
+                                       :conj :disj :cons :concat :reduce :reduced :reduce-kv
+                                       :mapv :filter :every? :some :not-any? :range :reverse :take
+                                       :nthrest :partition
+                                       :identity :comp :complement :constantly :memoize
+                                       :assoc :hash-map :get :get-in :keys :vals :find :dissoc
+                                       :remove-method :remove-all-methods :methods :get-method
+                                       :ordered-set :hash-set]}}
  :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
- :project-doc-order {}
  :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
  :project-version "v0.5.4"
- :sandbox true
+ :sandbox false
  :test-requirements {:init-macros.fnl "(require-macros :init-macros)
                                        (import-macros {: assert-eq} :fennel-test)
                                        (local {: eq : vector : hash-map} (require :init))"
-                     :init.fnl "(import-macros {: assert-eq : assert-ne : assert-is : assert-not} :fennel-test)"
+                     :init.fnl "(require-macros :init-macros)
+                                (require-macros :fennel-test)"
                      :tests/test.fnl "(require-macros :fennel-test)"}
  :toc true}

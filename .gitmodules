@@ -2,3 +2,9 @@
 	path = fennel-test
 	url = https://gitlab.com/andreyorst/fennel-test.git
         branch = v0.0.1
+[submodule "lazy-seq"]
+	path = lazy-seq
+	url = https://gitlab.com/andreyorst/lazy-seq
+[submodule "itable"]
+	path = itable
+	url = https://gitlab.com/andreyorst/itable
