@@ -546,21 +546,31 @@ Empty tables created with `vector` will pass the test:
                                   (immutable (itable v))))}
          (setmetatable {}))))
 
-(fn vec* [v]
+(fn vec* [v len]
   (match (getmetatable v)
     mt (doto mt
+         (tset :__len (constantly (or len (length* v))))
          (tset :cljlib/type :vector)
          (tset :cljlib/editable true)
          (tset :cljlib/conj
-               (fn [t v] (vec* (itable.insert t v))))
+               (fn [t v]
+                 (let [len (length* t)]
+                   (vec* (itable.assoc t (+ len 1) v) (+ len 1)))))
+         (tset :cljlib/pop
+               (fn [t]
+                 (let [len (- (length* t) 1)
+                       coll []]
+                   (for [i 1 len]
+                     (tset coll i (. t i)))
+                   (vec* (itable coll) len))))
          (tset :cljlib/empty
                (fn [] (vec* (itable []))))
          (tset :cljlib/transient (vec->transient vec*))
          (tset :__fennelview (fn [coll view inspector indent]
                                (if (empty? coll)
                                    "[]"
-                                   (let [lines (icollect [_ v (ipairs coll)]
-                                                 (.. " " (view v inspector indent)))]
+                                   (let [lines (fcollect [i 1 (length* coll)]
+                                                 (.. " " (view (. coll i) inspector indent)))]
                                      (tset lines 1 (.. "[" (string.gsub (or (. lines 1) "") "^%s+" "")))
                                      (tset lines (length lines) (.. (. lines (length lines)) "]"))
                                      lines)))))
@@ -570,14 +580,14 @@ Empty tables created with `vector` will pass the test:
 (defn vec
   "Coerce collection `coll` to a vector."
   [coll]
-  (cond (empty? coll) (vec* (itable []))
-        (vector? coll) (vec* (itable coll))
-        :else (-> coll
-                  core.seq
-                  lazy.pack
-                  (doto (tset :n nil))
-                  itable
-                  vec*)))
+  (cond (empty? coll) (vec* (itable []) 0)
+        (vector? coll) (vec* (itable coll) (length* coll))
+        :else (let [packed (-> coll core.seq lazy.pack)
+                    len packed.n]
+                (-> packed
+                    (doto (tset :n nil))
+                    (itable {:fast-index? true})
+                    (vec* len)))))
 
 (defn vector
   "Constructs sequential table out of it's arguments.
@@ -1949,6 +1959,17 @@ specified `key` or `keys`."
    (match (getmetatable Set)
      {:cljlib/type :hash-set :cljlib/disj f} (apply f Set key keys)
      _ (error (.. "disj is not supported on " (class Set)) 2))))
+
+(defn pop
+  "For a list or queue, returns a new list/queue without the first
+item, for a vector, returns a new vector without the last item. If
+the collection is empty, throws an exception.  Note - not the same
+as next/butlast."
+  [coll]
+  (match (getmetatable coll)
+    {:cljlib/type :seq} (drop 1 coll)
+    {:cljlib/pop f} (f coll)
+    _ (error (.. "pop is not supported on " (class coll)) 2)))
 
 ;;; Transients
 
