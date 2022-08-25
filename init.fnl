@@ -560,6 +560,8 @@ Empty tables created with `vector` will pass the test:
                (fn [t]
                  (let [len (- (length* t) 1)
                        coll []]
+                   (when (< len 0)
+                     (error "can't pop empty vector" 2))
                    (for [i 1 len]
                      (tset coll i (. t i)))
                    (vec* (itable coll) len))))
@@ -1961,13 +1963,15 @@ specified `key` or `keys`."
      _ (error (.. "disj is not supported on " (class Set)) 2))))
 
 (defn pop
-  "For a list or queue, returns a new list/queue without the first
-item, for a vector, returns a new vector without the last item. If
-the collection is empty, throws an exception.  Note - not the same
-as next/butlast."
+  "If `coll` is a list returns a new list without the first
+item. If `coll` is a vector, returns a new vector without the last
+item. If the collection is empty, raises an error. Not the same as
+`next` or `butlast`."
   [coll]
   (match (getmetatable coll)
-    {:cljlib/type :seq} (drop 1 coll)
+    {:cljlib/type :seq} (match (seq coll)
+                          s (drop 1 s)
+                          _ (error "can't pop empty list" 2))
     {:cljlib/pop f} (f coll)
     _ (error (.. "pop is not supported on " (class coll)) 2)))
 
