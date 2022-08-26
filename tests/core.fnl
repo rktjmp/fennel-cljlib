@@ -70,6 +70,12 @@
     (let [a {}]
       (assert-eq (core.empty a) []))))
 
+(deftest vector-test
+  (testing "vecor can store nil elements"
+    (assert-eq 6 (core.count (core.vector nil nil nil nil nil nil)))
+    (assert-eq 6 (core.count (core.conj (core.vector nil nil nil nil nil) nil)))
+    (assert-eq 6 (core.count (core.pop (core.conj (core.vector nil nil nil nil nil nil) nil))))))
+
 (deftest test-predicates
   (testing "zero?"
     (assert-is (core.zero? 0))
