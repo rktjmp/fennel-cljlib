@@ -718,7 +718,9 @@ If the sequence is empty, returns nil."
 (defn count
   "Count amount of elements in the sequence."
   [s]
-  (lazy.count s))
+  (match (getmetatable s)
+    {:cljlib/type :vector} (length* s)
+    _ (lazy.count s)))
 
 (defn cons
   "Construct a cons cell.
