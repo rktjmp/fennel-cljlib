@@ -166,7 +166,8 @@ non-ASCII strings.
 - [`partition-all`](#partition-all)
 - [`partition-by`](#partition-by)
 - [`persistent!`](#persistent)
-- [`pop!`](#pop)
+- [`pop`](#pop)
+- [`pop!`](#pop-1)
 - [`random-sample`](#random-sample)
 - [`realized?`](#realized)
 - [`reduced?`](#reduced-1)
@@ -1720,6 +1721,18 @@ Function signature:
 Returns a new, persistent version of the transient collection. The
 transient collection cannot be used after this call, any such use will
 raise an error.
+
+## `pop`
+Function signature:
+
+```
+(pop [coll])
+```
+
+If `coll` is a list returns a new list without the first
+item. If `coll` is a vector, returns a new vector without the last
+item. If the collection is empty, raises an error. Not the same as
+`next` or `butlast`.
 
 ## `pop!`
 Function signature:

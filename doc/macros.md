@@ -35,10 +35,12 @@ Function signature:
 Function signature:
 
 ```
-(def ...)
+(def ([name initializer]) ([meta name initializer]))
 ```
 
-**Undocumented**
+Name binding macro similar to `local` but acts in terms of current
+namespace set with the `ns` macro, unless `:private` was passed before
+the binding name.
 
 ## `defmethod`
 Function signature:
@@ -294,7 +296,7 @@ Function signature:
 (ns name commentary requirements)
 ```
 
-**Undocumented**
+Namespace declaration macro.
 
 ## `time`
 Function signature:
