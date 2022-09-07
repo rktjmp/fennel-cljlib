@@ -2,6 +2,7 @@
 
 - Vectors can store `nil` values
 - Add `pop` operation for vectors and sequences
+- The `ns` macro now supports automatic relative require via the `:relative` key in the require table.
 
 ## Cljlib v1.0.0 (2022-08-21)
 
