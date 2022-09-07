@@ -33,7 +33,25 @@ SOFTWARE.")
 
 (var current-ns nil)
 
+(fn has? [tbl sym]
+  ;; searches for the given symbol in a table.
+  (var has false)
+  (each [_ elt (ipairs tbl) :until has]
+    (set has (= sym elt)))
+  has)
+
+(fn make-require [module relative?]
+  (let [module (tostring module)]
+    (if relative?
+        `(if (: (or ... "") :match "(.+%.)[^.]+")
+             (require (.. (: (or ... "") :match "(.+%.)[^.]+") ,module))
+             (= ... "init")
+             (require ,module)
+             (require (.. ... "." ,module)))
+        `(require ,module))))
+
 (fn ns [name commentary requirements]
+  "Namespace declaration macro."
   (set current-ns name)
   (let [bind-table [name]
         require-table [{}]
@@ -43,20 +61,21 @@ SOFTWARE.")
     (match requirements
       [:require & requires]
       (each [_ spec (ipairs requires)]
-        (match spec
-          (where (or [module :as alias :refer names]
-                     [module :refer names :as alias]))
-          (do (table.insert bind-table (collect [_ name (ipairs names) :into {'&as alias}]
-                                         (values (tostring name) name)))
-              (table.insert require-table `(require ,(tostring module))))
-          [module :as alias]
-          (do (table.insert bind-table alias)
-              (table.insert require-table `(require ,(tostring module))))
-          [module :refer names]
-          (do (table.insert bind-table (collect [_ name (ipairs names)]
-                                         (values (tostring name) name)))
-              (table.insert require-table `(require ,(tostring module))))
-          _ (assert-compile false "wrong require syntax" name)))
+        (let [relative? (has? spec :relative)]
+          (match spec
+            (where (or [module :as alias :refer names]
+                       [module :refer names :as alias]))
+            (do (table.insert bind-table (collect [_ name (ipairs names) :into {'&as alias}]
+                                           (values (tostring name) name)))
+                (table.insert require-table (make-require module relative?)))
+            [module :as alias]
+            (do (table.insert bind-table alias)
+                (table.insert require-table (make-require module relative?)))
+            [module :refer names]
+            (do (table.insert bind-table (collect [_ name (ipairs names)]
+                                           (values (tostring name) name)))
+                (table.insert require-table (make-require module relative?)))
+            _ (assert-compile false "wrong require syntax" name))))
       nil nil
       _ (assert-compile false "wrong require syntax" name))
     (if (string? commentary)
@@ -70,6 +89,10 @@ SOFTWARE.")
 ;;; def
 
 (fn def [...]
+  {:fnl/docstring "Name binding macro similar to `local` but acts in terms of current
+namespace set with the `ns` macro, unless `:private` was passed before
+the binding name."
+   :fnl/arglist [([name initializer]) ([meta name initializer])]}
   (match [...]
     (where (or [:private name val]
                [{:private true} name val]))
@@ -97,13 +120,6 @@ SOFTWARE.")
 (fn rest [[_ & xs]] xs)
 (fn vfirst [x] x)
 (fn vrest [_ ...] ...)
-
-(fn has? [arglist sym]
-  ;; searches for the given symbol in a table.
-  (var has false)
-  (each [_ arg (ipairs arglist) :until has]
-    (set has (= sym arg)))
-  has)
 
 (fn length* [arglist]
   ;; Gets "length" of variadic arglist, stopping at first & plus 1 arg.
