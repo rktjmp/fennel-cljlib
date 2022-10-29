@@ -1,4 +1,4 @@
-# Core (v1.0.0)
+# Core (v1.1.0)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -1175,7 +1175,7 @@ Function signature:
 ```
 
 A transducer which concatenates the contents of each input, which must be a
-  collection, into the reduction.
+  collection, into the reduction. Accepts the reducing function `rf`.
 
 ## `class`
 Function signature:
@@ -1464,8 +1464,8 @@ Function signature:
 (into ({}) ([to]) ([to from]) ([to xform from]))
 ```
 
-Returns a new coll consisting of to-coll with all of the items of
-  from-coll conjoined. A transducer may be supplied.
+Returns a new coll consisting of `to` with all of the items of
+  `from` conjoined. A transducer `xform` may be supplied.
 
 ### Examples
 
@@ -1751,7 +1751,7 @@ Function signature:
 (random-sample ([prob]) ([prob coll]))
 ```
 
-Returns items from coll with random probability of prob (0.0 -
+Returns items from `coll` with random probability of `prob` (0.0 -
 1.0).  Returns a transducer when no collection is provided.
 
 ## `realized?`
@@ -1872,10 +1872,10 @@ Function signature:
 
 Coerces coll to a (possibly empty) sequence, if it is not already
 one. Will not force a lazy seq. `(sequence nil)` yields an empty list,
-When a transducer is supplied, returns a lazy sequence of applications
-of the transform to the items in `coll`, i.e. to the set of first
-items of each `coll`, followed by the set of second items in each
-`coll`, until any one of the `colls` is exhausted.  Any remaining
+When a transducer `xform` is supplied, returns a lazy sequence of
+applications of the transform to the items in `coll`, i.e. to the set
+of first items of each `coll`, followed by the set of second items in
+each `coll`, until any one of the `colls` is exhausted.  Any remaining
 items in other `colls` are ignored. The transform should accept
 number-of-colls arguments
 
@@ -2011,7 +2011,7 @@ Function signature:
 (unreduced [x])
 ```
 
-**Undocumented**
+If `x` is `reduced?`, returns `(deref x)`, else returns `x`.
 
 ## `update`
 Function signature:

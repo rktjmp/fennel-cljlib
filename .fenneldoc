@@ -15,6 +15,7 @@
                          "keys"
                          "tbl"
                          "_"
+                         "%+"
                          "cs"
                          "sep"
                          "coll"
@@ -27,12 +28,6 @@
  :insert-copyright true
  :insert-license true
  :insert-version true
- :keys {:copyright "_COPYRIGHT"
-        :description "_DESCRIPTION"
-        :doc-order "_DOC_ORDER"
-        :license "_LICENSE"
-        :module-name "_MODULE_NAME"
-        :version "_VERSION"}
  :mode "checkdoc"
  :modules-info {:init-macros.fnl {:description "Macros for fennel-cljlib."
                                   :name "macros"}
@@ -159,9 +154,8 @@ non-ASCII strings."
  :order "alphabetic"
  :out-dir "./doc"
  :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
- :project-doc-order {}
  :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
- :project-version "v1.0.0"
+ :project-version "v1.1.0"
  :sandbox false
  :test-requirements {:init-macros.fnl "(require-macros :init-macros)
                                        (import-macros {: assert-eq} :fennel-test)

@@ -1,4 +1,4 @@
-# Macros (v1.0.0)
+# Macros (v1.1.0)
 Macros for fennel-cljlib.
 
 **Table of contents**
@@ -29,7 +29,10 @@ Function signature:
 (cond ...)
 ```
 
-**Undocumented**
+Takes a set of test expression pairs. It evaluates each test one at a
+time.  If a test returns logical true, `cond` evaluates and returns
+the value of the corresponding expression and doesn't evaluate any of
+the other tests or exprs. `(cond)` returns nil.
 
 ## `def`
 Function signature:
@@ -40,7 +43,10 @@ Function signature:
 
 Name binding macro similar to `local` but acts in terms of current
 namespace set with the `ns` macro, unless `:private` was passed before
-the binding name.
+the binding name. Accepts the `name` to be bound and the `initializer`
+expression. `meta` can be either an associative table where keys are
+strings, or a string representing a key from the table. If a sole
+string is given, it's value is set to `true` in the meta table.
 
 ## `defmethod`
 Function signature:
@@ -164,7 +170,11 @@ Function signature:
 
 Same as (def name (fn* name docstring? [params*] pre-post? exprs*))
 or (def name (fn* name docstring? ([params*] pre-post? exprs*)+)) with
-any doc-string or attrs added to the function metadata.
+any doc-string or attrs added to the function metadata.  Accepts
+`name` wich will be used to refer to a function in the current
+namespace, and optional `doc-string?`, a vector of function's
+`params*`, `pre-post?` conditions, and the `body` of the function.
+The body is wrapped in an implicit do.  See `fn*` for more info.
 
 ## `defn-`
 Function signature:
@@ -176,7 +186,10 @@ Function signature:
 Same as (def :private name (fn* name docstring? [params*] pre-post?
 exprs*)) or (def :private name (fn* name docstring? ([params*]
 pre-post?  exprs*)+)) with any doc-string or attrs added to the
-function metadata.
+function metadata. Accepts `name` wich will be used to refer to a
+function, and optional `doc-string?`, a vector of function's `params*`,
+`pre-post?` conditions, and the `body` of the function.  The body is
+wrapped in an implicit do. See `fn*` for more info.
 
 ## `fn*`
 Function signature:
@@ -186,14 +199,18 @@ Function signature:
 ```
 
 Clojure-inspired `fn` macro for defining functions.
-Supports multi-arity dispatching via the following syntax:
+Accepts an optional `name` and `docstring?`, followed by the binding
+list containing function's `params*`. The `body` is wrapped in an
+implicit `do`.  The `doc-string?` argument specifies an optional
+documentation for the function.  Supports multi-arity dispatching via
+the following syntax:
 
 (fn* optional-name
   optional-docstring
   ([arity1] body1)
   ([other arity2] body2))
 
-Accepts pre and post conditions in a form of a table after argument
+Accepts `pre-post?` conditions in a form of a table after argument
 list:
 
 (fn* optional-name
@@ -211,19 +228,21 @@ The same syntax applies to multi-arity version.
 Function signature:
 
 ```
-(if-let [name test] if-branch else-branch ...)
+(if-let [name test] if-branch else-branch)
 ```
 
-**Undocumented**
+When `test` is logical `true`, evaluates the `if-branch` with `name`
+bound to the value of `test`. Otherwise evaluates the `else-branch`
 
 ## `if-some`
 Function signature:
 
 ```
-(if-some [name test] if-branch else-branch ...)
+(if-some [name test] if-branch else-branch)
 ```
 
-**Undocumented**
+When `test` is not `nil`, evaluates the `if-branch` with `name`
+bound to the value of `test`. Otherwise evaluates the `else-branch`
 
 ## `in-ns`
 Function signature:
@@ -232,25 +251,50 @@ Function signature:
 (in-ns name)
 ```
 
-**Undocumented**
+Sets the compile time variable `current-ns` to the given `name`.
+Affects such macros as `def`, `defn`, which will bind names to the
+specified namespace.
+
+### Examples
+
+```fennel
+(ns a)
+(defn f [] "f from a")
+(ns b)
+(defn f [] "f from b")
+(in-ns a)
+(defn g [] "g from a")
+(in-ns b)
+(defn g [] "g from b")
+
+(assert-eq (a.f) "f from a")
+(assert-eq (b.f) "f from b")
+(assert-eq (a.g) "g from a")
+(assert-eq (b.g) "g from b")
+```
 
 ## `lazy-cat`
 Function signature:
 
 ```
-(lazy-cat ...)
+(lazy-cat & colls)
 ```
 
-**Undocumented**
+Expands to code which yields a lazy sequence of the concatenation of
+`colls` - expressions returning collections.  Each expression is not
+evaluated until it is needed.
 
 ## `lazy-seq`
 Function signature:
 
 ```
-(lazy-seq ...)
+(lazy-seq & body)
 ```
 
-**Undocumented**
+Takes a `body` of expressions that returns an sequence, table or nil,
+and yields a lazy sequence that will invoke the body only the first
+time `seq` is called, and will cache the result and return it on all
+subsequent `seq` calls. See also - `realized?`
 
 ## `loop`
 Function signature:
@@ -297,6 +341,38 @@ Function signature:
 ```
 
 Namespace declaration macro.
+Accepts the `name` of the generated namespace, and creates a local
+variable with this name holding a table. Optionally accepts
+`commentary` describing what namespace is about and a `requirements`
+spec, specifying what libraries should be required.
+
+The `requirements` spec is a list that consists of vectors, specifying
+library name and a possible alias or a vector of names to refer to
+without a prefix:
+
+```
+(ns some-namespace
+  "Description of the some-namespace."
+  (:require [some.lib]
+            [some.other.lib :as lib2]
+            [another.lib :refer [foo bar baz]]))
+
+(defn inc [x] (+ x 1))
+```
+
+Which is equivalent to:
+
+```
+(local some-namespace {})
+(local lib (require :some.lib))
+(local lib2 (require :some.other.lib))
+(local {:bar bar :baz baz :foo foo} (require :another.lib))
+(comment "Description of the some-namespace.")
+```
+
+Note that when no `:as` alias is given, the library will be named
+after the innermost part of the require path, i.e. `some.lib` is
+transformed to `lib`.
 
 ## `time`
 Function signature:
@@ -305,7 +381,7 @@ Function signature:
 (time expr)
 ```
 
-Measure expression execution time in ms.
+Measure the CPU time spent executing `expr`.
 
 ## `try`
 Function signature:
@@ -381,19 +457,21 @@ Always run some side effect action:
 Function signature:
 
 ```
-(when-let [name test] ...)
+(when-let [name test] & body)
 ```
 
-**Undocumented**
+When `test` is logical `true`, evaluates the `body` with `name` bound
+to the value of `test`.
 
 ## `when-some`
 Function signature:
 
 ```
-(when-some [name test] ...)
+(when-some [name test] & body)
 ```
 
-**Undocumented**
+When `test` is not `nil`, evaluates the `body` with `name` bound to
+the value of `test`.
 
 
 ---

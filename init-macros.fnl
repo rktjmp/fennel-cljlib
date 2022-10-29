@@ -40,18 +40,40 @@ SOFTWARE.")
     (set has (= sym elt)))
   has)
 
-(fn make-require [module relative?]
-  (let [module (tostring module)]
-    (if relative?
-        `(if (: (or ... "") :match "(.+%.)[^.]+")
-             (require (.. (: (or ... "") :match "(.+%.)[^.]+") ,module))
-             (= ... "init")
-             (require ,module)
-             (require (.. ... "." ,module)))
-        `(require ,module))))
-
 (fn ns [name commentary requirements]
-  "Namespace declaration macro."
+  "Namespace declaration macro.
+Accepts the `name` of the generated namespace, and creates a local
+variable with this name holding a table. Optionally accepts
+`commentary` describing what namespace is about and a `requirements`
+spec, specifying what libraries should be required.
+
+The `requirements` spec is a list that consists of vectors, specifying
+library name and a possible alias or a vector of names to refer to
+without a prefix:
+
+```
+(ns some-namespace
+  \"Description of the some-namespace.\"
+  (:require [some.lib]
+            [some.other.lib :as lib2]
+            [another.lib :refer [foo bar baz]]))
+
+(defn inc [x] (+ x 1))
+```
+
+Which is equivalent to:
+
+```
+(local some-namespace {})
+(local lib (require :some.lib))
+(local lib2 (require :some.other.lib))
+(local {:bar bar :baz baz :foo foo} (require :another.lib))
+(comment \"Description of the some-namespace.\")
+```
+
+Note that when no `:as` alias is given, the library will be named
+after the innermost part of the require path, i.e. `some.lib` is
+transformed to `lib`."
   (set current-ns name)
   (let [bind-table [name]
         require-table [{}]
@@ -61,21 +83,26 @@ SOFTWARE.")
     (match requirements
       [:require & requires]
       (each [_ spec (ipairs requires)]
-        (let [relative? (has? spec :relative)]
-          (match spec
-            (where (or [module :as alias :refer names]
-                       [module :refer names :as alias]))
-            (do (table.insert bind-table (collect [_ name (ipairs names) :into {'&as alias}]
-                                           (values (tostring name) name)))
-                (table.insert require-table (make-require module relative?)))
-            [module :as alias]
-            (do (table.insert bind-table alias)
-                (table.insert require-table (make-require module relative?)))
-            [module :refer names]
-            (do (table.insert bind-table (collect [_ name (ipairs names)]
-                                           (values (tostring name) name)))
-                (table.insert require-table (make-require module relative?)))
-            _ (assert-compile false "wrong require syntax" name))))
+        (match spec
+          (where (or [module :as alias :refer names]
+                     [module :refer names :as alias]))
+          (do (table.insert bind-table (collect [_ name (ipairs names) :into {'&as alias}]
+                                         (values (tostring name) name)))
+              (table.insert require-table `(require ,(tostring module))))
+          [module :as alias]
+          (do (table.insert bind-table alias)
+              (table.insert require-table `(require ,(tostring module))))
+          [module :refer names]
+          (do (table.insert bind-table (collect [_ name (ipairs names)]
+                                         (values (tostring name) name)))
+              (table.insert require-table `(require ,(tostring module))))
+          [module]
+          (do (->> (string.gsub (tostring module) ".+%.(.-)$" "%1")
+                   (pick-values 1)
+                   sym
+                   (table.insert bind-table))
+              (table.insert require-table `(require ,(tostring module))))
+          _ (assert-compile false "wrong require syntax" name)))
       nil nil
       _ (assert-compile false "wrong require syntax" name))
     (if (string? commentary)
@@ -84,6 +111,27 @@ SOFTWARE.")
         `(local ,bind-table ,require-table))))
 
 (fn in-ns [name]
+  "Sets the compile time variable `current-ns` to the given `name`.
+Affects such macros as `def`, `defn`, which will bind names to the
+specified namespace.
+
+# Examples
+
+```fennel
+(ns a)
+(defn f [] \"f from a\")
+(ns b)
+(defn f [] \"f from b\")
+(in-ns a)
+(defn g [] \"g from a\")
+(in-ns b)
+(defn g [] \"g from b\")
+
+(assert-eq (a.f) \"f from a\")
+(assert-eq (b.f) \"f from b\")
+(assert-eq (a.g) \"g from a\")
+(assert-eq (b.g) \"g from b\")
+```"
   (set current-ns name))
 
 ;;; def
@@ -91,7 +139,10 @@ SOFTWARE.")
 (fn def [...]
   {:fnl/docstring "Name binding macro similar to `local` but acts in terms of current
 namespace set with the `ns` macro, unless `:private` was passed before
-the binding name."
+the binding name. Accepts the `name` to be bound and the `initializer`
+expression. `meta` can be either an associative table where keys are
+strings, or a string representing a key from the table. If a sole
+string is given, it's value is set to `true` in the meta table."
    :fnl/arglist [([name initializer]) ([meta name initializer])]}
   (match [...]
     (where (or [:private name val]
@@ -229,14 +280,18 @@ Because inital arglist didn't specify arities of 0 and 2."
 (fn fn* [...]
   {:fnl/docstring
    "Clojure-inspired `fn' macro for defining functions.
-Supports multi-arity dispatching via the following syntax:
+Accepts an optional `name` and `docstring?`, followed by the binding
+list containing function's `params*`. The `body` is wrapped in an
+implicit `do`.  The `doc-string?` argument specifies an optional
+documentation for the function.  Supports multi-arity dispatching via
+the following syntax:
 
 (fn* optional-name
   optional-docstring
   ([arity1] body1)
   ([other arity2] body2))
 
-Accepts pre and post conditions in a form of a table after argument
+Accepts `pre-post?` conditions in a form of a table after argument
 list:
 
 (fn* optional-name
@@ -366,7 +421,11 @@ The same syntax applies to multi-arity version.
   {:fnl/docstring
    "Same as (def name (fn* name docstring? [params*] pre-post? exprs*))
 or (def name (fn* name docstring? ([params*] pre-post? exprs*)+)) with
-any doc-string or attrs added to the function metadata."
+any doc-string or attrs added to the function metadata.  Accepts
+`name` wich will be used to refer to a function in the current
+namespace, and optional `doc-string?`, a vector of function's
+`params*`, `pre-post?` conditions, and the `body` of the function.
+The body is wrapped in an implicit do.  See `fn*` for more info."
    :fnl/arglist [([name doc-string? [params*] pre-post? body])
                  ([name doc-string? ([params*] pre-post? body)+])]}
   (assert-compile (sym? name) "expected a function name, use `fn*` for anonymous functions" name)
@@ -377,7 +436,10 @@ any doc-string or attrs added to the function metadata."
    "Same as (def :private name (fn* name docstring? [params*] pre-post?
 exprs*)) or (def :private name (fn* name docstring? ([params*]
 pre-post?  exprs*)+)) with any doc-string or attrs added to the
-function metadata."
+function metadata. Accepts `name` wich will be used to refer to a
+function, and optional `doc-string?`, a vector of function's `params*`,
+`pre-post?` conditions, and the `body` of the function.  The body is
+wrapped in an implicit do. See `fn*` for more info."
    :fnl/arglist [([name doc-string? [params*] pre-post? body])
                  ([name doc-string? ([params*] pre-post? body)+])]}
   (assert-compile (sym? name) "expected a function name, use `fn*` for anonymous functions" name)
@@ -386,7 +448,7 @@ function metadata."
 ;;; Time
 
 (fn time [expr]
-  "Measure expression execution time in ms."
+  "Measure the CPU time spent executing `expr`."
   `(let [c# os.clock
          pack# #(doto [$...] (tset :n (select "#" $...)))
          s# (c#)
@@ -398,12 +460,18 @@ function metadata."
 ;;; let variants
 
 (fn when-let [[name test] ...]
+  {:fnl/docstring "When `test` is logical `true`, evaluates the `body` with `name` bound
+to the value of `test`."
+   :fnl/arglist [[name test] & body]}
   `(let [val# ,test]
      (if val#
          (let [,name val#]
            ,...))))
 
 (fn if-let [[name test] if-branch else-branch ...]
+  {:fnl/docstring "When `test` is logical `true`, evaluates the `if-branch` with `name`
+bound to the value of `test`. Otherwise evaluates the `else-branch`"
+   :fnl/arglist [[name test] if-branch else-branch]}
   (assert-compile (= 0 (select "#" ...)) "too many arguments to if-let" ...)
   `(let [val# ,test]
      (if val#
@@ -412,12 +480,18 @@ function metadata."
          ,else-branch)))
 
 (fn when-some [[name test] ...]
+  {:fnl/docstring "When `test` is not `nil`, evaluates the `body` with `name` bound to
+the value of `test`."
+   :fnl/arglist [[name test] & body]}
   `(let [val# ,test]
      (if (not= nil val#)
          (let [,name val#]
            ,...))))
 
 (fn if-some [[name test] if-branch else-branch ...]
+  {:fnl/docstring "When `test` is not `nil`, evaluates the `if-branch` with `name`
+bound to the value of `test`. Otherwise evaluates the `else-branch`"
+   :fnl/arglist [[name test] if-branch else-branch]}
   (assert-compile (= 0 (select "#" ...)) "too many arguments to if-some" ...)
   `(let [val# ,test]
      (if (not= nil val#)
@@ -863,10 +937,16 @@ Always run some side effect action:
 ;;; Misc
 
 (fn cond [...]
+  "Takes a set of test expression pairs. It evaluates each test one at a
+time.  If a test returns logical true, `cond` evaluates and returns
+the value of the corresponding expression and doesn't evaluate any of
+the other tests or exprs. `(cond)` returns nil."
   (assert-compile (= 0 (% (select "#" ...) 2))
                   "cond requires an even number of forms"
                   ...)
-  `(if ,...))
+  (if (= 0 (select "#" ...))
+      `nil
+      `(if ,...)))
 
 ;;; Lazy seq
 
@@ -877,6 +957,11 @@ Always run some side effect action:
                "lazy-seq.init-macros")))
 
 (fn lazy-seq [...]
+  {:fnl/docstring "Takes a `body` of expressions that returns an sequence, table or nil,
+and yields a lazy sequence that will invoke the body only the first
+time `seq` is called, and will cache the result and return it on all
+subsequent `seq` calls. See also - `realized?`"
+   :fnl/arglist [& body]}
   `(let [core# (require ,core)
          res# ,(lazy-seq* ...)]
      (match (getmetatable res#)
@@ -888,6 +973,10 @@ Always run some side effect action:
      res#))
 
 (fn lazy-cat [...]
+  {:fnl/docstring "Expands to code which yields a lazy sequence of the concatenation of
+`colls` - expressions returning collections.  Each expression is not
+evaluated until it is needed."
+   :fnl/arglist [& colls]}
   `(let [core# (require ,core)
          res# ,(lazy-cat* ...)]
      (match (getmetatable res#)

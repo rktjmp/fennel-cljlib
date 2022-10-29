@@ -10,11 +10,19 @@ LUASOURCES = $(FNLSOURCES:.fnl=.lua)
 LUAEXECUTABLES ?= lua luajit
 FENNELDOC := $(shell command -v fenneldoc)
 LUACOV_COBERTURA := $(shell command -v luacov-cobertura)
-COMPILEFLAGS += --metadata
+COMPILEFLAGS += --metadata --require-as-include
 
 .PHONY: build clean distclean test luacov luacov-console doc help $(LUAEXECUTABLES)
 
 build: $(LUASOURCES)
+	@echo "--[[ This is a self-contained version of the fennel-cljlib library" > cljlib.lua
+	@echo "     meant to be used directly from Lua, or embedded into other" >> cljlib.lua
+	@echo "     applications. It doesn't include macros, given that Lua doesn't" >> cljlib.lua
+	@echo "     support Fennel's macro system, but all other features, like" >> cljlib.lua
+	@echo "     laziness, and immutability are available in the same way as if" >> cljlib.lua
+	@echo "     this library was used from Fennel. ]]" >> cljlib.lua
+	@cat init.lua >> cljlib.lua
+	@rm init.lua
 
 ${LUASOURCES}: $(FNLSOURCES)
 
@@ -22,11 +30,12 @@ ${LUASOURCES}: $(FNLSOURCES)
 	$(FENNEL) --lua $(LUA) $(COMPILEFLAGS) --compile $< > $@
 
 clean:
-	rm -f $(LUASOURCES) $(LUATESTS)
+	rm -f $(LUASOURCES) $(LUATESTS) cljlib.lua
 
 distclean: clean
 	rm -rf luacov* coverage
 
+test: COMPILEFLAGS = --metadata
 test: $(FNLTESTS)
 	@echo "Testing on" $$($(LUA) -v) >&2
 	@$(foreach test,$?,LUA_PATH="./?/init.lua;$LUA_PATH" $(FENNEL) $(COMPILEFLAGS) --lua $(LUA) $(test) || exit;)

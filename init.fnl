@@ -31,8 +31,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM‚ DAMAGES OR OTHER
 LIABILITY‚ WHETHER IN AN ACTION OF CONTRACT‚ TORT OR OTHERWISE‚ ARISING FROM‚
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."
-  (:require [lazy-seq :as lazy :relative]
-            [itable :as itable :relative]))
+  (:require [lazy-seq :as lazy]
+            [itable :as itable]))
 
 ;;; Utility functions
 
@@ -1206,7 +1206,7 @@ Returns a transducer when no collection is provided."
   ([coll] (core.sequence (dedupe) coll)))
 
 (defn random-sample
-  "Returns items from coll with random probability of prob (0.0 -
+  "Returns items from `coll` with random probability of `prob` (0.0 -
 1.0).  Returns a transducer when no collection is provided."
   ([prob]
    (filter (fn [] (< (math.random) prob))))
@@ -1492,6 +1492,7 @@ called. Early termination is supported via `reduced`.
   (lazy.reduced? x))
 
 (defn unreduced
+  "If `x` is `reduced?`, returns `(deref x)`, else returns `x`."
   [x]
   (if (reduced? x) (deref x) x))
 
@@ -1511,7 +1512,7 @@ called. Early termination is supported via `reduced`.
 
 (defn cat
   "A transducer which concatenates the contents of each input, which must be a
-  collection, into the reduction."
+  collection, into the reduction. Accepts the reducing function `rf`."
   [rf]
   (let [rrf (preserving-reduced rf)]
     (fn*
@@ -1591,10 +1592,10 @@ that certain transforms may inject or skip items."
 (defn sequence
   "Coerces coll to a (possibly empty) sequence, if it is not already
 one. Will not force a lazy seq. `(sequence nil)` yields an empty list,
-When a transducer is supplied, returns a lazy sequence of applications
-of the transform to the items in `coll`, i.e. to the set of first
-items of each `coll`, followed by the set of second items in each
-`coll`, until any one of the `colls` is exhausted.  Any remaining
+When a transducer `xform` is supplied, returns a lazy sequence of
+applications of the transform to the items in `coll`, i.e. to the set
+of first items of each `coll`, followed by the set of second items in
+each `coll`, until any one of the `colls` is exhausted.  Any remaining
 items in other `colls` are ignored. The transform should accept
 number-of-colls arguments"
   ([coll]
@@ -2046,8 +2047,8 @@ raise an error."
 ;;; Into
 
 (defn into
-  "Returns a new coll consisting of to-coll with all of the items of
-  from-coll conjoined. A transducer may be supplied.
+  "Returns a new coll consisting of `to` with all of the items of
+  `from` conjoined. A transducer `xform` may be supplied.
 
 # Examples
 
