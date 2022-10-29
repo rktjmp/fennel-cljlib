@@ -22,7 +22,6 @@ build: $(LUASOURCES)
 	@echo "     laziness, and immutability are available in the same way as if" >> cljlib.lua
 	@echo "     this library was used from Fennel. ]]" >> cljlib.lua
 	@cat init.lua >> cljlib.lua
-	@rm init.lua
 
 ${LUASOURCES}: $(FNLSOURCES)
 
@@ -52,7 +51,7 @@ endif
 testall: $(LUAEXECUTABLES)
 	@$(foreach lua,$?,LUA=$(lua) make test || exit;)
 
-luacov: COMPILEFLAGS += --correlate
+luacov: COMPILEFLAGS = --correlate --metadata
 luacov: distclean build $(LUATESTS)
 	@$(foreach test,$(LUATESTS),$(LUA) -lluarocks.loader -lluacov $(test) || exit;)
 	luacov
@@ -61,6 +60,7 @@ ifdef LUACOV_COBERTURA
 	luacov-cobertura -o coverage/cobertura-coverage.xml
 endif
 
+luacov-console: COMPILEFLAGS = --correlate --metadata
 luacov-console: clean build $(LUATESTS)
 	@$(foreach test,$(LUATESTS),$(LUA) -lluarocks.loader -lluacov $(test) || exit;)
 	luacov
