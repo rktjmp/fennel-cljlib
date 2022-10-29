@@ -1,5 +1,9 @@
 ## Cljlib dev (???)
 
+## Cljlib v1.1.1 (2022-10-29)
+
+- fixed typo in the installation instructions
+
 ## Cljlib v1.1.0 (2022-10-29)
 
 - Vectors can store `nil` values

@@ -155,7 +155,7 @@ non-ASCII strings."
  :out-dir "./doc"
  :project-copyright "Copyright (C) 2020-2021 Andrey Listopadov"
  :project-license "[MIT](https://gitlab.com/andreyorst/fennel-cljlib/-/raw/master/LICENSE)"
- :project-version "v1.1.0"
+ :project-version "v1.1.1"
  :sandbox false
  :test-requirements {:init-macros.fnl "(require-macros :init-macros)
                                        (import-macros {: assert-eq} :fennel-test)

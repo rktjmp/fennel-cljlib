@@ -22,7 +22,7 @@ Now you can require `:cljlib` from Fennel:
 Make sure to set up the `FENNEL_PATH` and `LUA_PATH` to include the installation directory:
 
     FENNEL_PATH="cljlib/?/init.fnl;$FENNEL_PATH"
-    LUA_PATH="cljlib/?/init.lua;#LUA_PATH"
+    LUA_PATH="cljlib/?/init.lua;$LUA_PATH"
 
 Alternatively, precompile the library to make it load slightly faster:
 
