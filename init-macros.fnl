@@ -149,7 +149,7 @@ string is given, it's value is set to `true` in the meta table."
                [{:private true} name val]))
     `(local ,name ,val)
     [name val]
-    (if current-ns
+    (if (in-scope? current-ns)
         `(local ,name
            (let [v# ,val]
              (tset ,current-ns ,(tostring name) v#)
