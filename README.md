@@ -10,7 +10,16 @@ Therefore, certain functions were altered to better suit the domain.
 
 Clone library into your project or put it as a git submodule:
 
-    $ git clone --recursive https://gitlab.com/andreyorst/fennel-cljlib club
+    $ git clone --recursive https://gitlab.com/andreyorst/fennel-cljlib cljlib
+
+Make sure to set up the `FENNEL_PATH` and `LUA_PATH` environment variables to include the installation directory:
+
+    FENNEL_PATH="cljlib/?/init.fnl;$FENNEL_PATH"
+    LUA_PATH="cljlib/?/init.lua;$LUA_PATH"
+
+Or pass them via command line arguments:
+
+    $ fennel --add-fennel-path "cljlib/?/init.fnl" --add-package-path "cljlib/?/init.lua"
 
 Now you can require `:cljlib` from Fennel:
 
@@ -18,11 +27,6 @@ Now you can require `:cljlib` from Fennel:
 (local clj (require :cljlib))
 (import-macros cljm :cljlib)
 ```
-
-Make sure to set up the `FENNEL_PATH` and `LUA_PATH` to include the installation directory:
-
-    FENNEL_PATH="cljlib/?/init.fnl;$FENNEL_PATH"
-    LUA_PATH="cljlib/?/init.lua;$LUA_PATH"
 
 Alternatively, precompile the library to make it load slightly faster:
 
