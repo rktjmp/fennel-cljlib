@@ -36,7 +36,7 @@ of Fennel.
 
 This library contains a set of functions providing functions that
 behave similarly to Clojure's equivalents.  Library itself has nothing
-Fennel specific so it should work on Lua, e.g:
+Fennel specific, so it should work on Lua, e.g:
 
 ``` lua
 Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
@@ -48,13 +48,13 @@ Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
 This example is mapping an anonymous `function' over a table,
 producing new table and concatenating it with `\" \"`.
 
-However this library also provides Fennel-specific set of
-[macros](./macros.md), that provides additional facilities like
-`defn' or `defmulti' which extend the language allowing writing code
-that looks and works mostly like Clojure.
+However, this library also provides Fennel-specific set of
+[macros](./macros.md), that provides additional facilities like `defn'
+or `defmulti' which extend the language allowing writing code that
+looks and works mostly like Clojure.
 
 Each function in this library is created with `defn', which is a
-special macros for creating multi-arity functions.  So when you see
+special macro for creating multi-arity functions.  So when you see
 function signature like `(foo [x])`, this means that this is function
 `foo', that accepts exactly one argument `x'.  In contrary, functions
 created with `fn' will produce `(foo x)` signature (`x' is not inside

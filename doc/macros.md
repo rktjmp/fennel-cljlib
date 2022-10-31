@@ -46,7 +46,7 @@ namespace set with the `ns` macro, unless `:private` was passed before
 the binding name. Accepts the `name` to be bound and the `initializer`
 expression. `meta` can be either an associative table where keys are
 strings, or a string representing a key from the table. If a sole
-string is given, it's value is set to `true` in the meta table.
+string is given, its value is set to `true` in the meta table.
 
 ## `defmethod`
 Function signature:
@@ -55,7 +55,7 @@ Function signature:
 (defmethod multi-fn dispatch-value fnspec)
 ```
 
-Attach new method to multi-function dispatch value. accepts the
+Attach new method to multi-function dispatch value. Accepts the
 `multi-fn` as its first argument, the `dispatch-value` as second, and
 `fnspec` - a function tail starting from argument list, followed by
 function body as in [`fn*`](#fn).
@@ -91,14 +91,14 @@ Multi-arity function tails are also supported:
 
 (defmulti foo (fn* ([x] [x]) ([x y] [x y])))
 
-(defmethod foo [10] [_] (print "I've knew I'll get 10"))
-(defmethod foo [10 20] [_ _] (print "I've knew I'll get both 10 and 20"))
+(defmethod foo [10] [_] (print "I knew I'll get 10"))
+(defmethod foo [10 20] [_ _] (print "I knew I'll get both 10 and 20"))
 (defmethod foo :default ([x] (print (.. "Umm, got" x)))
                         ([x y] (print (.. "Umm, got both " x " and " y))))
 ```
 
-Calling `(foo 10)` will print `"I've knew I'll get 10"`, and calling
-`(foo 10 20)` will print `"I've knew I'll get both 10 and 20"`.
+Calling `(foo 10)` will print `"I knew I'll get 10"`, and calling
+`(foo 10 20)` will print `"I knew I'll get both 10 and 20"`.
 However, calling `foo` with any other numbers will default either to
 `"Umm, got x"` message, when called with single value, and `"Umm, got
 both x and y"` when calling with two values.
@@ -168,10 +168,10 @@ Function signature:
 (defn ([name doc-string? [params*] pre-post? body]) ([name doc-string? ([params*] pre-post? body) +]))
 ```
 
-Same as (def name (fn* name docstring? [params*] pre-post? exprs*))
-or (def name (fn* name docstring? ([params*] pre-post? exprs*)+)) with
-any doc-string or attrs added to the function metadata.  Accepts
-`name` wich will be used to refer to a function in the current
+Same as `(def name (fn* name docstring? [params*] pre-post? exprs*))`
+or `(def name (fn* name docstring? ([params*] pre-post? exprs*)+))`
+with any doc-string or attrs added to the function metadata.  Accepts
+`name` which will be used to refer to a function in the current
 namespace, and optional `doc-string?`, a vector of function's
 `params*`, `pre-post?` conditions, and the `body` of the function.
 The body is wrapped in an implicit do.  See `fn*` for more info.
@@ -183,13 +183,13 @@ Function signature:
 (defn- ([name doc-string? [params*] pre-post? body]) ([name doc-string? ([params*] pre-post? body) +]))
 ```
 
-Same as (def :private name (fn* name docstring? [params*] pre-post?
-exprs*)) or (def :private name (fn* name docstring? ([params*]
-pre-post?  exprs*)+)) with any doc-string or attrs added to the
-function metadata. Accepts `name` wich will be used to refer to a
-function, and optional `doc-string?`, a vector of function's `params*`,
-`pre-post?` conditions, and the `body` of the function.  The body is
-wrapped in an implicit do. See `fn*` for more info.
+Same as `(def :private name (fn* name docstring? [params*] pre-post?
+exprs*))` or `(def :private name (fn* name docstring? ([params*]
+pre-post?  exprs*)+))` with any doc-string or attrs added to the
+function metadata. Accepts `name` which will be used to refer to a
+function, and optional `doc-string?`, a vector of function's
+`params*`, `pre-post?` conditions, and the `body` of the function.
+The body is wrapped in an implicit do. See `fn*` for more info.
 
 ## `fn*`
 Function signature:
@@ -222,7 +222,7 @@ list:
 
 The same syntax applies to multi-arity version.
 
-(pre and post checks are not yet implemented)
+(pre- and post-checks are not yet implemented)
 
 ## `if-let`
 Function signature:
@@ -232,7 +232,7 @@ Function signature:
 ```
 
 When `test` is logical `true`, evaluates the `if-branch` with `name`
-bound to the value of `test`. Otherwise evaluates the `else-branch`
+bound to the value of `test`. Otherwise, evaluates the `else-branch`
 
 ## `if-some`
 Function signature:
@@ -242,7 +242,7 @@ Function signature:
 ```
 
 When `test` is not `nil`, evaluates the `if-branch` with `name`
-bound to the value of `test`. Otherwise evaluates the `else-branch`
+bound to the value of `test`. Otherwise, evaluates the `else-branch`
 
 ## `in-ns`
 Function signature:
@@ -251,11 +251,12 @@ Function signature:
 (in-ns name)
 ```
 
-Sets the compile time variable `current-ns` to the given `name`.
+Sets the compile-time variable `cljlib-namespaces` to the given `name`.
 Affects such macros as `def`, `defn`, which will bind names to the
 specified namespace.
 
 ### Examples
+Creating several namespaces in the file, and defining functions in each:
 
 ```fennel
 (ns a)
@@ -272,6 +273,33 @@ specified namespace.
 (assert-eq (a.g) "g from a")
 (assert-eq (b.g) "g from b")
 ```
+
+Note, switching namespaces in the REPL doesn't affect non-namespaced
+local bindings.  In other words, when defining a local with `def`, a
+bot a local binding and a namespaced binding are created, and
+switching current namespace won't change the local binding:
+
+```
+>> (ns foo)
+nil
+>> (def x 42)
+nil
+>> (ns bar)
+nil
+>> (def x 1337)
+nil
+>> (in-ns foo)
+#<namespace: foo>
+>> x ; user might have expected to see 42 here
+1337
+>> foo.x
+42
+>> bar.x
+1337
+```
+
+Sadly, Fennel itself has no support for namespace switching in REPL,
+so this feature can be only partially emulated by the cljlib library.
 
 ## `lazy-cat`
 Function signature:
@@ -291,7 +319,7 @@ Function signature:
 (lazy-seq & body)
 ```
 
-Takes a `body` of expressions that returns an sequence, table or nil,
+Takes a `body` of expressions that returns a sequence, table or nil,
 and yields a lazy sequence that will invoke the body only the first
 time `seq` is called, and will cache the result and return it on all
 subsequent `seq` calls. See also - `realized?`
@@ -374,6 +402,8 @@ Note that when no `:as` alias is given, the library will be named
 after the innermost part of the require path, i.e. `some.lib` is
 transformed to `lib`.
 
+See `in-ns` on how to switch namespaces.
+
 ## `time`
 Function signature:
 
@@ -401,7 +431,7 @@ specified, an implicit catch-all clause is created.  `body*`, and
 inner expressions of `catch-clause*`, and `finally-clause?` are
 wrapped in implicit `do`.
 
-Finally clause is optional, and written as (finally body*).  If
+The `finally` clause is optional, and written as (finally body*).  If
 present, it must be the last clause in the [`try`](#try) form, and the only
 `finally` clause.  Note that `finally` clause is for side effects
 only, and runs either after succesful run of [`try`](#try) body, or after any

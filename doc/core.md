@@ -4,7 +4,7 @@ of Fennel.
 
 This library contains a set of functions providing functions that
 behave similarly to Clojure's equivalents.  Library itself has nothing
-Fennel specific so it should work on Lua, e.g:
+Fennel specific, so it should work on Lua, e.g:
 
 ``` lua
 Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
@@ -16,13 +16,13 @@ Lua 5.3.5  Copyright (C) 1994-2018 Lua.org, PUC-Rio
 This example is mapping an anonymous `function` over a table,
 producing new table and concatenating it with `" "`.
 
-However this library also provides Fennel-specific set of
-[macros](./macros.md), that provides additional facilities like
-`defn` or `defmulti` which extend the language allowing writing code
-that looks and works mostly like Clojure.
+However, this library also provides Fennel-specific set of
+[macros](./macros.md), that provides additional facilities like `defn`
+or `defmulti` which extend the language allowing writing code that
+looks and works mostly like Clojure.
 
 Each function in this library is created with `defn`, which is a
-special macros for creating multi-arity functions.  So when you see
+special macro for creating multi-arity functions.  So when you see
 function signature like `(foo [x])`, this means that this is function
 `foo`, that accepts exactly one argument `x`.  In contrary, functions
 created with `fn` will produce `(foo x)` signature (`x` is not inside
@@ -342,7 +342,7 @@ see `hash-map` for creating tables that have additional metadata
 attached for this test to work.
 
 ### Examples
-Non empty map:
+Non-empty map:
 
 ``` fennel
 (assert-is (map? {:a 1 :b 2}))
@@ -367,9 +367,9 @@ Function signature:
 (vector? [x])
 ```
 
-Check whether `tbl` is an sequential table.
+Check whether `tbl` is a sequential table.
 
-Non empty sequential tables are tested for two things:
+Non-empty sequential tables are tested for two things:
 - `next` returns the key-value pair,
 - key, that is returned by the `next` is equal to `1`.
 
@@ -379,7 +379,7 @@ see `vector` for creating tables that have additional
 metadata attached for this test to work.
 
 ### Examples
-Non empty vector:
+Non-empty vector:
 
 ``` fennel
 (assert-is (vector? [1 2 3 4]))
@@ -571,7 +571,7 @@ Function signature:
 (vector [& args])
 ```
 
-Constructs sequential table out of it's arguments.
+Constructs sequential table out of its arguments.
 
 Sets additional metadata for function `vector?` to work.
 
@@ -589,10 +589,10 @@ Function signature:
 (seq [coll])
 ```
 
-Construct a sequnce from the given collection `coll`.  If `coll` is an
-associative table, returns sequence of vectors with key and
-value.  If `col` is sequential table, returns its shallow copy.  If
-`col` is string, return sequential table of its codepoints.
+Construct a sequence from the given collection `coll`.  If `coll` is
+an associative table, returns sequence of vectors with key and value.
+If `col` is sequential table, returns its shallow copy.  If `col` is
+string, return sequential table of its codepoints.
 
 ### Examples
 Sequential tables are transformed to sequences:
@@ -602,7 +602,7 @@ Sequential tables are transformed to sequences:
 ```
 
 Associative tables are transformed to format like this `[[key1 value1]
-... [keyN valueN]]` and order is non deterministic:
+... [keyN valueN]]` and order is non-deterministic:
 
 ``` fennel
 (seq {:a 1 :b 2 :c 3}) ;; @seq([:b 2] [:a 1] [:c 3])
@@ -800,7 +800,7 @@ Reduces an associative table using function `f` and initial value `val`.
 applying `f` to `val`, the first key and the first value in `tbl`,
 then applying `f` to that result and the 2nd key and value, etc.  If
 `tbl` contains no entries, returns `val` and `f` is not called.  Note
-that reduce-kv is supported on sequential tables and strings, where
+that `reduce-kv` is supported on sequential tables and strings, where
 the keys will be the ordinals.
 
 Early termination is possible with the use of `reduced`
@@ -841,9 +841,9 @@ Function signature:
 
 Returns a vector consisting of the result of applying `f` to the
 set of first items of each `coll`, followed by applying `f` to the set
-of second items in each coll, until any one of the `colls` is exhausted.
-Any remaining items in other colls are ignored.  Function `f` should
-accept number-of-colls arguments.
+of second items in each coll, until any one of the `colls` is
+exhausted.  Any remaining items in other collections are ignored.
+Function `f` should accept number-of-colls arguments.
 
 ## `filter`
 Function signature:
@@ -890,7 +890,8 @@ Function signature:
 (range ([]) ([upper]) ([lower upper]) ([lower upper step]))
 ```
 
-Returns lazy sequence of of numbers from `lower` to `upper` with optional `step`.
+Returns lazy sequence of numbers from `lower` to `upper` with optional
+`step`.
 
 ## `reverse`
 Function signature:
@@ -899,7 +900,7 @@ Function signature:
 (reverse [coll])
 ```
 
-Returns a lazy sequnce with same items as in `coll` but in reverse order.
+Returns a lazy sequence with same items as in `coll` but in reverse order.
 
 ## `take`
 Function signature:
@@ -940,7 +941,7 @@ Given a collection `coll`, returns a lazy sequence of lists of `n`
 items each, at offsets `step` apart. If `step` is not supplied,
 defaults to `n`, i.e. the partitions do not overlap. If a `pad`
 collection is supplied, use its elements as necessary to complete last
-partition upto `n` items. In case there are not enough padding
+partition up to `n` items. In case there are not enough padding
 elements, return a partition with less than `n` items.
 
 ## `identity`
@@ -970,7 +971,7 @@ Function signature:
 
 Takes a function `f` and returns the function that takes the same
 amount of arguments as `f`, has the same effect, and returns the
-oppisite truth value.
+opposite truth value.
 
 ## `constantly`
 Function signature:
@@ -1069,7 +1070,8 @@ Function signature:
 (find [coll key])
 ```
 
-Returns the map entry for `key`, or `nil` if key not present in `coll`.
+Returns the map entry for `key`, or `nil` if key is not present in
+`coll`.
 
 ## `dissoc`
 Function signature:
@@ -1096,7 +1098,7 @@ Function signature:
 (remove-all-methods [multimethod])
 ```
 
-Removes all of the methods of `multimethod`
+Removes all methods of `multimethod`
 
 ## `methods`
 Function signature:
@@ -1213,7 +1215,8 @@ Function signature:
 (contains? [coll elt])
 ```
 
-Test if `elt` is in the `coll`.  May be a linear search depending on the type of the collection.
+Test if `elt` is in the `coll`.  It may be a linear search depending
+on the type of the collection.
 
 ## `count`
 Function signature:
@@ -1511,7 +1514,7 @@ Function signature:
 
 Returns a lazy sequence of the non-nil results of (f index item) in
 the `coll`.  Note, this means false return values will be included.
-`f` must be free of side-effects. Returns a transducer when no
+`f` must be free of side effects. Returns a transducer when no
 collection is provided.
 
 ## `lazy-seq`
@@ -1548,8 +1551,8 @@ truncated before the file is closed:
 ```fennel
 (let [lines (with-open [f (io.open "init.fnl" :r)]
               (line-seq f))]
-  ;; this errors because only first line was realized, but the file
-  ;; was closed before the rest of lines were cached
+  ;; this will error because only first line was realized, but the
+  ;; file was closed before the rest of lines were cached
   (assert-not (pcall next lines)))
 ```
 
@@ -1634,7 +1637,7 @@ Function signature:
 
 Returns a lazy sequence consisting of the result of applying `f` to 1
 and the first item of `coll`, followed by applying `f` to 2 and the
-second item in `coll`, etc, until `coll` is exhausted.  Returns a
+second item in `coll`, etc., until `coll` is exhausted.  Returns a
 transducer when no collection is provided.
 
 ## `mapcat`
@@ -1954,7 +1957,7 @@ Function signature:
 ```
 
 `reduce` with a transformation of `f` (`xform`). If `init` is not
-supplied, `f` will be called to produce it. f should be a reducing
+supplied, `f` will be called to produce it. `f` should be a reducing
 step function that accepts both 1 and 2 arguments, if it accepts only
 2 you can add the arity-1 with `completing`. Returns the result of
 applying (the transformed) `xform` to `init` and the first item in
