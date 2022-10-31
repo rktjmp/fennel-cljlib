@@ -258,7 +258,7 @@ specified namespace.
 ### Examples
 Creating several namespaces in the file, and defining functions in each:
 
-```fennel
+``` fennel
 (ns a)
 (defn f [] "f from a")
 (ns b)
@@ -279,7 +279,7 @@ local bindings.  In other words, when defining a local with `def`, a
 bot a local binding and a namespaced binding are created, and
 switching current namespace won't change the local binding:
 
-```
+``` fennel
 >> (ns foo)
 nil
 >> (def x 42)
@@ -342,7 +342,7 @@ forms), and the values to bind to them.
 
 For example:
 
-```fennel
+``` fennel
 (loop [[first & rest] [1 2 3 4 5]
        i 0]
   (if (= nil first)
@@ -361,6 +361,50 @@ iteration), and with `i` being called with one value greater than the previous.
 When the loop terminates (When the user doesn't call `recur`) it will return the
 number of elements in the passed in table. (In this case, 5)
 
+### Limitations
+
+In order to only evaluate expressions once and support sequential
+bindings, the binding table has to be transformed like this:
+
+``` fennel
+(loop [[x & xs] (foo)
+       y (+ x 1)]
+  ...)
+
+(let [_1_ (foo)
+      [x & xs] _1_
+      _2_ (+ x 1)
+      y _2_]
+  ((fn recur [[x & xs] y] ...) _1_ _2_)
+```
+
+This ensures that `foo` is called only once, its result is cached in a
+`sym1#` binding, and that `y` can use the destructured value, obtained
+from that binding.  The value of this binding is later passed to the
+function to begin the first iteration.
+
+This has two unfortunate consequences.  One is that the initial
+destructuring happens twice - first, to make sure that later bindings
+can be properly initialized, and second, when the first looping
+function call happens.  Another one is that as a result, `loop` macro
+can't work with multiple-value destructuring, because these can't be
+cached as described above.  E.g. this will not work:
+
+``` fennel
+(loop [(x y) (foo)] ...)
+```
+
+Because it would be transformed to:
+
+``` fennel
+(let [_1_ (foo)
+      (x y) _1_]
+  ((fn recur [(x y)] ...) _1_)
+```
+
+`x` is correctly set, but `y` is completely lost.  Therefore, this
+macro checks for lists in bindings.
+
 ## `ns`
 Function signature:
 
@@ -378,7 +422,7 @@ The `requirements` spec is a list that consists of vectors, specifying
 library name and a possible alias or a vector of names to refer to
 without a prefix:
 
-```
+``` fennel
 (ns some-namespace
   "Description of the some-namespace."
   (:require [some.lib]
@@ -390,7 +434,7 @@ without a prefix:
 
 Which is equivalent to:
 
-```
+``` fennel
 (local some-namespace {})
 (local lib (require :some.lib))
 (local lib2 (require :some.other.lib))

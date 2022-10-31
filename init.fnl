@@ -786,7 +786,7 @@ no collection is provided.
 
 # Examples
 
-```fennel
+``` fennel
 (map #(+ $ 1) [1 2 3]) ;; => @seq(2 3 4)
 (map #(+ $1 $2) [1 2 3] [4 5 6]) ;; => @seq(5 7 9)
 (def :private res (map #(+ $ 1) [:a :b :c])) ;; will raise an error only when realized
@@ -1245,7 +1245,7 @@ iterator style with the `doseq` macro.
 Bear in mind, that since the sequence is lazy it should be realized or
 truncated before the file is closed:
 
-```fennel
+``` fennel
 (let [lines (with-open [f (io.open \"init.fnl\" :r)]
               (line-seq f))]
   ;; this will error because only first line was realized, but the
@@ -2057,13 +2057,13 @@ raise an error."
 
 Thransofmr a hash-map into a sequence of key-value pairs:
 
-```fennel
+``` fennel
 (assert-eq [[:a 1]] (into (vector) {:a 1}))
 ```
 
   Construct a hash-map from a sequence of key-value pairs:
 
-```fennel
+``` fennel
 (assert-eq {:a 1 :b 2 :c 3}
            (into (hash-map) [[:a 1] [:b 2] [:c 3]]))
 ```"
