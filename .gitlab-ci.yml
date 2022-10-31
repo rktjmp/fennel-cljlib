@@ -5,8 +5,8 @@ stages:
 
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    fennel_ver: main # TODO: revert back to stable once fcollect is released
-    fenneldoc_ver: v0.1.8
+    fennel_ver: 1.2.1
+    fenneldoc_ver: v1.0.0
 
 .install_fennel: &fennel |-
     cd "$HOME"
