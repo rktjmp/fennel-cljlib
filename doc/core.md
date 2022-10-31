@@ -1,4 +1,4 @@
-# Core (v1.1.0)
+# Core (v1.1.1)
 Fennel-cljlib - functions from Clojure's core.clj implemented on top
 of Fennel.
 
@@ -219,7 +219,7 @@ Applying `add` to different amount of arguments:
 Function signature:
 
 ```
-(add ({}) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
+(add ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Sum arbitrary amount of numbers.
@@ -228,7 +228,7 @@ Sum arbitrary amount of numbers.
 Function signature:
 
 ```
-(sub ({}) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
+(sub ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Subtract arbitrary amount of numbers.
@@ -237,7 +237,7 @@ Subtract arbitrary amount of numbers.
 Function signature:
 
 ```
-(mul ({}) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
+(mul ([]) ([a]) ([a b]) ([a b c]) ([a b c d]) ([a b c d & rest]))
 ```
 
 Multiply arbitrary amount of numbers.
@@ -309,7 +309,7 @@ Decrease number `x` by one
 Function signature:
 
 ```
-(eq ({}) ([_]) ([a b]) ([a b & cs]))
+(eq ([]) ([_]) ([a b]) ([a b & cs]))
 ```
 
 Comparison function.
@@ -422,7 +422,7 @@ Check if object is a set.
 Function signature:
 
 ```
-(nil? ({}) ([x]))
+(nil? ([]) ([x]))
 ```
 
 Test if `x` is nil.
@@ -650,7 +650,7 @@ Returns everything but the last element of the `coll` as a new
 Function signature:
 
 ```
-(conj ({}) ([s]) ([s x]) ([s x & xs]))
+(conj ([]) ([s]) ([s x]) ([s x & xs]))
 ```
 
 Insert `x` as a last element of a table `tbl`.
@@ -887,7 +887,7 @@ Test if no item in `coll` satisfy the `pred`.
 Function signature:
 
 ```
-(range ({}) ([upper]) ([lower upper]) ([lower upper step]))
+(range ([]) ([upper]) ([lower upper]) ([lower upper step]))
 ```
 
 Returns lazy sequence of of numbers from `lower` to `upper` with optional `step`.
@@ -956,7 +956,7 @@ Returns its argument.
 Function signature:
 
 ```
-(comp ({}) ([f]) ([f g]) ([f g & fs]))
+(comp ([]) ([f]) ([f g]) ([f g & fs]))
 ```
 
 Compose functions.
@@ -1201,7 +1201,7 @@ suitable for transduce by adding an arity-1 signature that calls
 Function signature:
 
 ```
-(conj! ({}) ([coll]) ([coll x]))
+(conj! ([]) ([coll]) ([coll x]))
 ```
 
 Adds `x` to the transient collection, and return `coll`.
@@ -1238,7 +1238,7 @@ Create a lazy infinite sequence of repetitions of the items in the
 Function signature:
 
 ```
-(dedupe ({}) ([coll]))
+(dedupe ([]) ([coll]))
 ```
 
 Returns a lazy sequence removing consecutive duplicates in coll.
@@ -1276,7 +1276,7 @@ Remove `k`from transient map, and return `map`.
 Function signature:
 
 ```
-(distinct ({}) ([coll]))
+(distinct ([]) ([coll]))
 ```
 
 Returns a lazy sequence of the elements of the `coll` without
@@ -1322,7 +1322,7 @@ provided.
 Function signature:
 
 ```
-(drop-last ({}) ([coll]) ([n coll]))
+(drop-last ([]) ([coll]) ([n coll]))
 ```
 
 Return a lazy sequence from `coll` without last `n` elements.
@@ -1441,7 +1441,7 @@ unaffected.
 Function signature:
 
 ```
-(interleave ({}) ([s]) ([s1 s2]) ([s1 s2 & ss]))
+(interleave ([]) ([s]) ([s1 s2]) ([s1 s2 & ss]))
 ```
 
 Returns a lazy sequence of the first item in each sequence, then the
@@ -1461,7 +1461,7 @@ Returns a lazy sequence of the elements of `coll` separated by
 Function signature:
 
 ```
-(into ({}) ([to]) ([to from]) ([to xform from]))
+(into ([]) ([to]) ([to from]) ([to xform from]))
 ```
 
 Returns a new coll consisting of `to` with all of the items of

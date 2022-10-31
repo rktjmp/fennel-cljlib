@@ -1004,26 +1004,4 @@ evaluated until it is needed."
  : loop
  : try
  : lazy-seq
- : lazy-cat
- }
-
-;; Local Variables:
-;; eval: (put 'ns 'fennel-indent-function 1)
-;; eval: (put 'ns 'fennel-doc-string-elt 2)
-;; eval: (put 'def 'fennel-indent-function 'defun)
-;; eval: (put 'defn 'fennel-indent-function 'defun)
-;; eval: (put 'defn 'fennel-doc-string-elt 2)
-;; eval: (put 'defn- 'fennel-indent-function 'defun)
-;; eval: (put 'defn- 'fennel-doc-string-elt 2)
-;; eval: (put 'fn* 'fennel-indent-function 'defun)
-;; eval: (put 'fn* 'fennel-doc-string-elt 2)
-;; eval: (put 'if-let 'fennel-indent-function 1)
-;; eval: (put 'when-let 'fennel-indent-function 1)
-;; eval: (put 'if-some 'fennel-indent-function 1)
-;; eval: (put 'when-some 'fennel-indent-function 1)
-;; eval: (put 'defmulti 'fennel-indent-function 'defun)
-;; eval: (put 'defmethod 'fennel-indent-function 2)
-;; eval: (put 'defmethod 'fennel-doc-string-elt 2)
-;; eval: (font-lock-add-keywords 'fennel-mode '(("\\<\\(?:def\\(?:m\\(?:ethod\\|ulti\\)\\|n-?\\)?\\|fn\\*\\|if-\\(?:let\\|some\\)\\|ns\\|time\\|when-\\(?:let\\|some\\)\\)\\>" . 'font-lock-keyword-face)))
-;; eval: (font-lock-add-keywords 'fennel-mode '(("\\s(\\(?:defn-?\\|fn\\*\\)[[:space:]]+\\(\\(?:\\sw\\|\\s_\\|-\\|_\\)+\\)" 1 'font-lock-function-name-face)))
-;; End:
+ : lazy-cat}

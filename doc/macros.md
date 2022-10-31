@@ -1,4 +1,4 @@
-# Macros (v1.1.0)
+# Macros (v1.1.1)
 Macros for fennel-cljlib.
 
 **Table of contents**

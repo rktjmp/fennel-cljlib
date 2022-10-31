@@ -2241,7 +2241,3 @@ default."
       (error (.. (tostring multimethod) " is not a multifn") 2)))
 
 core
-
-;; Local Variables:
-;; eval: (add-to-list 'imenu-generic-expression `(nil "\\s(\\(?:defn-?\\|fn\\*\\)[[:space:]]+\\(\\(?:\\sw\\|\\s_\\|-\\|_\\)+\\)" 1))
-;; End:
