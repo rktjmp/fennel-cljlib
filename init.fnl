@@ -1298,9 +1298,7 @@ collection is provided."
 # Examples
 
 ``` fennel
-(assert-eq 10 (accumulate [res 0
-                           _ x (pairs (take 10 (repeat 1)))]
-                (+ res x)))
+(assert-eq 20 (reduce add (take 10 (repeat 2))))
 ```"
   [x]
   (seq* (lazy.repeat x)))
@@ -2050,18 +2048,25 @@ raise an error."
 ;;; Into
 
 (defn into
-  "Returns a new coll consisting of `to` with all of the items of
-  `from` conjoined. A transducer `xform` may be supplied.
+  "Returns a new coll consisting of `to` with all of the items of `from`
+conjoined. A transducer `xform` may be supplied.
 
 # Examples
 
-Thransofmr a hash-map into a sequence of key-value pairs:
+Insert items of one collection into another collection:
+
+```fennel
+(assert-eq [1 2 3 :a :b :c] (into [1 2 3] \"abc\"))
+(assert-eq {:a 2 :b 3} (into {:a 1} {:a 2 :b 3}))
+```
+
+Transform a hash-map into a sequence of key-value pairs:
 
 ``` fennel
 (assert-eq [[:a 1]] (into (vector) {:a 1}))
 ```
 
-  Construct a hash-map from a sequence of key-value pairs:
+You can also construct a hash-map from a sequence of key-value pairs:
 
 ``` fennel
 (assert-eq {:a 1 :b 2 :c 3}
