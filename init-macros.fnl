@@ -1017,11 +1017,10 @@ the other tests or exprs. `(cond)` returns nil."
 
 ;;; Lazy seq
 
-(local {:lazy-seq lazy-seq* :lazy-cat lazy-cat*}
-  (require (if (and ... (string.match ... "init%-macros$"))
-               (string.gsub ... "init%-macros$" "lazy-seq.init-macros")
-               ... (.. ... ".lazy-seq.init-macros")
-               "lazy-seq.init-macros")))
+(local lazy-seq-rel-path (if (and ... (string.match ... "init%-macros$"))
+                           (string.gsub ... "init%-macros$" "lazy-seq.init-macros")
+                           ... (.. ... ".lazy-seq.init-macros")
+                           "lazy-seq.init-macros"))
 
 (fn lazy-seq [...]
   {:fnl/docstring "Takes a `body` of expressions that returns a sequence, table or nil,
@@ -1029,30 +1028,34 @@ and yields a lazy sequence that will invoke the body only the first
 time `seq` is called, and will cache the result and return it on all
 subsequent `seq` calls. See also - `realized?`"
    :fnl/arglist [& body]}
-  `(let [core# (require ,core)
-         res# ,(lazy-seq* ...)]
-     (match (getmetatable res#)
-       mt# (doto mt#
-             (tset :cljlib/type :seq)
-             (tset :cljlib/conj
-                   (fn [s# v#] (core#.cons v# s#)))
-             (tset :cljlib/empty #(core#.list))))
-     res#))
+  `(do
+     (import-macros {:lazy-seq lazy-seq*} ,lazy-seq-rel-path)
+     (let [core# (require ,core)
+           res# (lazy-seq* ,...)]
+       (match (getmetatable res#)
+         mt# (doto mt#
+               (tset :cljlib/type :seq)
+               (tset :cljlib/conj
+                     (fn [s# v#] (core#.cons v# s#)))
+               (tset :cljlib/empty #(core#.list))))
+       res#)))
 
 (fn lazy-cat [...]
   {:fnl/docstring "Expands to code which yields a lazy sequence of the concatenation of
 `colls` - expressions returning collections.  Each expression is not
 evaluated until it is needed."
    :fnl/arglist [& colls]}
-  `(let [core# (require ,core)
-         res# ,(lazy-cat* ...)]
-     (match (getmetatable res#)
-       mt# (doto mt#
-             (tset :cljlib/type :seq)
-             (tset :cljlib/conj
-                   (fn [s# v#] (core#.cons v# s#)))
-             (tset :cljlib/empty #(core#.list))))
-     res#))
+  `(do
+     (import-macros {:lazy-cat lazy-cat*} ,lazy-seq-rel-path)
+     (let [core# (require ,core)
+           res# (lazy-cat* ,...)]
+       (match (getmetatable res#)
+         mt# (doto mt#
+               (tset :cljlib/type :seq)
+               (tset :cljlib/conj
+                     (fn [s# v#] (core#.cons v# s#)))
+               (tset :cljlib/empty #(core#.list))))
+       res#)))
 
 {: fn*
  : defn
